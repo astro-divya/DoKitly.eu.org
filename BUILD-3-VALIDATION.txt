@@ -1,0 +1,22 @@
+DoKitly Build 3 validation
+Date: 2026-09-15
+
+HTML files checked: 156
+JavaScript files checked: 10
+JavaScript syntax errors: 0
+Pages with duplicate IDs: 0
+Broken local href/src references: 0
+Sitemap URLs checked: 101
+Sitemap local targets missing: 0
+
+PDF to Word OCR checks:
+- Tesseract.js OCR library linked: PASS
+- OCR language selector present: PASS
+- Automatic OCR worker present: PASS
+- Editable OCR output tracking present: PASS
+- Per-page Word sections present: PASS
+- DOCX reopen validation present: PASS
+
+RESULT: PASS
+
+Runtime note: scanned-PDF OCR uses Tesseract.js in the browser and needs the OCR library/language data to be reachable from the deployed site. Static source/integrity checks passed in this build.

@@ -396,3 +396,7 @@ body[data-tool]:not([data-tool="pdf-editor"]) .editor-controls{min-width:0!impor
 
 /* Build 2 — final compact tool-first pass */
 @media(min-width:901px){.it-head-inner{height:58px!important}.it-brand img{width:205px!important}.it-shell{padding:10px 22px 30px!important}.it-breadcrumb{margin-bottom:6px!important;font-size:11px!important}.it-title{margin-bottom:9px!important}.it-title .ico{width:36px!important;height:36px!important;font-size:18px!important}.it-title h1{font-size:25px!important;margin-bottom:2px!important}.it-title p{font-size:12px!important;line-height:1.3!important}.it-panel{padding:13px!important}}
+
+/* PDF to Word OCR progress */
+.ocr-inline-progress{height:7px;margin-top:10px;border-radius:999px;overflow:hidden;background:rgba(37,99,235,.12)}
+.ocr-inline-progress>i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#2563eb,#14b8a6);transition:width .2s ease}

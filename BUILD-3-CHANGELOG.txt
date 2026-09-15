@@ -1,0 +1,16 @@
+DoKitly Build 3
+Date: 2026-09-15
+
+PDF TO WORD
+- Added automatic text-PDF vs scanned/image-PDF detection.
+- Added Tesseract.js OCR for scanned pages.
+- Added English and English + Hindi OCR choices.
+- Scanned pages now become editable Word text when OCR succeeds.
+- Preserved image fallback only when OCR returns no usable text.
+- Added OCR conversion progress/status feedback.
+- Preserved page-by-page layout reconstruction, font sizing, line spacing, table detection and repeated-background-text suppression.
+- Improved DOCX page fidelity by creating a Word section for each source PDF page and preserving source page dimensions.
+- DOCX package is validated after generation before download is enabled.
+
+BASE
+- Built from DoKitly-Build-2-NO-GAMES.zip (latest full-site package in the project library before this build).
