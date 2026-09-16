@@ -1,1 +1,181 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f7f9fc"><title>Website Analyzer — DoKitly</title><meta name="description" content="Check public DNS and Lighthouse/PageSpeed signals without invented traffic estimates."><link rel="icon" href="../assets/favicon-32.png"><link rel="stylesheet" href="../tool-page.css?v=dk2fix"><link rel="canonical" href="https://astro-divya.github.io/DoKitly.eu.org/seo-tools/website-analyzer.html"><meta property="og:title" content="Website Analyzer — DoKitly"><meta property="og:description" content="Check public DNS and Lighthouse/PageSpeed signals without invented traffic estimates."><meta property="og:type" content="website"><meta property="og:url" content="https://astro-divya.github.io/DoKitly.eu.org/seo-tools/website-analyzer.html"></head><body class="standalone-tool-page"><header class="it-header"><div class="it-head-inner"><a class="it-brand" href="../index.html"><img src="../assets/logo.png?v=2" alt="DoKitly"></a><nav class="it-nav"><a href="../index.html">Home</a><a href="index.html">Category</a></nav></div></header><main class="tool-page-shell"><div class="tool-breadcrumb"><a href="../index.html">Home</a> / <a href="index.html">Seo</a> / Website Analyzer</div><div class="tool-page-head"><span class="tool-page-icon">🔎</span><div><h1>Website Analyzer</h1><p>Check public DNS and Lighthouse/PageSpeed signals without invented traffic estimates.</p></div></div><div class="math-card"><div class="math-field"><label>Website URL or domain</label><input id="waUrl" placeholder="example.com"></div><div class="math-actions"><button class="math-primary" id="waRun">Analyze Website</button></div><div class="math-output" id="waOut">Checks public DNS and PageSpeed/Lighthouse signals. No fake traffic, revenue or authority numbers.</div><div id="waResults" class="analyzer-grid"></div></div><section class="seo-copy"><h2>What this analyzer reports</h2><p>Public DNS answers and, where Google PageSpeed Insights is available, Lighthouse performance, SEO, accessibility and best-practice signals. Traffic, backlink authority and earnings estimates require external commercial datasets and are intentionally not invented here.</p></section></main><script>(()=>{const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));$('waRun').onclick=async()=>{let raw=$('waUrl').value.trim();if(!raw)return $('waOut').textContent='Enter a URL or domain.';if(!/^https?:\/\//i.test(raw))raw='https://'+raw;let u;try{u=new URL(raw)}catch{return $('waOut').textContent='Enter a valid URL.'}$('waOut').textContent='Running public checks…';$('waResults').innerHTML='';const cards=[];try{const [a,ns]=await Promise.all([fetch(`https://dns.google/resolve?name=${encodeURIComponent(u.hostname)}&type=A`).then(r=>r.json()),fetch(`https://dns.google/resolve?name=${encodeURIComponent(u.hostname)}&type=NS`).then(r=>r.json())]);cards.push(['DNS A records',(a.Answer||[]).map(x=>x.data).join(', ')||'No A answer returned']);cards.push(['Nameservers',(ns.Answer||[]).map(x=>x.data.replace(/\.$/,'')).join(', ')||'No NS answer returned'])}catch{cards.push(['DNS','Public DNS lookup unavailable from this browser'])}try{const api=`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(u.href)}&strategy=mobile&category=PERFORMANCE&category=SEO&category=ACCESSIBILITY&category=BEST_PRACTICES`,j=await fetch(api).then(r=>{if(!r.ok)throw Error();return r.json()}),c=j.lighthouseResult?.categories||{};for(const [k,label] of [['performance','Performance'],['seo','SEO'],['accessibility','Accessibility'],['best-practices','Best practices']])cards.push([label,c[k]?.score==null?'Unavailable':Math.round(c[k].score*100)+'/100']);const au=j.lighthouseResult?.audits||{};[['document-title','Title'],['meta-description','Meta description'],['is-crawlable','Indexability'],['uses-https','HTTPS']].forEach(([k,label])=>{if(au[k])cards.push([label,au[k].score===1?'Pass':au[k].title||'Needs review'])})}catch{cards.push(['PageSpeed / Lighthouse','Unavailable or rate-limited right now'])}$('waResults').innerHTML=cards.map(([a,b])=>`<div class="analyzer-card"><b>${esc(a)}</b><span>${esc(b)}</span></div>`).join('');$('waOut').innerHTML=`<strong>${esc(u.hostname)}</strong><small>Results below are from public sources available to your browser.</small>`}})();</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f7f9fc">
+<title>Website Analyzer — DoKitly</title>
+<meta name="description" content="Analyze live DNS, SEO, redirects, security headers, domain data, technology signals and PageSpeed for a website.">
+<link rel="icon" href="../assets/favicon-32.png">
+<link rel="stylesheet" href="../tool-page.css?v=dk7-analyzer">
+<link rel="canonical" href="https://astro-divya.github.io/DoKitly.eu.org/seo-tools/website-analyzer.html">
+<meta property="og:title" content="Website Analyzer — DoKitly">
+<meta property="og:description" content="Analyze live DNS, SEO, redirects, security headers, domain data, technology signals and PageSpeed for a website.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://astro-divya.github.io/DoKitly.eu.org/seo-tools/website-analyzer.html">
+<style>
+.wa-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}.wa-form .math-field{min-width:0}.wa-form button{min-height:44px}.wa-status{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;min-height:28px;color:#64748b;font-size:12px}.wa-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;border:1px solid #dbe7f3;background:#f8fbff;color:#334155;font-weight:850}.wa-pill.ok{background:#ecfdf5;border-color:#bbf7d0;color:#047857}.wa-pill.warn{background:#fff7ed;border-color:#fed7aa;color:#9a3412}.wa-pill.bad{background:#fff1f2;border-color:#fecdd3;color:#be123c}.wa-loading{display:none;margin-top:14px;padding:14px;border:1px solid #dce7f2;border-radius:14px;background:linear-gradient(135deg,#f8fbff,#effcfb);font-weight:800;color:#334155}.wa-loading.show{display:flex;align-items:center;gap:10px}.wa-spinner{width:17px;height:17px;border:2px solid #cbd5e1;border-top-color:#0ea5a5;border-radius:50%;animation:waSpin .8s linear infinite}@keyframes waSpin{to{transform:rotate(360deg)}}
+.wa-results{display:none;margin-top:14px;gap:12px}.wa-results.show{display:grid}.wa-summary{display:grid;grid-template-columns:1.5fr repeat(3,minmax(0,.7fr));gap:10px}.wa-summary-card,.wa-section{border:1px solid #dfe7f1;border-radius:16px;background:#fff}.wa-summary-card{padding:13px 14px;min-width:0}.wa-summary-card b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin-bottom:5px}.wa-summary-card strong,.wa-summary-card span{overflow-wrap:anywhere}.wa-summary-card strong{font-size:15px;color:#0f172a}.wa-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.wa-section{padding:15px;min-width:0}.wa-section.wide{grid-column:1/-1}.wa-section h2{font-size:15px;margin:0 0 11px;display:flex;align-items:center;justify-content:space-between;gap:8px}.wa-section h2 small{font-size:10px;color:#64748b;font-weight:750}.wa-kv{display:grid;gap:0}.wa-row{display:grid;grid-template-columns:minmax(120px,.42fr) minmax(0,1fr);gap:12px;padding:8px 0;border-top:1px solid #eef2f7;font-size:12px}.wa-row:first-child{border-top:0;padding-top:0}.wa-row:last-child{padding-bottom:0}.wa-row b{color:#475569}.wa-row span{color:#0f172a;overflow-wrap:anywhere;white-space:pre-wrap}.wa-tags{display:flex;flex-wrap:wrap;gap:6px}.wa-tag{padding:5px 8px;border-radius:999px;background:#eff6ff;border:1px solid #dbeafe;font-size:11px;font-weight:800;color:#1e40af}.wa-score-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.wa-score{padding:12px;border:1px solid #e2e8f0;border-radius:13px;text-align:center;background:#f8fbff}.wa-score strong{display:block;font-size:22px;line-height:1.05;color:#0f172a}.wa-score span{font-size:10px;color:#64748b;font-weight:800}.wa-empty{font-size:12px;color:#64748b}.wa-list{margin:0;padding-left:18px;color:#334155;font-size:12px;line-height:1.6}.wa-footnote{margin-top:11px;color:#64748b;font-size:11px;line-height:1.45}.wa-error{margin-top:12px;padding:12px 14px;border:1px solid #fecdd3;border-radius:13px;background:#fff1f2;color:#9f1239;font-size:12px;font-weight:750;display:none}.wa-error.show{display:block}
+@media(max-width:800px){.wa-form{grid-template-columns:1fr}.wa-form button{width:100%}.wa-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.wa-summary-card:first-child{grid-column:1/-1}.wa-sections{grid-template-columns:1fr}.wa-section.wide{grid-column:auto}.wa-score-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wa-row{grid-template-columns:1fr;gap:3px}}
+</style>
+<link rel="stylesheet" href="../assets/site-shell.css?v=dk7full"></head>
+<body class="standalone-tool-page">
+<header class="it-header"><div class="it-head-inner"><a class="it-brand" href="../index.html"><img src="../assets/logo.png?v=2" alt="DoKitly"></a><nav class="it-nav"><a href="../index.html">Home</a><a href="../all-tools.html">Categories</a><a href="../whats-new.html">What’s New</a></nav></div></header>
+<main class="tool-page-shell">
+  <div class="tool-breadcrumb"><a href="../index.html">Home</a> / <a href="index.html">SEO</a> / Website Analyzer</div>
+  <div class="tool-page-head"><span class="tool-page-icon">🔎</span><div><h1>Website Analyzer</h1><p>Live website checks for SEO, DNS, redirects, security, domain signals, technologies and PageSpeed.</p></div></div>
+
+  <div class="math-card">
+    <div class="wa-form">
+      <div class="math-field"><label for="waUrl">Website URL or domain</label><input id="waUrl" inputmode="url" autocomplete="url" placeholder="example.com"></div>
+      <button class="math-primary" id="waRun" type="button">Analyze Website</button>
+    </div>
+    <div class="wa-status" id="waStatus"><span class="wa-pill">Live checks</span><span>Enter a public website to start.</span></div>
+    <div class="wa-loading" id="waLoading"><span class="wa-spinner" aria-hidden="true"></span><span id="waLoadingText">Analyzing website…</span></div>
+    <div class="wa-error" id="waError" role="alert"></div>
+
+    <div class="wa-results" id="waResults">
+      <div class="wa-summary" id="waSummary"></div>
+      <div class="wa-sections">
+        <section class="wa-section" id="waOverview"></section>
+        <section class="wa-section" id="waSeo"></section>
+        <section class="wa-section" id="waDns"></section>
+        <section class="wa-section" id="waDomain"></section>
+        <section class="wa-section" id="waSecurity"></section>
+        <section class="wa-section" id="waTech"></section>
+        <section class="wa-section wide" id="waSpeed"></section>
+      </div>
+      <div class="wa-footnote" id="waFootnote"></div>
+    </div>
+  </div>
+
+  <section class="seo-copy"><h2>What is checked?</h2><p>DoKitly checks public website and domain signals. Full engine mode can inspect the target page server-side, including HTTP status and redirects, title/meta/H1/canonical, robots and sitemap availability, DNS, RDAP registration data, security headers, technology signals and PageSpeed/Lighthouse when available.</p></section>
+</main>
+<script src="../assets/website-analyzer-config.js?v=1"></script>
+<script>
+(()=>{
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const cfg=window.DOKITLY_WEBSITE_ANALYZER||{};
+  const engineBase=String(cfg.analyzerApi||'').trim().replace(/\/+$/,'');
+  const fmtDate=v=>{if(!v)return '—';const d=new Date(v);return isNaN(d)?String(v):d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})};
+  const yesNo=v=>v?'Yes':'No';
+  const list=v=>Array.isArray(v)&&v.length?v.join(', '):'—';
+  const row=(a,b)=>`<div class="wa-row"><b>${esc(a)}</b><span>${esc(b==null||b===''?'—':b)}</span></div>`;
+  const section=(title,body,small='')=>`<h2><span>${esc(title)}</span>${small?`<small>${esc(small)}</small>`:''}</h2>${body}`;
+  const score=v=>v==null?'—':Math.round(v);
+
+  async function run(){
+    let raw=$('waUrl').value.trim();
+    if(!raw){showError('Enter a website URL or domain.');return;}
+    if(!/^https?:\/\//i.test(raw))raw='https://'+raw;
+    let u;try{u=new URL(raw);if(!/^https?:$/.test(u.protocol))throw 0}catch{showError('Enter a valid HTTP or HTTPS website.');return;}
+    setBusy(true);hideError();$('waResults').classList.remove('show');
+    try{
+      let data,mode='engine';
+      if(engineBase){
+        try{
+          const r=await fetch(`${engineBase}/analyze?url=${encodeURIComponent(u.href)}`,{headers:{accept:'application/json'}});
+          const j=await r.json().catch(()=>({}));
+          if(!r.ok||!j.ok)throw new Error(j.error||`Engine returned ${r.status}`);
+          data=j;
+        }catch(e){
+          mode='basic';
+          data=await basicAnalyze(u);
+          data._engineError=e.message||'Full engine unavailable';
+        }
+      }else{
+        mode='basic';
+        data=await basicAnalyze(u);
+      }
+      render(data,mode);
+    }catch(e){showError(e.message||'Could not analyze this website.');}
+    finally{setBusy(false);}
+  }
+
+  async function basicAnalyze(u){
+    const host=u.hostname;
+    const dns=await getDnsBundle(host);
+    const [rdap,pagespeed]=await Promise.all([getRdap(host),getPageSpeed(u.href)]);
+    return {ok:true,hostname:host,inputUrl:u.href,http:{finalUrl:u.href,status:null,redirects:[],responseTimeMs:null,contentType:null},page:null,dns,rdap,robots:null,sitemap:null,headers:{},security:null,technology:[],pagespeed,_basic:true};
+  }
+
+  async function dnsQuery(host,type){
+    try{
+      const r=await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(host)}&type=${type}`,{headers:{accept:'application/dns-json'}});
+      if(!r.ok)return[];
+      const j=await r.json();
+      return (j.Answer||[]).filter(x=>Number(x.type)!==5).map(x=>String(x.data||'').replace(/\.$/,''));
+    }catch{return[]}
+  }
+  async function getDnsBundle(host){
+    const types=['A','AAAA','NS','MX','TXT'];
+    const vals=await Promise.all(types.map(async t=>[t,await dnsQuery(host,t)]));
+    return Object.fromEntries(vals);
+  }
+  async function getRdap(host){
+    try{
+      const r=await fetch(`https://rdap.org/domain/${encodeURIComponent(host)}`,{headers:{accept:'application/rdap+json,application/json'}});
+      if(!r.ok)return{available:false,status:r.status};
+      const j=await r.json(),events={};(j.events||[]).forEach(e=>{if(e.eventAction&&e.eventDate)events[e.eventAction]=e.eventDate});
+      let registrar=null;(j.entities||[]).some(e=>{if(!(e.roles||[]).includes('registrar'))return false;const rows=e.vcardArray?.[1]||[];const fn=rows.find(x=>Array.isArray(x)&&x[0]==='fn');registrar=fn?.[3]||e.handle||null;return true});
+      return{available:true,registrar,status:j.status||[],nameservers:(j.nameservers||[]).map(n=>n.ldhName).filter(Boolean),registration:events.registration||null,expiration:events.expiration||null,lastChanged:events['last changed']||null};
+    }catch{return{available:false}}
+  }
+  async function getPageSpeed(url){
+    try{
+      const api=`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=PERFORMANCE&category=SEO&category=ACCESSIBILITY&category=BEST_PRACTICES`;
+      const r=await fetch(api);if(!r.ok)return{available:false,status:r.status};const j=await r.json();const c=j.lighthouseResult?.categories||{},a=j.lighthouseResult?.audits||{};
+      const s=k=>typeof c[k]?.score==='number'?Math.round(c[k].score*100):null;
+      return{available:true,performance:s('performance'),seo:s('seo'),accessibility:s('accessibility'),bestPractices:s('best-practices'),fcp:a['first-contentful-paint']?.displayValue||null,lcp:a['largest-contentful-paint']?.displayValue||null,cls:a['cumulative-layout-shift']?.displayValue||null,tbt:a['total-blocking-time']?.displayValue||null};
+    }catch{return{available:false}}
+  }
+
+  function render(d,mode){
+    const http=d.http||{},page=d.page||{},dns=d.dns||{},rdap=d.rdap||{},sec=d.security,ps=d.pagespeed||{};
+    $('waStatus').innerHTML=`<span class="wa-pill ${mode==='engine'?'ok':'warn'}">${mode==='engine'?'Full live engine':'Basic live mode'}</span><span>${esc(d.hostname||new URL(d.inputUrl).hostname)}</span>`;
+    $('waSummary').innerHTML=[
+      ['Website',http.finalUrl||d.inputUrl||'—'],
+      ['HTTP Status',http.status==null?'—':http.status],
+      ['Response',http.responseTimeMs==null?'—':http.responseTimeMs+' ms'],
+      ['Redirects',Array.isArray(http.redirects)?http.redirects.length:0]
+    ].map(([a,b],i)=>`<div class="wa-summary-card"><b>${esc(a)}</b>${i===0?`<strong>${esc(b)}</strong>`:`<strong>${esc(b)}</strong>`}</div>`).join('');
+
+    const overviewBody=`<div class="wa-kv">${row('Final URL',http.finalUrl||d.inputUrl)}${row('Status',http.status==null?'Full engine required':http.status)}${row('Content type',http.contentType||'—')}${row('Redirect chain',Array.isArray(http.redirects)&&http.redirects.length?http.redirects.map(x=>`${x.status}: ${x.to}`).join('\n'):'None detected')}</div>`;
+    $('waOverview').innerHTML=section('Overview',overviewBody);
+
+    let seoBody;
+    if(d.page){
+      seoBody=`<div class="wa-kv">${row('Title',page.title||'Missing')}${row('Title length',page.titleLength??0)}${row('Meta description',page.metaDescription||'Missing')}${row('Description length',page.metaDescriptionLength??0)}${row('H1',list(page.h1))}${row('H1 count',page.h1Count??0)}${row('Canonical',page.canonical||'Missing')}${row('Robots meta',page.robotsMeta||'—')}${row('Language',page.lang||'—')}${row('robots.txt',d.robots?(d.robots.exists?`Found (${d.robots.status})`:`Not found (${d.robots.status??'—'})`):'—')}${row('Sitemap',d.sitemap?(d.sitemap.exists?`Found (${d.sitemap.status})`:`Not found (${d.sitemap.status??'—'})`):'—')}</div>`;
+    }else seoBody='<div class="wa-empty">Page-level SEO inspection is available when the DoKitly server-side analyzer engine is connected.</div>';
+    $('waSeo').innerHTML=section('SEO & Indexing',seoBody);
+
+    $('waDns').innerHTML=section('DNS',`<div class="wa-kv">${row('A',list((dns.A||[]).map(x=>x.data||x)))}${row('AAAA',list((dns.AAAA||[]).map(x=>x.data||x)))}${row('Nameservers',list((dns.NS||[]).map(x=>x.data||x)))}${row('MX',list((dns.MX||[]).map(x=>x.data||x)))}${row('TXT',list((dns.TXT||[]).map(x=>x.data||x)))}</div>`);
+
+    $('waDomain').innerHTML=section('Domain / RDAP',rdap.available?`<div class="wa-kv">${row('Registrar',rdap.registrar||'—')}${row('Registered',fmtDate(rdap.registration))}${row('Expires',fmtDate(rdap.expiration))}${row('Last changed',fmtDate(rdap.lastChanged))}${row('Domain status',list(rdap.status))}</div>`:'<div class="wa-empty">RDAP information was not available for this domain.</div>');
+
+    if(sec){
+      const c=sec.checks||{};
+      $('waSecurity').innerHTML=section('Security Headers',`<div class="wa-kv">${row('HTTPS',yesNo(c.https))}${row('HSTS',yesNo(c.hsts))}${row('Content-Security-Policy',yesNo(c.csp))}${row('X-Content-Type-Options',yesNo(c.xContentTypeOptions))}${row('Frame protection',yesNo(c.frameProtection))}${row('Referrer-Policy',yesNo(c.referrerPolicy))}${row('Permissions-Policy',yesNo(c.permissionsPolicy))}</div>`,`${sec.passed}/${sec.total} detected`);
+    }else $('waSecurity').innerHTML=section('Security Headers','<div class="wa-empty">Security-header inspection requires the full analyzer engine.</div>');
+
+    const tech=Array.isArray(d.technology)?d.technology:[];
+    $('waTech').innerHTML=section('Technology Signals',tech.length?`<div class="wa-tags">${tech.map(x=>`<span class="wa-tag">${esc(x)}</span>`).join('')}</div><div class="wa-footnote">Detected from public HTML/HTTP signals; not every technology exposes a detectable signature.</div>`:'<div class="wa-empty">No technology signal detected, or full engine inspection is not connected.</div>');
+
+    if(ps.available){
+      $('waSpeed').innerHTML=section('PageSpeed / Lighthouse',`<div class="wa-score-grid"><div class="wa-score"><strong>${score(ps.performance)}</strong><span>Performance</span></div><div class="wa-score"><strong>${score(ps.seo)}</strong><span>SEO</span></div><div class="wa-score"><strong>${score(ps.accessibility)}</strong><span>Accessibility</span></div><div class="wa-score"><strong>${score(ps.bestPractices)}</strong><span>Best Practices</span></div></div><div class="wa-kv" style="margin-top:12px">${row('First Contentful Paint',ps.fcp||'—')}${row('Largest Contentful Paint',ps.lcp||'—')}${row('Cumulative Layout Shift',ps.cls||'—')}${row('Total Blocking Time',ps.tbt||'—')}</div>`,'Mobile');
+    }else $('waSpeed').innerHTML=section('PageSpeed / Lighthouse',`<div class="wa-empty">PageSpeed data is currently unavailable${ps.status?` (HTTP ${esc(ps.status)})`:''}. The core domain checks above are independent of PageSpeed.</div>`,'Mobile');
+
+    $('waFootnote').textContent=mode==='engine'?'Results were generated from live public checks for this specific website.':'Live DNS/RDAP/PageSpeed checks are shown. Page HTML, redirects and security-header inspection become available after the server-side analyzer engine is connected.';
+    $('waResults').classList.add('show');
+  }
+
+  function setBusy(v){$('waLoading').classList.toggle('show',v);$('waRun').disabled=v;$('waRun').textContent=v?'Analyzing…':'Analyze Website';}
+  function showError(msg){$('waError').textContent=msg;$('waError').classList.add('show');}
+  function hideError(){$('waError').classList.remove('show');$('waError').textContent='';}
+  $('waRun').addEventListener('click',run);
+  $('waUrl').addEventListener('keydown',e=>{if(e.key==='Enter')run()});
+})();
+</script>
+<script src="../assets/site-shell.js?v=dk7full"></script></body>
+</html>
