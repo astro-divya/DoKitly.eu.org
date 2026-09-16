@@ -61,3 +61,5 @@ Protected engines
 - pdf-engine-build7.js unchanged
 - pdf-inline-engine-build7.js unchanged
 - pdf-tools.js unchanged
+
+Website Analyzer Worker connected: https://dokitly-analyzer.softcrafted.workers.dev

@@ -1,20 +1,24 @@
-DoKitly Build 7 — Website Analyzer Engine Setup
-===============================================
+DoKitly Website Analyzer - Build 7
+==================================
 
-The website front-end is GitHub Pages, so full live analysis needs the included Cloudflare Worker to bypass browser CORS restrictions safely.
+STATUS
+The Website Analyzer frontend is already configured to use:
+https://dokitly-analyzer.softcrafted.workers.dev
 
-ONE-TIME SETUP
-1) Upload/replace this Build 7 in the DoKitly.eu.org GitHub repo.
-2) In Cloudflare: Workers & Pages -> Create Worker.
-3) Copy the contents of:
-   cloudflare-worker/website-analyzer-worker.js
-   into the Worker editor and Deploy.
-4) Copy your Worker URL (example: https://dokitly-website-analyzer.xxxxx.workers.dev).
-5) Edit this repo file:
-   assets/website-analyzer-config.js
-   and set analyzerApi to that Worker URL.
-6) Commit the config file.
+The connected Cloudflare Worker source is included at:
+cloudflare-worker/website-analyzer-worker.js
 
-After that, Website Analyzer will show website-specific live results for HTTP/redirects, page SEO, DNS, RDAP/domain data, robots/sitemap, security headers, technology signals and PageSpeed when available.
+If the Worker URL changes later, edit:
+assets/website-analyzer-config.js
 
-Optional: add PAGESPEED_API_KEY as a Worker secret for more reliable Google PageSpeed quota.
+OPTIONAL PAGESPEED KEY
+Google PageSpeed may return HTTP 429 when public quota is exhausted.
+For more reliable PageSpeed results, add a Cloudflare Worker secret named:
+PAGESPEED_API_KEY
+
+Cloudflare Dashboard -> Workers & Pages -> dokitly-analyzer -> Settings -> Variables and Secrets.
+
+NOTE
+The main analyzer checks (HTTP, redirects, HTML SEO signals, robots/sitemap,
+DNS, RDAP, security headers and technology signals) do not depend on the
+PageSpeed quota.
