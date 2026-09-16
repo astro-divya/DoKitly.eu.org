@@ -131,7 +131,7 @@ toolDefs.push(...build2ToolDefs);
 // Final refinement: repeat-use Student/Creator tools plus a practical HTML builder.
 const refinementToolDefs = [
  {id:'focus-timer',name:'Focus Timer',icon:'⏱️',cat:'Student',desc:'Save focused study sessions with a simple Pomodoro-style timer and streak.'},
- {id:'world-quiz',name:'World Quiz & Exam Practice',icon:'🌍',cat:'Student',desc:'Practice subjects and competitive-exam style questions with live scoring.'},
+ {id:'world-quiz',name:'World Quiz & Exam Practice',icon:'🌍',cat:'Student',desc:'Practice subjects and exam-specific Indian competitive test questions with multilingual review.'},
  {id:'quiz-generator',name:'Smart Quiz Generator',icon:'❓',cat:'Student',desc:'Turn pasted notes into quick revision questions in your browser.'},
  {id:'revision-planner',name:'Revision Planner',icon:'🗓️',cat:'Student',desc:'Build and save a day-by-day revision plan up to your exam date.'},
  {id:'assignment-tracker',name:'Assignment Tracker',icon:'✅',cat:'Student',desc:'Save assignments, deadlines and priorities locally on your device.'},

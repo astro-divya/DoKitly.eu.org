@@ -1,0 +1,18 @@
+DoKitly Build 4 — World Quiz & Exam Practice rebuild
+
+Main changes:
+- Rebuilt student-tools/world-quiz.html with a clean test interface.
+- Setup selectors disappear after the quiz starts; only the quiz/test UI remains.
+- Added English, Hindi and Hinglish language choices.
+- Added no-repeat question selection within each test and recent-question avoidance where possible.
+- Added Subject Practice and exam-specific Competitive Exam mode.
+- Exam profiles included: SSC CGL/CHSL/MTS/CPO, DSSSB General/One-Tier, RRB NTPC/Group D, IBPS PO/Clerk Prelims, SBI PO Prelims, CTET Paper I, Delhi Police Constable, NDA, CDS and UPSC Prelims Practice.
+- Exam mode draws questions from the selected exam's relevant subject mix and recurring PYQ-style concepts.
+- Added question palette, previous/next, clear response, mark for review, timer and progress.
+- Added detailed final result: correct, incorrect, unattempted, accuracy, correct answer and explanation for every question.
+- Added Retry Incorrect and Start New Test.
+- Flashcard Maker legacy page now redirects to World Quiz & Exam Practice.
+- Updated Student text on homepage/category/tool listing.
+- PDF Editor, PDF-to-Word and their protected engines were not changed.
+
+Upload the CONTENTS of this folder/ZIP to the root of the DoKitly.eu.org GitHub repository, replacing existing files.
