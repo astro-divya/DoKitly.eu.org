@@ -141,7 +141,9 @@ const refinementToolDefs = [
  {id:'caption-extractor',name:'Caption & Hashtag Extractor',icon:'🔗',cat:'Creator',desc:'Extract public caption metadata where supported, or paste caption text and separate its hashtags.'},
  {id:'html-generator',name:'HTML Page Generator',icon:'</>',cat:'Website & SEO',desc:'Build a clean responsive HTML page with live preview, SEO tags and downloadable code.'},
  {id:'website-analyzer',name:'Website Analyzer',icon:'🔎',cat:'Website & SEO',desc:'Check public DNS and PageSpeed/Lighthouse signals without fake traffic estimates.'},
- {id:'barcode-studio',name:'Barcode Studio',icon:'▥',cat:'Developer',desc:'Generate common barcodes and decode barcode images in one workspace.'}
+ {id:'barcode-studio',name:'Barcode Studio',icon:'▥',cat:'Developer',desc:'Generate common barcodes and decode barcode images in one workspace.'},
+ {id:'qr-studio',name:'QR Code Studio',icon:'▦',cat:'Developer',desc:'Generate QR codes and decode QR images in one workspace.'},
+ {id:'typing-practice',name:'Typing Test & Hindi Tutor',icon:'⌨️',cat:'Student',desc:'English/Hindi typing tests plus guided Hindi typing lessons and keyboard references.'}
 ];
 toolDefs.push(...refinementToolDefs);
 

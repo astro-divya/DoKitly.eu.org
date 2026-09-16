@@ -1,0 +1,63 @@
+DoKitly Build 7 — Combined Change Notes
+=======================================
+
+Navigation / Homepage
+- Header simplified to: Home | Categories | What's New.
+- PDF and Image direct header links removed.
+- Homepage quick shortcuts are visitor-editable (max 8) and saved with localStorage.
+- Shortcuts can be selected and reordered with Move Up / Move Down controls.
+
+Footer
+- About
+- Report a Bug
+- Blog
+- Suggest a Tool
+- FAQ
+- Disclaimer
+- Contact
+- Privacy
+- Terms
+- Report/Suggest/Contact forms prepare a real GitHub issue for the DoKitly repository instead of showing a fake success message.
+
+All Tools
+- Category chip bar is sticky below the header.
+- Horizontal overflow is scrollable instead of clipped.
+- Active category is highlighted while scrolling.
+
+Student
+- Added Typing Test & Hindi Typing Tutor.
+- English/Hindi timed typing tests with WPM, CPM, accuracy, errors and passage refresh.
+- Hindi tutor lessons for letters, vowels, matras, words, conjuncts and sentences.
+- Reference modes for Phonetic Unicode, InScript and Remington-style layouts.
+- Existing World Quiz / Exam Practice is retained from the previous fixes.
+
+Developer
+- Added QR Code Studio.
+- Generate QR for text/URL, Wi-Fi, email, phone, SMS and vCard.
+- Decode QR images with BarcodeDetector where supported and jsQR fallback.
+- PNG download and copy-result actions.
+
+Creator
+- Creator Trend Hub cleaned into Instagram / YouTube / TikTok tabs.
+- Raw source-link clutter removed from the main layout.
+- Selected topic can be sent to Caption Generator or Hashtag Generator.
+
+Website & SEO
+- Website Analyzer live engine retained and packaged with a Cloudflare Worker.
+- Full-engine mode can inspect HTTP status, redirects, title/meta/H1/canonical, robots, sitemap, DNS, RDAP, security headers, technology signals and PageSpeed when available.
+
+Content pages
+- What's New
+- Report a Bug
+- Suggest a Tool
+- FAQ
+- Disclaimer
+- Contact
+- Blog + starter articles
+
+Protected engines
+- pdf-editor-build7.js unchanged
+- word-engine-build7.js unchanged
+- pdf-engine-build7.js unchanged
+- pdf-inline-engine-build7.js unchanged
+- pdf-tools.js unchanged

@@ -1,0 +1,20 @@
+DoKitly Build 7 — Website Analyzer Engine Setup
+===============================================
+
+The website front-end is GitHub Pages, so full live analysis needs the included Cloudflare Worker to bypass browser CORS restrictions safely.
+
+ONE-TIME SETUP
+1) Upload/replace this Build 7 in the DoKitly.eu.org GitHub repo.
+2) In Cloudflare: Workers & Pages -> Create Worker.
+3) Copy the contents of:
+   cloudflare-worker/website-analyzer-worker.js
+   into the Worker editor and Deploy.
+4) Copy your Worker URL (example: https://dokitly-website-analyzer.xxxxx.workers.dev).
+5) Edit this repo file:
+   assets/website-analyzer-config.js
+   and set analyzerApi to that Worker URL.
+6) Commit the config file.
+
+After that, Website Analyzer will show website-specific live results for HTTP/redirects, page SEO, DNS, RDAP/domain data, robots/sitemap, security headers, technology signals and PageSpeed when available.
+
+Optional: add PAGESPEED_API_KEY as a Worker secret for more reliable Google PageSpeed quota.
