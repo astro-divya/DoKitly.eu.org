@@ -27,7 +27,7 @@ export default {
     }
 
     if (reqUrl.pathname === '/' || reqUrl.pathname === '/health') {
-      return json({ ok: true, service: 'DoKitly Website Analyzer Engine', version: '1.0.0' }, 200, cors);
+      return json({ ok: true, service: 'DoKitly Website Analyzer Engine', version: '1.0.1' }, 200, cors);
     }
 
     if (reqUrl.pathname !== '/analyze') {
@@ -189,7 +189,7 @@ async function safeFetch(startUrl, init = {}, maxRedirects = 5) {
       ...init,
       redirect: 'manual',
       headers: {
-        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'accept': 'text/html, application/xhtml+xml, application/xml;q=0.9',
         'accept-language': 'en-US,en;q=0.8',
         ...(init.headers || {})
       }
@@ -320,7 +320,7 @@ async function checkTextResource(url, kind) {
   try {
     const { response, finalUrl } = await safeFetch(url, {
       method: 'GET',
-      headers: { 'accept': kind === 'sitemap' ? 'application/xml,text/xml,text/plain,*/*' : 'text/plain,*/*' }
+      headers: { 'accept': kind === 'sitemap' ? 'application/xml, text/xml, text/plain' : 'text/plain' }
     }, 3);
     const text = response.ok ? await readLimitedText(response, 300_000) : '';
     return { ok: response.ok, status: response.status, finalUrl, text };

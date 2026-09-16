@@ -1,7 +1,6 @@
 /* DoKitly Website Analyzer engine configuration.
-   After deploying cloudflare-worker/website-analyzer-worker.js, paste the Worker base URL below.
-   Example: https://dokitly-website-analyzer.example.workers.dev
+   Cloudflare Worker connected on 2026-09-16.
 */
 window.DOKITLY_WEBSITE_ANALYZER = {
-  analyzerApi: ""
+  analyzerApi: "https://dokitly-analyzer.softcrafted.workers.dev"
 };
