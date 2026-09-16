@@ -1,0 +1,6 @@
+name = "dokitly-website-analyzer"
+main = "website-analyzer-worker.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://astro-divya.github.io,https://dokitly.eu.org,https://www.dokitly.eu.org"
