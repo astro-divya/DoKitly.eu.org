@@ -7,7 +7,7 @@
 <title>Website Analyzer — DoKitly</title>
 <meta name="description" content="Analyze live DNS, SEO, redirects, security headers, domain data, technology signals and PageSpeed for a website.">
 <link rel="icon" href="../assets/favicon-32.png">
-<link rel="stylesheet" href="../tool-page.css?v=dk7-analyzer">
+<link rel="stylesheet" href="../tool-page.css?v=dk8-analyzer">
 <link rel="canonical" href="https://astro-divya.github.io/DoKitly.eu.org/seo-tools/website-analyzer.html">
 <meta property="og:title" content="Website Analyzer — DoKitly">
 <meta property="og:description" content="Analyze live DNS, SEO, redirects, security headers, domain data, technology signals and PageSpeed for a website.">
@@ -43,13 +43,14 @@
         <section class="wa-section" id="waDomain"></section>
         <section class="wa-section" id="waSecurity"></section>
         <section class="wa-section" id="waTech"></section>
+        <section class="wa-section" id="waTraffic"></section>
         <section class="wa-section wide" id="waSpeed"></section>
       </div>
       <div class="wa-footnote" id="waFootnote"></div>
     </div>
   </div>
 
-  <section class="seo-copy"><h2>What is checked?</h2><p>DoKitly checks public website and domain signals. Full engine mode can inspect the target page server-side, including HTTP status and redirects, title/meta/H1/canonical, robots and sitemap availability, DNS, RDAP registration data, security headers, technology signals and PageSpeed/Lighthouse when available.</p></section>
+  <section class="seo-copy"><h2>What is checked?</h2><p>DoKitly checks public website and domain signals. Full engine mode can inspect the target page server-side, including HTTP status and redirects, title/meta/H1/canonical, robots and sitemap availability, DNS, RDAP registration data, security headers, technology signals, optional public popularity signals and PageSpeed/Lighthouse when available. Traffic numbers are only shown when backed by a named data source; DoKitly does not invent visit counts.</p></section>
 </main>
 <script src="../assets/website-analyzer-config.js?v=1"></script>
 <script>
@@ -97,7 +98,7 @@
     const host=u.hostname;
     const dns=await getDnsBundle(host);
     const [rdap,pagespeed]=await Promise.all([getRdap(host),getPageSpeed(u.href)]);
-    return {ok:true,hostname:host,inputUrl:u.href,http:{finalUrl:u.href,status:null,redirects:[],responseTimeMs:null,contentType:null},page:null,dns,rdap,robots:null,sitemap:null,headers:{},security:null,technology:[],pagespeed,_basic:true};
+    return {ok:true,hostname:host,inputUrl:u.href,http:{finalUrl:u.href,status:null,redirects:[],responseTimeMs:null,contentType:null},page:null,dns,rdap,robots:null,sitemap:null,headers:{},security:null,technology:[],pagespeed,traffic:{available:false,reason:'full_engine_required'},_basic:true};
   }
 
   async function dnsQuery(host,type){
@@ -132,7 +133,7 @@
   }
 
   function render(d,mode){
-    const http=d.http||{},page=d.page||{},dns=d.dns||{},rdap=d.rdap||{},sec=d.security,ps=d.pagespeed||{};
+    const http=d.http||{},page=d.page||{},dns=d.dns||{},rdap=d.rdap||{},sec=d.security,ps=d.pagespeed||{},traffic=d.traffic||{};
     $('waStatus').innerHTML=`<span class="wa-pill ${mode==='engine'?'ok':'warn'}">${mode==='engine'?'Full live engine':'Basic live mode'}</span><span>${esc(d.hostname||new URL(d.inputUrl).hostname)}</span>`;
     $('waSummary').innerHTML=[
       ['Website',http.finalUrl||d.inputUrl||'—'],
@@ -156,15 +157,22 @@
 
     if(sec){
       const c=sec.checks||{};
-      $('waSecurity').innerHTML=section('Security Headers',`<div class="wa-kv">${row('HTTPS',yesNo(c.https))}${row('HSTS',yesNo(c.hsts))}${row('Content-Security-Policy',yesNo(c.csp))}${row('X-Content-Type-Options',yesNo(c.xContentTypeOptions))}${row('Frame protection',yesNo(c.frameProtection))}${row('Referrer-Policy',yesNo(c.referrerPolicy))}${row('Permissions-Policy',yesNo(c.permissionsPolicy))}</div>`,`${sec.passed}/${sec.total} detected`);
+      $('waSecurity').innerHTML=section('Security Headers',`<div class="wa-kv">${row('HTTPS',yesNo(sec.https))}${row('HSTS',yesNo(c.hsts))}${row('Content-Security-Policy',yesNo(c.csp))}${row('X-Content-Type-Options',yesNo(c.xContentTypeOptions))}${row('Frame protection',yesNo(c.frameProtection))}${row('Referrer-Policy',yesNo(c.referrerPolicy))}${row('Permissions-Policy',yesNo(c.permissionsPolicy))}</div>`,`${sec.passed}/${sec.total} headers detected`);
     }else $('waSecurity').innerHTML=section('Security Headers','<div class="wa-empty">Security-header inspection requires the full analyzer engine.</div>');
 
     const tech=Array.isArray(d.technology)?d.technology:[];
     $('waTech').innerHTML=section('Technology Signals',tech.length?`<div class="wa-tags">${tech.map(x=>`<span class="wa-tag">${esc(x)}</span>`).join('')}</div><div class="wa-footnote">Detected from public HTML/HTTP signals; not every technology exposes a detectable signature.</div>`:'<div class="wa-empty">No technology signal detected, or full engine inspection is not connected.</div>');
 
+    if(traffic.available){
+      const locs=(traffic.topLocations||[]).map(x=>x.locationName?`${x.locationName}${x.rank?` (#${x.rank})`:''}`:x.locationCode).filter(Boolean);
+      $('waTraffic').innerHTML=section('Traffic & Valuation',`<div class="wa-kv">${row('Popularity rank',traffic.rank??'—')}${row('Ranking bucket',traffic.bucket||'—')}${row('Top locations',list(locs))}${row('Estimated monthly visits',traffic.monthlyVisits??'Not provided by this source')}${row('Estimated pageviews',traffic.pageviews??'Not provided by this source')}${row('Estimated ad revenue',traffic.revenue??'Needs a traffic-volume source')}${row('Estimated site value',traffic.siteValue??'Needs a traffic-volume source')}</div><div class="wa-footnote">Source: ${esc(traffic.source||'public traffic provider')}. DoKitly only shows visit/revenue estimates when the connected source supplies enough data.</div>`);
+    }else{
+      $('waTraffic').innerHTML=section('Traffic & Valuation','<div class="wa-empty">Traffic-volume estimates are not available from page HTML, DNS or RDAP alone. Connect a supported traffic-data source to show visits, geography and revenue estimates. DoKitly does not fabricate traffic numbers.</div>','Source required');
+    }
+
     if(ps.available){
       $('waSpeed').innerHTML=section('PageSpeed / Lighthouse',`<div class="wa-score-grid"><div class="wa-score"><strong>${score(ps.performance)}</strong><span>Performance</span></div><div class="wa-score"><strong>${score(ps.seo)}</strong><span>SEO</span></div><div class="wa-score"><strong>${score(ps.accessibility)}</strong><span>Accessibility</span></div><div class="wa-score"><strong>${score(ps.bestPractices)}</strong><span>Best Practices</span></div></div><div class="wa-kv" style="margin-top:12px">${row('First Contentful Paint',ps.fcp||'—')}${row('Largest Contentful Paint',ps.lcp||'—')}${row('Cumulative Layout Shift',ps.cls||'—')}${row('Total Blocking Time',ps.tbt||'—')}</div>`,'Mobile');
-    }else $('waSpeed').innerHTML=section('PageSpeed / Lighthouse',`<div class="wa-empty">PageSpeed data is currently unavailable${ps.status?` (HTTP ${esc(ps.status)})`:''}. The core domain checks above are independent of PageSpeed.</div>`,'Mobile');
+    }else $('waSpeed').innerHTML=section('PageSpeed / Lighthouse',`<div class="wa-empty">${ps.reason==='rate_limited'?'Google PageSpeed API rate limit reached. Try again later.':`PageSpeed data is currently unavailable${ps.status?` (HTTP ${esc(ps.status)})`:''}.`} The core domain checks above are independent of PageSpeed.</div>`,'Mobile');
 
     $('waFootnote').textContent=mode==='engine'?'Results were generated from live public checks for this specific website.':'Live DNS/RDAP/PageSpeed checks are shown. Page HTML, redirects and security-header inspection become available after the server-side analyzer engine is connected.';
     $('waResults').classList.add('show');

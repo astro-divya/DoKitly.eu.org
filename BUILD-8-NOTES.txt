@@ -1,0 +1,41 @@
+DoKitly Build 8 — Typing, Exam Practice & Analyzer Quality
+===========================================================
+
+Typing Test
+- Timed tests now generate one long continuous passage sized to the selected duration.
+- Approximate passage capacity: 1 min ~320 words, 2 min ~620, 5 min ~1500, 10 min ~3000.
+- Completing the text early no longer ends a timed test. Extra text is appended seamlessly as a fallback.
+- Timer/statistics stay continuous; the test ends at zero or when Finish Now is pressed.
+- Long target text is contained in a scrollable reading panel instead of making the whole page extremely tall.
+
+Hindi Typing Tutor
+- Removed the old Phonetic Unicode-first approach from the tutor.
+- Default course is real Devanagari InScript key-layout training.
+- User can keep the physical/OS keyboard in English; the tutor maps the physical key to Hindi internally.
+- Course progression: physical key mapping -> vowels -> matras -> halant/half letters -> words -> conjuncts -> sentences -> speed practice.
+- Current target physical key is highlighted and finger guidance is shown.
+- Built-in key recall Game Mode added; it uses the same InScript mapping as Learn Mode.
+- InScript mapping is kept separate from future Remington training rather than mixing layouts.
+
+World Quiz & Exam Practice
+- Action controls were restyled into one consistent DoKitly design system: Previous, Clear Response, Mark for Review, Next and Submit.
+- Competitive-exam profiles now carry their own target difficulty instead of silently using one generic mixed level.
+- Banking prelims use stronger quantitative/reasoning generators and a larger grammar/vocabulary/cloze bank; NDA/CDS maths/GK pools avoid the simplest generic filler where possible.
+- Recent-question memory is scoped by selected exam/subject to reduce repeat-heavy sessions.
+- UPSC Prelims was rebuilt as "UPSC Prelims GS Paper I Practice" with a dedicated original question engine.
+- UPSC bank uses conceptual statements, constitutional matching, economics concepts, chronology, geography/environment and science-style elimination questions.
+- Basic capital/currency filler is excluded from the UPSC custom pool.
+- UPSC pool is large enough for a 50-question test without falling back to generic GK.
+- Competitive-exam setup explicitly labels questions as original exam-style practice, not copied PYQs.
+
+Website Analyzer
+- H1 text cleaning now strips nested style/script/noscript content before extracting visible heading text.
+- HTTPS is no longer incorrectly counted as a security header; security header count is now 0–6 separately from HTTPS.
+- RDAP now falls back through the IANA RDAP bootstrap registry if rdap.org cannot resolve a TLD.
+- PageSpeed HTTP 429 is shown as a rate-limit message instead of a generic unavailable message.
+- Traffic & Valuation section added with source integrity rules.
+- Optional Cloudflare Radar token can provide popularity rank/bucket and top locations.
+- DoKitly intentionally does not fabricate monthly visits, ad revenue or site value when no real traffic-volume source is connected.
+
+Protected PDF engines
+- No planned changes to the existing protected PDF/Word engines in this build.

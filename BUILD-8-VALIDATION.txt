@@ -1,0 +1,13 @@
+DoKitly Build 8 Validation
+=========================
+
+HTML files checked: 181
+Duplicate HTML IDs: 0
+Broken local references: 0
+External JavaScript syntax errors: 0
+Modified-page inline JavaScript syntax errors: 0
+Sitemap local targets missing: 0
+Protected PDF/Word engine files changed: 0
+Hindi InScript lesson mapping coverage: PASS
+Quiz runtime: 50 unique questions generated for all 15 exam profiles: PASS
+RESULT: PASS
