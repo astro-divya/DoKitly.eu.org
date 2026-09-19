@@ -1,24 +1,17 @@
-DoKitly Website Analyzer - Build 7
-==================================
+DoKitly Website Analyzer — Build 10
+===================================
 
-STATUS
-The Website Analyzer frontend is already configured to use:
+Frontend Worker URL:
 https://dokitly-analyzer.softcrafted.workers.dev
 
-The connected Cloudflare Worker source is included at:
+Worker source:
 cloudflare-worker/website-analyzer-worker.js
 
-If the Worker URL changes later, edit:
-assets/website-analyzer-config.js
+After deployment, open /health and confirm:
+1.2.0-build10
 
-OPTIONAL PAGESPEED KEY
-Google PageSpeed may return HTTP 429 when public quota is exhausted.
-For more reliable PageSpeed results, add a Cloudflare Worker secret named:
-PAGESPEED_API_KEY
+Build 10 adds stronger public-signal traffic estimates, PageSpeed retry/cache logic,
+frontend Worker retries and creator public-link / Google Trends helper endpoints.
 
-Cloudflare Dashboard -> Workers & Pages -> dokitly-analyzer -> Settings -> Variables and Secrets.
-
-NOTE
-The main analyzer checks (HTTP, redirects, HTML SEO signals, robots/sitemap,
-DNS, RDAP, security headers and technology signals) do not depend on the
-PageSpeed quota.
+Optional PageSpeed key:
+Add a Worker secret named PAGESPEED_API_KEY for better quota reliability.
