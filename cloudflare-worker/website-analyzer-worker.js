@@ -27,7 +27,31 @@ export default {
     }
 
     if (reqUrl.pathname === '/' || reqUrl.pathname === '/health') {
-      return json({ ok: true, service: 'DoKitly Website Analyzer Engine', version: '1.1.0-build9' }, 200, cors);
+      return json({ ok: true, service: 'DoKitly Website Analyzer Engine', version: '1.2.0-build10' }, 200, cors);
+    }
+
+    if (reqUrl.pathname === '/creator-context') {
+      const raw = (reqUrl.searchParams.get('url') || '').trim();
+      if (!raw || raw.length > 2048) return json({ ok:false, error:'Enter a valid public URL.' }, 400, cors);
+      try {
+        const target = normalizeTarget(raw);
+        const result = await getCreatorContext(target);
+        return json({ ok:true, ...result }, 200, cors);
+      } catch (e) {
+        return json({ ok:false, error:cleanError(e) }, e && e.status ? e.status : 502, cors);
+      }
+    }
+
+    if (reqUrl.pathname === '/creator-trends') {
+      try {
+        const geo = String(reqUrl.searchParams.get('geo') || 'IN').toUpperCase().replace(/[^A-Z]/g,'').slice(0,2) || 'IN';
+        const platform = String(reqUrl.searchParams.get('platform') || 'General').slice(0,40);
+        const category = String(reqUrl.searchParams.get('category') || 'General').slice(0,40);
+        const result = await getCreatorTrends(geo, platform, category);
+        return json({ ok:true, ...result }, 200, cors);
+      } catch (e) {
+        return json({ ok:false, error:cleanError(e) }, 502, cors);
+      }
     }
 
     if (reqUrl.pathname !== '/analyze') {
@@ -209,6 +233,79 @@ async function safeFetch(startUrl, init = {}, maxRedirects = 5) {
   throw httpError(508, 'Too many redirects.');
 }
 
+
+async function getCreatorContext(target) {
+  const main = await safeFetch(target.toString(), { method:'GET' }, 4);
+  const r = main.response;
+  const contentType = r.headers.get('content-type') || '';
+  if (!/text\/html|application\/xhtml\+xml/i.test(contentType)) {
+    throw httpError(415, 'This link is not a readable public HTML page. Paste the text instead.');
+  }
+  const html = await readLimitedText(r, 900_000);
+  const page = extractPageSignals(html, main.finalUrl);
+  const contextText = extractReadableText(html).slice(0, 6000);
+  return {
+    hostname: new URL(main.finalUrl).hostname,
+    finalUrl: main.finalUrl,
+    title: page.title || '',
+    description: page.metaDescription || page.openGraph?.description || '',
+    image: page.openGraph?.image || null,
+    contextText,
+    note: 'Public page context only. Private, blocked or script-only pages may not be readable.'
+  };
+}
+
+function extractReadableText(html) {
+  let s = String(html || '');
+  s = s.replace(/<(script|style|noscript|svg|template)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ');
+  s = s.replace(/<!--[\s\S]*?-->/g, ' ');
+  s = s.replace(/<\/?(?:nav|header|footer|aside)\b[^>]*>/gi, ' ');
+  s = s.replace(/<[^>]+>/g, ' ');
+  s = decodeEntities(s).replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+async function getCreatorTrends(geo, platform, category) {
+  const cache = typeof caches !== 'undefined' ? caches.default : null;
+  const key = new Request(`https://dokitly-trends-cache.invalid/?geo=${encodeURIComponent(geo)}`);
+  if (cache) {
+    try {
+      const hit = await cache.match(key);
+      if (hit) {
+        const j = await hit.json();
+        return { ...j, platform, category, cached:true };
+      }
+    } catch {}
+  }
+  const url = `https://trends.google.com/trending/rss?geo=${encodeURIComponent(geo)}`;
+  const r = await fetchWithTimeout(url, { headers:{'accept':'application/rss+xml,text/xml;q=0.9,*/*;q=0.5','user-agent':'Mozilla/5.0 DoKitly/1.0'} }, 9000);
+  if (!r.ok) throw new Error(`Trend source returned HTTP ${r.status}`);
+  const xml = await readLimitedText(r, 500_000);
+  const items = [];
+  const blocks = xml.match(/<item>[\s\S]*?<\/item>/gi) || [];
+  for (const block of blocks.slice(0,30)) {
+    const titleRaw = firstMatch(block, /<title>([\s\S]*?)<\/title>/i).replace(/^<!\[CDATA\[|\]\]>$/g,'');
+    const trafficRaw = firstMatch(block, /<(?:ht:)?approx_traffic>([\s\S]*?)<\/(?:ht:)?approx_traffic>/i).replace(/^<!\[CDATA\[|\]\]>$/g,'');
+    const pubDate = firstMatch(block, /<pubDate>([\s\S]*?)<\/pubDate>/i).replace(/^<!\[CDATA\[|\]\]>$/g,'');
+    const title = cleanText(titleRaw);
+    if (title) items.push({ title, approxTraffic:cleanText(trafficRaw)||null, pubDate:cleanText(pubDate)||null });
+  }
+  if (!items.length) throw new Error('Live trend source returned no readable items.');
+  const result = {
+    source:'Google Trends public RSS',
+    geo,
+    platform,
+    category,
+    fetchedAt:new Date().toISOString(),
+    items:items.slice(0,18),
+    note:'These are live Google web-search trends for the selected country, not a private Instagram/TikTok/YouTube trending feed.'
+  };
+  if (cache) {
+    try { await cache.put(key, new Response(JSON.stringify(result), {headers:{'content-type':'application/json','cache-control':'public, max-age=900'}})); } catch {}
+  }
+  return result;
+}
+
 async function analyzeWebsite(target, env) {
   const host = target.hostname.toLowerCase();
   const dnsPromise = getDnsBundle(host);
@@ -252,12 +349,13 @@ async function analyzeWebsite(target, env) {
     pagespeed,
     security,
     responseTimeMs: main.elapsedMs,
-    radar
+    radar,
+    technology: tech
   });
 
   return {
     analyzedAt: new Date().toISOString(),
-    engineVersion: '1.1.0-build9',
+    engineVersion: '1.2.0-build10',
     inputUrl: target.toString(),
     hostname: host,
     http: {
@@ -353,7 +451,24 @@ async function checkTextResource(url, kind) {
 }
 
 async function getTrafficSignals(host, env) {
-  if (!env.CLOUDFLARE_RADAR_TOKEN) return { available:false, reason:'radar_token_not_configured' };
+  const [commonCrawl, radar] = await Promise.all([
+    getCommonCrawlFootprint(host),
+    getRadarSignal(host, env)
+  ]);
+  return {
+    available: !!(commonCrawl.available || radar.available),
+    commonCrawl,
+    radar
+  };
+}
+
+async function getRadarSignal(host, env) {
+  // Cloudflare Radar data is optional and disabled by default.
+  // Enable only after checking the data licence for your intended use.
+  const enabled = String(env.ENABLE_CLOUDFLARE_RADAR || '').toLowerCase();
+  if (!env.CLOUDFLARE_RADAR_TOKEN || !['1','true','yes'].includes(enabled)) {
+    return { available:false, reason:'radar_not_enabled' };
+  }
   try {
     const r = await fetchWithTimeout(`https://api.cloudflare.com/client/v4/radar/ranking/domain/${encodeURIComponent(host)}?includeTopLocations=true`, {
       headers: { 'accept':'application/json', 'authorization':`Bearer ${env.CLOUDFLARE_RADAR_TOKEN}` }
@@ -361,8 +476,94 @@ async function getTrafficSignals(host, env) {
     if (!r.ok) return { available:false, reason:'radar_unavailable', status:r.status };
     const j = await r.json();
     const d = j && j.result && (j.result.details_0 || j.result.details || {});
-    return { available:true, source:'Cloudflare Radar', rank:d.rank??null, bucket:d.bucket??null, topLocations:Array.isArray(d.top_locations)?d.top_locations.slice(0,8):[] };
-  } catch { return { available:false, reason:'radar_unavailable' }; }
+    return {
+      available:true,
+      source:'Cloudflare Radar',
+      rank:d.rank??null,
+      bucket:d.bucket??null,
+      topLocations:Array.isArray(d.top_locations)?d.top_locations.slice(0,8):[]
+    };
+  } catch {
+    return { available:false, reason:'radar_unavailable' };
+  }
+}
+
+async function getLatestCommonCrawlIndex() {
+  const cache = typeof caches !== 'undefined' ? caches.default : null;
+  const cacheKey = new Request('https://dokitly-commoncrawl-index.invalid/latest');
+  if (cache) {
+    try {
+      const hit = await cache.match(cacheKey);
+      if (hit) {
+        const j = await hit.json();
+        if (j && j.id) return j.id;
+      }
+    } catch {}
+  }
+  try {
+    const r = await fetchWithTimeout('https://index.commoncrawl.org/collinfo.json', {
+      headers: { 'accept':'application/json', 'user-agent':'DoKitly-Website-Analyzer/1.2 (+https://dokitly.eu.org)' }
+    }, 8000);
+    if (!r.ok) return 'CC-MAIN-2026-34';
+    const list = await r.json();
+    const id = Array.isArray(list) && list[0] && list[0].id ? String(list[0].id) : 'CC-MAIN-2026-34';
+    if (cache) {
+      try {
+        await cache.put(cacheKey, new Response(JSON.stringify({id}), {
+          headers:{'content-type':'application/json','cache-control':'public, max-age=21600'}
+        }));
+      } catch {}
+    }
+    return id;
+  } catch {
+    return 'CC-MAIN-2026-34';
+  }
+}
+
+async function getCommonCrawlFootprint(host) {
+  const cache = typeof caches !== 'undefined' ? caches.default : null;
+  const cacheKey = new Request(`https://dokitly-commoncrawl-cache.invalid/?host=${encodeURIComponent(host)}`);
+  if (cache) {
+    try {
+      const hit = await cache.match(cacheKey);
+      if (hit) return { ...(await hit.json()), cached:true };
+    } catch {}
+  }
+  try {
+    const indexId = await getLatestCommonCrawlIndex();
+    const api = `https://index.commoncrawl.org/${encodeURIComponent(indexId)}-index?url=${encodeURIComponent(host)}&matchType=domain&output=json&showNumPages=true&pageSize=5`;
+    const r = await fetchWithTimeout(api, {
+      headers: { 'accept':'application/json,text/plain', 'user-agent':'DoKitly-Website-Analyzer/1.2 (+https://dokitly.eu.org)' }
+    }, 10000);
+    if (!r.ok) return { available:false, status:r.status, indexId };
+    const text = (await r.text()).trim();
+    if (!text) return { available:false, indexId };
+    let j;
+    try { j = JSON.parse(text.split(/\n+/)[0]); } catch { return { available:false, indexId, reason:'parse_failed' }; }
+    const blocks = Math.max(0, Number(j.blocks || 0));
+    const pages = Math.max(0, Number(j.pages || 0));
+    const pageSize = Math.max(1, Number(j.pageSize || 5));
+    const result = {
+      available: blocks > 0 || pages > 0,
+      source:'Common Crawl URL Index',
+      indexId,
+      blocks,
+      pages,
+      pageSize,
+      // Common Crawl blocks contain many capture lines. Keep this deliberately broad.
+      estimatedCaptures: blocks > 0 ? rangeObj(blocks * 900, blocks * 3600) : null
+    };
+    if (cache) {
+      try {
+        await cache.put(cacheKey, new Response(JSON.stringify(result), {
+          headers:{'content-type':'application/json','cache-control':'public, max-age=21600'}
+        }));
+      } catch {}
+    }
+    return result;
+  } catch {
+    return { available:false, reason:'request_failed' };
+  }
 }
 
 function ageYears(date) {
@@ -379,85 +580,171 @@ function roundNice(n) {
   if (n < 10000) return Math.round(n / 500) * 500;
   if (n < 100000) return Math.round(n / 5000) * 5000;
   if (n < 1000000) return Math.round(n / 50000) * 50000;
-  return Math.round(n / 500000) * 500000;
+  if (n < 10000000) return Math.round(n / 500000) * 500000;
+  if (n < 100000000) return Math.round(n / 5000000) * 5000000;
+  return Math.round(n / 25000000) * 25000000;
 }
 function rangeObj(low, high) {
   low = roundNice(low); high = roundNice(high);
   if (high <= low) high = roundNice(low * 1.8 + 100);
   return { low, high };
 }
+function geometricMean(a,b){
+  a=Math.max(1,Number(a)||1); b=Math.max(1,Number(b)||1);
+  return Math.sqrt(a*b);
+}
+function blendRanges(a,b) {
+  if (!a) return b;
+  if (!b) return a;
+  const low = geometricMean(a.low,b.low) * 0.72;
+  const high = geometricMean(a.high,b.high) * 1.38;
+  return rangeObj(low,high);
+}
 function radarVisitRange(radar) {
   if (!radar || !radar.available) return null;
   const rank = Number(radar.rank);
   if (Number.isFinite(rank) && rank > 0) {
-    if (rank <= 100) return rangeObj(50_000_000, 500_000_000);
-    if (rank <= 1_000) return rangeObj(5_000_000, 60_000_000);
-    if (rank <= 10_000) return rangeObj(500_000, 8_000_000);
-    if (rank <= 100_000) return rangeObj(60_000, 900_000);
-    if (rank <= 200_000) return rangeObj(30_000, 450_000);
-    if (rank <= 500_000) return rangeObj(10_000, 180_000);
-    if (rank <= 1_000_000) return rangeObj(3_000, 75_000);
+    if (rank <= 100) return rangeObj(40_000_000, 600_000_000);
+    if (rank <= 1_000) return rangeObj(6_000_000, 120_000_000);
+    if (rank <= 10_000) return rangeObj(700_000, 18_000_000);
+    if (rank <= 100_000) return rangeObj(90_000, 2_500_000);
+    if (rank <= 200_000) return rangeObj(45_000, 1_200_000);
+    if (rank <= 500_000) return rangeObj(12_000, 450_000);
+    if (rank <= 1_000_000) return rangeObj(3_000, 140_000);
   }
   const bucket = String(radar.bucket || '').toLowerCase().replace(/[,\s]/g,'');
-  if (bucket.includes('100k') || bucket.includes('100000')) return rangeObj(60_000,900_000);
-  if (bucket.includes('200k') || bucket.includes('200000')) return rangeObj(30_000,450_000);
-  if (bucket.includes('500k') || bucket.includes('500000')) return rangeObj(10_000,180_000);
-  if (bucket.includes('1m') || bucket.includes('1000000')) return rangeObj(3_000,75_000);
+  if (bucket.includes('100k') || bucket.includes('100000')) return rangeObj(90_000,2_500_000);
+  if (bucket.includes('200k') || bucket.includes('200000')) return rangeObj(45_000,1_200_000);
+  if (bucket.includes('500k') || bucket.includes('500000')) return rangeObj(12_000,450_000);
+  if (bucket.includes('1m') || bucket.includes('1000000')) return rangeObj(3_000,140_000);
   return null;
 }
-function estimateTrafficAndValue({page,rdap,sitemapUrlCount,pagespeed,security,responseTimeMs,radar}) {
-  let modelScore = 12;
+function commonCrawlVisitRange(cc, hasCruxFieldData) {
+  if (!cc || !cc.available) return null;
+  const b = Math.max(0, Number(cc.blocks || 0));
+  let r;
+  if (b >= 15000) r = rangeObj(25_000_000, 300_000_000);
+  else if (b >= 5000) r = rangeObj(8_000_000, 140_000_000);
+  else if (b >= 1500) r = rangeObj(2_000_000, 45_000_000);
+  else if (b >= 500) r = rangeObj(600_000, 14_000_000);
+  else if (b >= 150) r = rangeObj(180_000, 4_000_000);
+  else if (b >= 50) r = rangeObj(50_000, 1_200_000);
+  else if (b >= 15) r = rangeObj(12_000, 350_000);
+  else if (b >= 5) r = rangeObj(3_000, 120_000);
+  else if (b >= 1) r = rangeObj(600, 35_000);
+  else return null;
+  if (hasCruxFieldData) {
+    r = rangeObj(r.low * 1.35, r.high * 1.8);
+  }
+  return r;
+}
+function inferSiteCategory(page, technology) {
+  const text = [page?.title,page?.metaDescription,...(page?.h1||[]),...(technology||[])].filter(Boolean).join(' ').toLowerCase();
+  const has = re => re.test(text);
+  if (has(/shop|shopping|store|marketplace|buy online|cart|e-?commerce|product/)) return 'ecommerce';
+  if (has(/bank|finance|loan|credit|insurance|invest|stock|broker|mortgage|tax/)) return 'finance';
+  if (has(/news|magazine|journal|newspaper|breaking|media/)) return 'media';
+  if (has(/school|college|university|course|learn|education|exam|quiz|student|tutorial/)) return 'education';
+  if (has(/software|developer|api|saas|tool|converter|calculator|generator|analyzer/)) return 'software_tools';
+  if (has(/social|community|forum|chat|dating|network/)) return 'community';
+  if (has(/video|music|movie|stream|game|gaming|entertainment/)) return 'entertainment';
+  return 'general';
+}
+function categoryEconomics(category) {
+  const map = {
+    ecommerce:{pages:[2.8,6.2],rpm:[0.7,5.0]},
+    finance:{pages:[1.7,3.6],rpm:[4.0,24.0]},
+    media:{pages:[1.8,4.5],rpm:[1.0,9.0]},
+    education:{pages:[1.6,3.4],rpm:[1.2,8.0]},
+    software_tools:{pages:[1.4,3.2],rpm:[1.5,12.0]},
+    community:{pages:[3.0,9.0],rpm:[0.5,5.0]},
+    entertainment:{pages:[2.0,6.0],rpm:[0.6,6.0]},
+    general:{pages:[1.4,3.2],rpm:[0.8,8.0]}
+  };
+  return map[category] || map.general;
+}
+function estimateTrafficAndValue({page,rdap,sitemapUrlCount,pagespeed,security,responseTimeMs,radar,technology}) {
+  const signals = radar && radar.commonCrawl !== undefined ? radar : {radar:radar||{available:false},commonCrawl:{available:false}};
+  const radarSignal = signals.radar || {available:false};
+  const cc = signals.commonCrawl || {available:false};
+  const hasCrux = !!(pagespeed && pagespeed.hasFieldData);
+
+  let modelScore = 10;
   const years = ageYears(rdap && rdap.registration);
-  modelScore += clamp(years * 4, 0, 22);
+  modelScore += clamp(years * 2.5, 0, 18);
   const sm = Number(sitemapUrlCount || 0);
-  if (sm > 0) modelScore += clamp(Math.log10(sm + 1) * 10, 3, 22);
-  if (page && page.title) modelScore += 4;
-  if (page && page.metaDescription) modelScore += 4;
-  if (page && page.h1Count === 1) modelScore += 4;
-  if (page && page.canonical) modelScore += 3;
-  if (page && Number(page.linkCount || 0) > 20) modelScore += 4;
-  if (pagespeed && pagespeed.hasFieldData) modelScore += 16;
-  if (pagespeed && Number.isFinite(pagespeed.seo)) modelScore += clamp((pagespeed.seo - 50) / 5, 0, 10);
+  if (sm > 0) modelScore += clamp(Math.log10(sm + 1) * 8, 2, 18);
+  if (page && page.title) modelScore += 3;
+  if (page && page.metaDescription) modelScore += 3;
+  if (page && page.h1Count === 1) modelScore += 3;
+  if (page && page.canonical) modelScore += 2;
+  if (page && Number(page.linkCount || 0) > 20) modelScore += 3;
+  if (hasCrux) modelScore += 20;
+  if (cc.available) modelScore += clamp(Math.log10(Number(cc.blocks||0)+1)*12, 3, 25);
+  if (pagespeed && Number.isFinite(pagespeed.seo)) modelScore += clamp((pagespeed.seo - 50) / 7, 0, 7);
   if (security && security.https) modelScore += 2;
-  if (Number.isFinite(responseTimeMs) && responseTimeMs < 800) modelScore += 3;
+  if (Number.isFinite(responseTimeMs) && responseTimeMs < 800) modelScore += 2;
   modelScore = clamp(Math.round(modelScore), 0, 100);
 
-  let monthly = radarVisitRange(radar);
-  let confidence = radar && radar.available ? 'Medium' : 'Low';
-  let source = radar && radar.available ? 'Cloudflare Radar + DoKitly estimation model' : 'DoKitly public-signal estimation model';
+  const radarRange = radarVisitRange(radarSignal);
+  const ccRange = commonCrawlVisitRange(cc, hasCrux);
+  let monthly = blendRanges(radarRange, ccRange);
+
+  if (!monthly && hasCrux) monthly = rangeObj(8_000, 250_000);
   if (!monthly) {
-    if (modelScore >= 82) monthly = rangeObj(50_000, 300_000);
-    else if (modelScore >= 68) monthly = rangeObj(15_000, 120_000);
-    else if (modelScore >= 54) monthly = rangeObj(4_000, 45_000);
-    else if (modelScore >= 40) monthly = rangeObj(800, 12_000);
-    else monthly = rangeObj(100, 3_000);
+    if (modelScore >= 82) monthly = rangeObj(30_000, 500_000);
+    else if (modelScore >= 68) monthly = rangeObj(8_000, 180_000);
+    else if (modelScore >= 54) monthly = rangeObj(2_000, 60_000);
+    else if (modelScore >= 40) monthly = rangeObj(400, 18_000);
+    else monthly = rangeObj(100, 5_000);
   }
 
-  const pagesLow = 1.25 + clamp(modelScore/100,0,1)*0.25;
-  const pagesHigh = 2.0 + clamp(modelScore/100,0,1)*1.0;
-  const pageviews = rangeObj(monthly.low * pagesLow, monthly.high * pagesHigh);
+  const category = inferSiteCategory(page, technology);
+  const economics = categoryEconomics(category);
+  const pageviews = rangeObj(monthly.low * economics.pages[0], monthly.high * economics.pages[1]);
   const daily = rangeObj(monthly.low/30, monthly.high/30);
-  // Broad display-ad RPM band; geography/niche/ad-fill are unknown, so range is intentionally wide.
-  const revenueMonthlyUsd = rangeObj((pageviews.low/1000)*0.5, (pageviews.high/1000)*6.0);
+  const revenueMonthlyUsd = rangeObj((pageviews.low/1000)*economics.rpm[0], (pageviews.high/1000)*economics.rpm[1]);
   const revenueYearlyUsd = rangeObj(revenueMonthlyUsd.low*12, revenueMonthlyUsd.high*12);
-  const siteValueUsd = rangeObj(revenueMonthlyUsd.low*18, revenueMonthlyUsd.high*36);
+  const siteValueUsd = rangeObj(revenueMonthlyUsd.low*18, revenueMonthlyUsd.high*42);
+
+  const signalNames = [];
+  if (cc.available) signalNames.push('Common Crawl footprint');
+  if (hasCrux) signalNames.push('Chrome real-user field-data signal');
+  if (radarSignal.available) signalNames.push('Cloudflare Radar rank');
+  if (rdap && rdap.registration) signalNames.push('domain age');
+  if (sm > 0) signalNames.push('sitemap footprint');
+
+  let confidence = 'Low';
+  const popularitySignalCount = Number(cc.available) + Number(hasCrux) + Number(radarSignal.available);
+  if (popularitySignalCount >= 3) confidence = 'High';
+  else if (popularitySignalCount >= 2) confidence = 'Medium';
+  else if ((cc.available && Number(cc.blocks||0)>=50) || radarSignal.available) confidence = 'Medium';
 
   return {
     available:true,
     estimated:true,
-    source,
+    source: signalNames.length ? `${signalNames.join(' + ')} + DoKitly model` : 'DoKitly public-signal estimation model',
     confidence,
     modelScore,
-    rank: radar && radar.available ? (radar.rank ?? null) : null,
-    bucket: radar && radar.available ? (radar.bucket ?? null) : null,
-    topLocations: radar && radar.available ? (radar.topLocations || []) : [],
+    category,
+    rank: radarSignal.available ? (radarSignal.rank ?? null) : null,
+    bucket: radarSignal.available ? (radarSignal.bucket ?? null) : null,
+    topLocations: radarSignal.available ? (radarSignal.topLocations || []) : [],
+    commonCrawl: cc.available ? {
+      indexId:cc.indexId||null,
+      blocks:cc.blocks||0,
+      pages:cc.pages||0,
+      estimatedCaptures:cc.estimatedCaptures||null,
+      cached:!!cc.cached
+    } : null,
+    cruxFieldData:hasCrux,
     monthlyVisits: monthly,
     dailyVisits: daily,
     pageviews,
     revenueMonthlyUsd,
     revenueYearlyUsd,
     siteValueUsd,
-    note:'Broad estimate from public technical/domain signals and, when configured, Cloudflare Radar ranking. It is not owner analytics and may differ substantially from real traffic or revenue.'
+    note:'Directional estimate from public web-footprint and real-user availability signals. It is not private analytics or a Similarweb/HypeStat measurement, so the real traffic and revenue can still differ substantially.'
   };
 }
 

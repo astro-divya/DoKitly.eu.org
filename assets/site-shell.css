@@ -20,3 +20,23 @@
 .dk-form-note{font-size:12px;color:var(--muted,#64748b);line-height:1.55;margin-top:9px}.dk-form-status{margin-top:12px;padding:11px 12px;border-radius:12px;background:#f8fbff;border:1px solid #dfe7f1;color:#475569;font-size:12px}.dk-form-status.ok{background:#ecfdf5;border-color:#bbf7d0;color:#047857}.dk-form-status.err{background:#fff1f2;border-color:#fecdd3;color:#be123c}
 @media(max-width:760px){.dk-footer-top{grid-template-columns:1fr}.dk-footer-links{justify-content:flex-start}.it-head-inner,.header-inner{padding-left:10px!important;padding-right:10px!important}.it-brand img,.brand img{width:128px!important;max-width:38vw!important;height:auto!important}.it-nav,.site-header nav{gap:2px!important}.it-nav a,.site-header nav a{display:inline-flex!important;font-size:11px!important;padding:7px 6px!important}.site-header nav .theme-btn{display:none!important}.category-jumps.dk-sticky-jumps{top:58px}.dk-shortcut-list{max-height:54vh}}
 @media(max-width:430px){.it-nav a,.site-header nav a{font-size:10px!important;padding:6px 4px!important}.it-brand img,.brand img{width:116px!important}.dk-footer-inner{padding-left:14px;padding-right:14px}}
+
+/* DoKitly Build 10 — consistent action-button family */
+.action-row button,.math-actions button,.output>button,.study-row>button,.tag-cloud button,.creator-chip-row button,.dk-page-cta{
+  min-height:42px;border-radius:12px;padding:9px 14px;font:inherit;font-size:12px;font-weight:850;line-height:1.15;
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;text-decoration:none;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,filter .16s ease,background .16s ease;
+  box-sizing:border-box
+}
+.action-row button:hover,.math-actions button:hover,.output>button:hover,.study-row>button:hover,.tag-cloud button:hover,.creator-chip-row button:hover,.dk-page-cta:hover{transform:translateY(-1px)}
+.action-row button:focus-visible,.math-actions button:focus-visible,.output>button:focus-visible,.study-row>button:focus-visible,.tag-cloud button:focus-visible,.creator-chip-row button:focus-visible,.dk-page-cta:focus-visible{outline:3px solid rgba(37,99,235,.20);outline-offset:2px}
+.action-row button:disabled,.math-actions button:disabled,.output>button:disabled{opacity:.55;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+button.primary,.math-primary,.dk-page-cta{border:1px solid transparent!important;background:linear-gradient(135deg,#1769ff,#14b8a6)!important;color:#fff!important;box-shadow:0 9px 22px rgba(23,105,255,.16)}
+button.secondary,.math-secondary,.action-row button:not(.primary):not(.danger):not(.ghost){border:1px solid #d7e2ee;background:#fff;color:#17324d;box-shadow:0 5px 14px rgba(15,23,42,.05)}
+button.danger{border:1px solid #fecaca;background:#fff5f5;color:#b91c1c}button.ghost{border:1px solid transparent;background:transparent;color:#0f766e}
+input[type="file"]::file-selector-button{border:1px solid #d7e2ee;border-radius:10px;padding:8px 11px;margin-right:10px;background:linear-gradient(135deg,#f8fbff,#eefcf9);color:#17324d;font-weight:850;cursor:pointer}
+.dk-page-cta{padding-inline:17px}
+.creator-helper{display:block;margin-top:6px;color:var(--muted,#64748b);font-size:11px;line-height:1.45}
+.creator-trend-box{margin-top:12px;padding:13px;border:1px solid rgba(20,184,166,.2);border-radius:15px;background:linear-gradient(135deg,rgba(37,99,235,.035),rgba(20,184,166,.06));display:grid;gap:8px}
+.creator-trend-box>b{font-size:13px}.creator-trend-box>small{color:var(--muted,#64748b);font-size:11px}.creator-chip-row{display:flex;gap:7px;flex-wrap:wrap}.creator-chip-row button{min-height:34px;padding:7px 10px;border:1px solid #dbe7ef;background:#fff;color:#17435b;border-radius:999px;font-size:11px}.creator-chip-row.live button{border-color:rgba(20,184,166,.32);background:#f0fdfa;color:#0f766e}
+.seo-copy details{border-top:1px solid var(--line,#e5eaf1);padding:10px 0}.seo-copy details:first-of-type{border-top:0}.seo-copy summary{cursor:pointer;color:var(--text,#0f172a);font-size:14px}.seo-copy details p{margin:8px 0 2px}
