@@ -1,0 +1,18 @@
+DoKitly Build 9 validation: PASS
+
+HTML files checked: 181
+Duplicate-ID pages: 0
+Broken local references: 0
+JavaScript syntax errors: 0
+CSS brace-balance errors: 0
+Build8 base files changed intentionally: 6
+PDF tools changed: 0
+15 exam profiles full-count PASS
+
+Intentional changed files:
+- cloudflare-worker/website-analyzer-worker.js
+- seo-tools/website-analyzer.html
+- developer-tools/qr-studio.html
+- student-tools/world-quiz.html
+- student-tools/typing-practice.html
+- index.html

@@ -1,0 +1,58 @@
+DoKitly Build 9
+================
+
+Main updates
+------------
+1. Website Analyzer
+   - New DoKitly-styled report with larger readable typography and premium cards.
+   - Key Snapshot cards for HTTP status, response time, SEO, security, domain age, estimated visits, earnings and performance.
+   - Traffic & Earnings Estimate section with broad ranges for daily/monthly visits, pageviews, ad revenue and site value.
+   - Estimates are clearly labelled as public-signal estimates, not owner analytics.
+   - Technology signals render as separate chips.
+   - Worker version is exposed as 1.1.0-build9.
+   - PageSpeed requests use retry/backoff and Cloudflare cache where available.
+
+2. Typing Master
+   - Long passages wrap inside the passage box; horizontal overflow removed.
+   - Passage length scales with test duration.
+   - Easy / Medium / Hard now use genuinely different text complexity.
+   - Passage topics are varied: science, nature, travel, history, technology, culture and everyday life.
+   - New Passage / Restart / Finish use one consistent DoKitly button style.
+   - Existing real Hindi InScript tutor and game-learning features retained.
+
+3. World Quiz & Exam Practice
+   - Full Mock and Mini Mock are separated.
+   - Full mocks use configured exam-style question count, timer, subject mix and negative-marking profile.
+   - All configured exam profiles now generate the full requested question count in validation.
+   - UPSC pool expanded to 100+ unique hard/conceptual questions without basic capital/currency filler.
+   - CTET Child Development and EVS banks expanded to support a full 150-question Paper-I-style mock.
+   - Hindi selection keeps DoKitly UI in English while rendering the actual question and answer options in Hindi where applicable.
+   - Hindi GK country/state/capital/currency localisation expanded.
+   - Repeated generic question sharing across exams reduced through exam-specific pools and recent-question controls.
+
+4. QR Code Studio
+   - QR generation repaired with browser QR engine fallback.
+   - Large centered responsive QR preview.
+   - Selected export size is preserved for PNG download while preview uses the available panel area.
+   - Color/size controls regenerate the preview.
+   - Copy Payload, PNG download and image QR decode are wired and error-handled.
+
+5. Homepage Popular Tools
+   - PDF to Word
+   - PDF Editor
+   - Image Compressor
+   - Typing Master
+   - World Quiz & Exam Practice
+
+Cloudflare deployment
+---------------------
+For the Build 9 Website Analyzer backend changes, deploy:
+cloudflare-worker/website-analyzer-worker.js
+
+The same worker code is also supplied separately as:
+DoKitly-Build-9-Website-Analyzer-Worker.txt
+
+Notes
+-----
+- Traffic/revenue/site-value results are broad estimates from public signals and can differ substantially from private analytics.
+- Exact competitive-exam rules can change between notifications; the profiles are exam-style practice configurations and should be reviewed when an official notification changes.
