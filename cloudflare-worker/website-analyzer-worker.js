@@ -213,6 +213,7 @@ async function analyzeWebsite(target, env) {
   const host = target.hostname.toLowerCase();
   const dnsPromise = getDnsBundle(host);
   const rdapPromise = getRdap(host);
+  const trafficPromise = getTrafficSignals(host, env);
   const main = await safeFetch(target.toString(), { method: 'GET' });
   const response = main.response;
   const contentType = response.headers.get('content-type') || '';
@@ -229,12 +230,13 @@ async function analyzeWebsite(target, env) {
   const robotsUrl = `${final.origin}/robots.txt`;
   const sitemapUrl = page.sitemaps[0] || `${final.origin}/sitemap.xml`;
 
-  const [dns, rdap, robots, sitemap, pagespeed] = await Promise.all([
+  const [dns, rdap, robots, sitemap, pagespeed, traffic] = await Promise.all([
     dnsPromise,
     rdapPromise,
     checkTextResource(robotsUrl, 'robots'),
     checkTextResource(sitemapUrl, 'sitemap'),
-    getPageSpeed(main.finalUrl, env)
+    getPageSpeed(main.finalUrl, env),
+    trafficPromise
   ]);
 
   if (robots.text) {
@@ -263,7 +265,8 @@ async function analyzeWebsite(target, env) {
     headers,
     security,
     technology: tech,
-    pagespeed
+    pagespeed,
+    traffic
   };
 }
 
@@ -274,31 +277,31 @@ async function getDnsBundle(host) {
 }
 
 async function getRdap(host) {
-  try {
-    const r = await fetchWithTimeout(`https://rdap.org/domain/${encodeURIComponent(host)}`, {
-      headers: { 'accept': 'application/rdap+json,application/json' }
-    }, 9000);
-    if (!r.ok) return { available: false, status: r.status };
+  const parse = async r => {
     const j = await r.json();
     const registrar = findRdapEntityName(j.entities || [], 'registrar');
     const eventMap = {};
-    for (const e of (j.events || [])) {
-      if (e.eventAction && e.eventDate) eventMap[e.eventAction] = e.eventDate;
+    for (const e of (j.events || [])) if (e.eventAction && e.eventDate) eventMap[e.eventAction] = e.eventDate;
+    return {available:true,ldhName:j.ldhName||host,handle:j.handle||null,registrar:registrar||null,status:Array.isArray(j.status)?j.status:[],nameservers:(j.nameservers||[]).map(n=>n.ldhName).filter(Boolean).slice(0,10),registration:eventMap.registration||null,expiration:eventMap.expiration||null,lastChanged:eventMap['last changed']||null};
+  };
+  try {
+    const primary = await fetchWithTimeout(`https://rdap.org/domain/${encodeURIComponent(host)}`, {headers:{'accept':'application/rdap+json,application/json'}}, 9000);
+    if (primary.ok) return await parse(primary);
+  } catch {}
+  try {
+    const tld = host.toLowerCase().split('.').pop();
+    const boot = await fetchWithTimeout('https://data.iana.org/rdap/dns.json',{headers:{'accept':'application/json'}},7000);
+    if (!boot.ok) throw new Error('RDAP bootstrap unavailable');
+    const j = await boot.json();
+    let base = null;
+    for (const svc of (j.services || [])) {
+      if (Array.isArray(svc[0]) && svc[0].map(x=>String(x).toLowerCase()).includes(tld)) { base = Array.isArray(svc[1]) ? svc[1][0] : null; break; }
     }
-    return {
-      available: true,
-      ldhName: j.ldhName || host,
-      handle: j.handle || null,
-      registrar: registrar || null,
-      status: Array.isArray(j.status) ? j.status : [],
-      nameservers: (j.nameservers || []).map(n => n.ldhName).filter(Boolean).slice(0, 10),
-      registration: eventMap.registration || null,
-      expiration: eventMap.expiration || null,
-      lastChanged: eventMap['last changed'] || null
-    };
-  } catch {
-    return { available: false };
-  }
+    if (!base) return {available:false};
+    const r = await fetchWithTimeout(`${String(base).replace(/\/+$/,'')}/domain/${encodeURIComponent(host)}`,{headers:{'accept':'application/rdap+json,application/json'}},9000);
+    if (!r.ok) return {available:false,status:r.status};
+    return await parse(r);
+  } catch { return {available:false}; }
 }
 
 function findRdapEntityName(entities, role) {
@@ -329,12 +332,25 @@ async function checkTextResource(url, kind) {
   }
 }
 
+async function getTrafficSignals(host, env) {
+  if (!env.CLOUDFLARE_RADAR_TOKEN) return { available:false, reason:'radar_token_not_configured' };
+  try {
+    const r = await fetchWithTimeout(`https://api.cloudflare.com/client/v4/radar/ranking/domain/${encodeURIComponent(host)}?includeTopLocations=true`, {
+      headers: { 'accept':'application/json', 'authorization':`Bearer ${env.CLOUDFLARE_RADAR_TOKEN}` }
+    }, 9000);
+    if (!r.ok) return { available:false, reason:'radar_unavailable', status:r.status };
+    const j = await r.json();
+    const d = j && j.result && (j.result.details_0 || j.result.details || {});
+    return { available:true, source:'Cloudflare Radar', rank:d.rank??null, bucket:d.bucket??null, topLocations:Array.isArray(d.top_locations)?d.top_locations.slice(0,8):[], monthlyVisits:null, pageviews:null, revenue:null, siteValue:null };
+  } catch { return { available:false, reason:'radar_unavailable' }; }
+}
+
 async function getPageSpeed(url, env) {
   try {
     let api = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=PERFORMANCE&category=SEO&category=ACCESSIBILITY&category=BEST_PRACTICES`;
     if (env.PAGESPEED_API_KEY) api += `&key=${encodeURIComponent(env.PAGESPEED_API_KEY)}`;
     const r = await fetchWithTimeout(api, { headers: { 'accept': 'application/json' } }, 14000);
-    if (!r.ok) return { available: false, status: r.status };
+    if (!r.ok) return { available: false, status: r.status, reason: r.status === 429 ? 'rate_limited' : 'http_error' };
     const j = await r.json();
     const c = j.lighthouseResult && j.lighthouseResult.categories || {};
     const audits = j.lighthouseResult && j.lighthouseResult.audits || {};
@@ -350,7 +366,7 @@ async function getPageSpeed(url, env) {
       tbt: auditDisplay(audits['total-blocking-time'])
     };
   } catch {
-    return { available: false };
+    return { available: false, reason:'request_failed' };
   }
 }
 
@@ -430,7 +446,7 @@ function parseAttrs(tag) {
 }
 
 function cleanText(s) {
-  return decodeEntities(String(s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()).slice(0, 1000);
+  return decodeEntities(String(s || '').replace(/<(script|style|noscript)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()).slice(0, 1000);
 }
 function decodeEntities(s) {
   return s.replace(/&amp;/gi,'&').replace(/&lt;/gi,'<').replace(/&gt;/gi,'>').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/&nbsp;/gi,' ');
@@ -452,7 +468,6 @@ function extractHeaders(h) {
 
 function extractSecurity(h, finalUrl) {
   const checks = {
-    https: finalUrl.protocol === 'https:',
     hsts: !!h.get('strict-transport-security'),
     csp: !!h.get('content-security-policy'),
     xContentTypeOptions: !!h.get('x-content-type-options'),
@@ -460,7 +475,7 @@ function extractSecurity(h, finalUrl) {
     referrerPolicy: !!h.get('referrer-policy'),
     permissionsPolicy: !!h.get('permissions-policy')
   };
-  return { checks, passed: Object.values(checks).filter(Boolean).length, total: Object.keys(checks).length };
+  return { https: finalUrl.protocol === 'https:', checks, passed:Object.values(checks).filter(Boolean).length, total:Object.keys(checks).length };
 }
 
 function detectTechnology(html, headers) {

@@ -22,3 +22,8 @@ When dokitly.eu.org is active behind Cloudflare, you can route /api/* to this Wo
 
 SECURITY
 The Worker blocks localhost/private-network destinations and validates redirect targets. CORS is limited to DoKitly/GitHub Pages origins by default.
+
+OPTIONAL CLOUDFLARE RADAR TOKEN (Build 8)
+Build 8 can show Cloudflare Radar popularity rank/bucket and top-location signals when a Radar token is configured.
+Add a Worker secret named CLOUDFLARE_RADAR_TOKEN with Radar read permission.
+Important: Radar does not provide exact monthly visit counts, so DoKitly does not invent visits, revenue or site value from rank alone.
