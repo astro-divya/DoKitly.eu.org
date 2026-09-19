@@ -27,7 +27,7 @@ export default {
     }
 
     if (reqUrl.pathname === '/' || reqUrl.pathname === '/health') {
-      return json({ ok: true, service: 'DoKitly Website Analyzer Engine', version: '1.0.1' }, 200, cors);
+      return json({ ok: true, service: 'DoKitly Website Analyzer Engine', version: '1.1.0-build9' }, 200, cors);
     }
 
     if (reqUrl.pathname !== '/analyze') {
@@ -213,7 +213,6 @@ async function analyzeWebsite(target, env) {
   const host = target.hostname.toLowerCase();
   const dnsPromise = getDnsBundle(host);
   const rdapPromise = getRdap(host);
-  const trafficPromise = getTrafficSignals(host, env);
   const main = await safeFetch(target.toString(), { method: 'GET' });
   const response = main.response;
   const contentType = response.headers.get('content-type') || '';
@@ -230,13 +229,13 @@ async function analyzeWebsite(target, env) {
   const robotsUrl = `${final.origin}/robots.txt`;
   const sitemapUrl = page.sitemaps[0] || `${final.origin}/sitemap.xml`;
 
-  const [dns, rdap, robots, sitemap, pagespeed, traffic] = await Promise.all([
+  const [dns, rdap, robots, sitemap, pagespeed, radar] = await Promise.all([
     dnsPromise,
     rdapPromise,
     checkTextResource(robotsUrl, 'robots'),
     checkTextResource(sitemapUrl, 'sitemap'),
     getPageSpeed(main.finalUrl, env),
-    trafficPromise
+    getTrafficSignals(host, env)
   ]);
 
   if (robots.text) {
@@ -244,8 +243,21 @@ async function analyzeWebsite(target, env) {
     if (fromRobots.length) page.sitemaps = [...new Set([...page.sitemaps, ...fromRobots])];
   }
 
+  const sitemapUrlCount = countSitemapEntries(sitemap.text);
+  const traffic = estimateTrafficAndValue({
+    host,
+    page,
+    rdap,
+    sitemapUrlCount,
+    pagespeed,
+    security,
+    responseTimeMs: main.elapsedMs,
+    radar
+  });
+
   return {
     analyzedAt: new Date().toISOString(),
+    engineVersion: '1.1.0-build9',
     inputUrl: target.toString(),
     hostname: host,
     http: {
@@ -261,13 +273,21 @@ async function analyzeWebsite(target, env) {
     dns,
     rdap,
     robots: { url: robotsUrl, status: robots.status, exists: robots.ok },
-    sitemap: { url: sitemapUrl, status: sitemap.status, exists: sitemap.ok },
+    sitemap: { url: sitemapUrl, status: sitemap.status, exists: sitemap.ok, urlCount: sitemapUrlCount || null },
     headers,
     security,
     technology: tech,
     pagespeed,
     traffic
   };
+}
+
+function countSitemapEntries(text) {
+  const s = String(text || '');
+  if (!s) return 0;
+  const urls = (s.match(/<url\b/gi) || []).length;
+  const maps = (s.match(/<sitemap\b/gi) || []).length;
+  return Math.max(urls, maps);
 }
 
 async function getDnsBundle(host) {
@@ -341,34 +361,150 @@ async function getTrafficSignals(host, env) {
     if (!r.ok) return { available:false, reason:'radar_unavailable', status:r.status };
     const j = await r.json();
     const d = j && j.result && (j.result.details_0 || j.result.details || {});
-    return { available:true, source:'Cloudflare Radar', rank:d.rank??null, bucket:d.bucket??null, topLocations:Array.isArray(d.top_locations)?d.top_locations.slice(0,8):[], monthlyVisits:null, pageviews:null, revenue:null, siteValue:null };
+    return { available:true, source:'Cloudflare Radar', rank:d.rank??null, bucket:d.bucket??null, topLocations:Array.isArray(d.top_locations)?d.top_locations.slice(0,8):[] };
   } catch { return { available:false, reason:'radar_unavailable' }; }
 }
 
-async function getPageSpeed(url, env) {
-  try {
-    let api = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=PERFORMANCE&category=SEO&category=ACCESSIBILITY&category=BEST_PRACTICES`;
-    if (env.PAGESPEED_API_KEY) api += `&key=${encodeURIComponent(env.PAGESPEED_API_KEY)}`;
-    const r = await fetchWithTimeout(api, { headers: { 'accept': 'application/json' } }, 14000);
-    if (!r.ok) return { available: false, status: r.status, reason: r.status === 429 ? 'rate_limited' : 'http_error' };
-    const j = await r.json();
-    const c = j.lighthouseResult && j.lighthouseResult.categories || {};
-    const audits = j.lighthouseResult && j.lighthouseResult.audits || {};
-    return {
-      available: true,
-      performance: score(c.performance),
-      seo: score(c.seo),
-      accessibility: score(c.accessibility),
-      bestPractices: score(c['best-practices']),
-      fcp: auditDisplay(audits['first-contentful-paint']),
-      lcp: auditDisplay(audits['largest-contentful-paint']),
-      cls: auditDisplay(audits['cumulative-layout-shift']),
-      tbt: auditDisplay(audits['total-blocking-time'])
-    };
-  } catch {
-    return { available: false, reason:'request_failed' };
-  }
+function ageYears(date) {
+  if (!date) return 0;
+  const t = new Date(date).getTime();
+  if (!Number.isFinite(t)) return 0;
+  return Math.max(0, (Date.now() - t) / 31557600000);
 }
+function clamp(n,a,b){ return Math.min(b,Math.max(a,n)); }
+function roundNice(n) {
+  n = Math.max(0, Number(n) || 0);
+  if (n < 100) return Math.round(n / 10) * 10;
+  if (n < 1000) return Math.round(n / 50) * 50;
+  if (n < 10000) return Math.round(n / 500) * 500;
+  if (n < 100000) return Math.round(n / 5000) * 5000;
+  if (n < 1000000) return Math.round(n / 50000) * 50000;
+  return Math.round(n / 500000) * 500000;
+}
+function rangeObj(low, high) {
+  low = roundNice(low); high = roundNice(high);
+  if (high <= low) high = roundNice(low * 1.8 + 100);
+  return { low, high };
+}
+function radarVisitRange(radar) {
+  if (!radar || !radar.available) return null;
+  const rank = Number(radar.rank);
+  if (Number.isFinite(rank) && rank > 0) {
+    if (rank <= 100) return rangeObj(50_000_000, 500_000_000);
+    if (rank <= 1_000) return rangeObj(5_000_000, 60_000_000);
+    if (rank <= 10_000) return rangeObj(500_000, 8_000_000);
+    if (rank <= 100_000) return rangeObj(60_000, 900_000);
+    if (rank <= 200_000) return rangeObj(30_000, 450_000);
+    if (rank <= 500_000) return rangeObj(10_000, 180_000);
+    if (rank <= 1_000_000) return rangeObj(3_000, 75_000);
+  }
+  const bucket = String(radar.bucket || '').toLowerCase().replace(/[,\s]/g,'');
+  if (bucket.includes('100k') || bucket.includes('100000')) return rangeObj(60_000,900_000);
+  if (bucket.includes('200k') || bucket.includes('200000')) return rangeObj(30_000,450_000);
+  if (bucket.includes('500k') || bucket.includes('500000')) return rangeObj(10_000,180_000);
+  if (bucket.includes('1m') || bucket.includes('1000000')) return rangeObj(3_000,75_000);
+  return null;
+}
+function estimateTrafficAndValue({page,rdap,sitemapUrlCount,pagespeed,security,responseTimeMs,radar}) {
+  let modelScore = 12;
+  const years = ageYears(rdap && rdap.registration);
+  modelScore += clamp(years * 4, 0, 22);
+  const sm = Number(sitemapUrlCount || 0);
+  if (sm > 0) modelScore += clamp(Math.log10(sm + 1) * 10, 3, 22);
+  if (page && page.title) modelScore += 4;
+  if (page && page.metaDescription) modelScore += 4;
+  if (page && page.h1Count === 1) modelScore += 4;
+  if (page && page.canonical) modelScore += 3;
+  if (page && Number(page.linkCount || 0) > 20) modelScore += 4;
+  if (pagespeed && pagespeed.hasFieldData) modelScore += 16;
+  if (pagespeed && Number.isFinite(pagespeed.seo)) modelScore += clamp((pagespeed.seo - 50) / 5, 0, 10);
+  if (security && security.https) modelScore += 2;
+  if (Number.isFinite(responseTimeMs) && responseTimeMs < 800) modelScore += 3;
+  modelScore = clamp(Math.round(modelScore), 0, 100);
+
+  let monthly = radarVisitRange(radar);
+  let confidence = radar && radar.available ? 'Medium' : 'Low';
+  let source = radar && radar.available ? 'Cloudflare Radar + DoKitly estimation model' : 'DoKitly public-signal estimation model';
+  if (!monthly) {
+    if (modelScore >= 82) monthly = rangeObj(50_000, 300_000);
+    else if (modelScore >= 68) monthly = rangeObj(15_000, 120_000);
+    else if (modelScore >= 54) monthly = rangeObj(4_000, 45_000);
+    else if (modelScore >= 40) monthly = rangeObj(800, 12_000);
+    else monthly = rangeObj(100, 3_000);
+  }
+
+  const pagesLow = 1.25 + clamp(modelScore/100,0,1)*0.25;
+  const pagesHigh = 2.0 + clamp(modelScore/100,0,1)*1.0;
+  const pageviews = rangeObj(monthly.low * pagesLow, monthly.high * pagesHigh);
+  const daily = rangeObj(monthly.low/30, monthly.high/30);
+  // Broad display-ad RPM band; geography/niche/ad-fill are unknown, so range is intentionally wide.
+  const revenueMonthlyUsd = rangeObj((pageviews.low/1000)*0.5, (pageviews.high/1000)*6.0);
+  const revenueYearlyUsd = rangeObj(revenueMonthlyUsd.low*12, revenueMonthlyUsd.high*12);
+  const siteValueUsd = rangeObj(revenueMonthlyUsd.low*18, revenueMonthlyUsd.high*36);
+
+  return {
+    available:true,
+    estimated:true,
+    source,
+    confidence,
+    modelScore,
+    rank: radar && radar.available ? (radar.rank ?? null) : null,
+    bucket: radar && radar.available ? (radar.bucket ?? null) : null,
+    topLocations: radar && radar.available ? (radar.topLocations || []) : [],
+    monthlyVisits: monthly,
+    dailyVisits: daily,
+    pageviews,
+    revenueMonthlyUsd,
+    revenueYearlyUsd,
+    siteValueUsd,
+    note:'Broad estimate from public technical/domain signals and, when configured, Cloudflare Radar ranking. It is not owner analytics and may differ substantially from real traffic or revenue.'
+  };
+}
+
+async function getPageSpeed(url, env) {
+  const cacheKey = new Request(`https://dokitly-pagespeed-cache.invalid/?url=${encodeURIComponent(url)}`);
+  const cache = typeof caches !== 'undefined' ? caches.default : null;
+  if (cache) {
+    try {
+      const hit = await cache.match(cacheKey);
+      if (hit) return { ...(await hit.json()), cached:true };
+    } catch {}
+  }
+  let lastStatus = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      let api = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=PERFORMANCE&category=SEO&category=ACCESSIBILITY&category=BEST_PRACTICES`;
+      if (env.PAGESPEED_API_KEY) api += `&key=${encodeURIComponent(env.PAGESPEED_API_KEY)}`;
+      const r = await fetchWithTimeout(api, { headers: { 'accept': 'application/json' } }, 14000);
+      lastStatus = r.status;
+      if (r.status === 429 && attempt < 2) { await sleep(450 * (attempt + 1)); continue; }
+      if (!r.ok) return { available: false, status: r.status, reason: r.status === 429 ? 'rate_limited' : 'http_error' };
+      const j = await r.json();
+      const c = j.lighthouseResult && j.lighthouseResult.categories || {};
+      const audits = j.lighthouseResult && j.lighthouseResult.audits || {};
+      const result = {
+        available: true,
+        performance: score(c.performance),
+        seo: score(c.seo),
+        accessibility: score(c.accessibility),
+        bestPractices: score(c['best-practices']),
+        fcp: auditDisplay(audits['first-contentful-paint']),
+        lcp: auditDisplay(audits['largest-contentful-paint']),
+        cls: auditDisplay(audits['cumulative-layout-shift']),
+        tbt: auditDisplay(audits['total-blocking-time']),
+        hasFieldData: !!(j.loadingExperience && j.loadingExperience.metrics && Object.keys(j.loadingExperience.metrics).length) || !!(j.originLoadingExperience && j.originLoadingExperience.metrics && Object.keys(j.originLoadingExperience.metrics).length)
+      };
+      if (cache) {
+        try { await cache.put(cacheKey, new Response(JSON.stringify(result), {headers:{'content-type':'application/json','cache-control':'public, max-age=21600'}})); } catch {}
+      }
+      return result;
+    } catch (e) {
+      if (attempt < 2) { await sleep(350 * (attempt + 1)); continue; }
+    }
+  }
+  return { available:false, status:lastStatus, reason:lastStatus===429?'rate_limited':'request_failed' };
+}
+function sleep(ms){ return new Promise(resolve=>setTimeout(resolve,ms)); }
 
 function score(x) {
   return x && typeof x.score === 'number' ? Math.round(x.score * 100) : null;
@@ -395,6 +531,8 @@ function extractPageSignals(html, baseUrl) {
   const ogImage = toAbsolute(metaContent(html, 'property', 'og:image'), baseUrl);
   const twitterCard = metaContent(html, 'name', 'twitter:card');
   const sitemaps = [];
+  const linkCount = (String(html || '').match(/<a\b[^>]*\bhref\s*=/gi) || []).length;
+  const imageCount = (String(html || '').match(/<img\b/gi) || []).length;
   return {
     title: cleanText(title),
     titleLength: cleanText(title).length,
@@ -409,6 +547,8 @@ function extractPageSignals(html, baseUrl) {
     generator: cleanText(generator),
     openGraph: { title: cleanText(ogTitle), description: cleanText(ogDescription), image: ogImage || null },
     twitterCard: cleanText(twitterCard),
+    linkCount,
+    imageCount,
     sitemaps
   };
 }
