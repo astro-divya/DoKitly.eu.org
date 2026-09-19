@@ -20,7 +20,7 @@
 @media(max-width:780px){.quiz-setup-grid{grid-template-columns:1fr}.quiz-layout{grid-template-columns:1fr}.quiz-side{display:none}.quiz-main{padding:18px}.quiz-topbar{align-items:flex-start}.quiz-mobile-palette{display:flex;gap:8px;overflow:auto;padding:0 18px 12px}.quiz-mobile-palette button{flex:0 0 34px;width:34px;height:34px;border:1px solid #dce5e9;background:#fff;border-radius:9px;font-size:11px;font-weight:800}.quiz-mobile-palette button.current{outline:2px solid #0b8c8c}.quiz-mobile-palette button.answered{background:#e5f6f2}.quiz-mobile-palette button.review{background:#fff4d8}.quiz-result-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.quiz-setup{padding:18px}.quiz-mode{flex-direction:column}.quiz-result{padding:18px}.quiz-qmeta{align-items:flex-start}.quiz-question{font-size:21px}.quiz-option{padding:12px}.quiz-result-stats{grid-template-columns:1fr 1fr}}
 </style>
-<link rel="stylesheet" href="../assets/site-shell.css?v=dk7full"></head>
+<link rel="stylesheet" href="../assets/site-shell.css?v=dk10"></head>
 <body class="standalone-tool-page">
 <header class="it-header"><div class="it-head-inner"><a class="it-brand" href="../index.html"><img src="../assets/logo.png?v=2" alt="DoKitly"></a><nav class="it-nav"><a href="../index.html">Home</a><a href="../all-tools.html">Categories</a><a href="../whats-new.html">What’s New</a></nav></div></header>
 <main class="tool-page-shell">
@@ -598,5 +598,5 @@ document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>renderReview
 $('retryWrong').onclick=()=>{const wrong=questions.filter(q=>q.user===null||q.user!==q.correct);if(wrong.length)startTest(wrong)};$('newTest').onclick=()=>{clearInterval(timerId);result.classList.remove('active');running.classList.remove('active');setup.classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})};$('qStart').onclick=()=>startTest(null);
 })();
 </script>
-<script src="../assets/site-shell.js?v=dk7full"></script></body>
+<script src="../assets/site-shell.js?v=dk10"></script></body>
 </html>

@@ -20,7 +20,7 @@
 .wa-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.wa-section{padding:18px;border:1px solid #dfe7f1;border-radius:17px;background:#fff;min-width:0}.wa-section.wide{grid-column:1/-1}.wa-section h2{font-size:18px;margin:0 0 13px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#173f56}.wa-section h2 small{font-size:11px;color:#64748b;font-weight:800}.wa-kv{display:grid}.wa-row{display:grid;grid-template-columns:minmax(145px,.42fr) minmax(0,1fr);gap:14px;padding:10px 0;border-top:1px solid #eef2f7;font-size:14px;line-height:1.45}.wa-row:first-child{border-top:0;padding-top:0}.wa-row:last-child{padding-bottom:0}.wa-row b{color:#526674}.wa-row span{color:#122f42;overflow-wrap:anywhere;white-space:pre-wrap}.wa-tags{display:flex;flex-wrap:wrap;gap:8px}.wa-tag{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#edf7ff;border:1px solid #cfe8f8;font-size:12px;font-weight:850;color:#16557a}.wa-score-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.wa-score{padding:14px;border:1px solid #e2e8f0;border-radius:14px;text-align:center;background:#f8fbff}.wa-score strong{display:block;font-size:26px;line-height:1.05;color:#0f3e59}.wa-score span{font-size:11px;color:#64748b;font-weight:850}.wa-empty{font-size:14px;color:#64748b;line-height:1.55}.wa-footnote{margin-top:12px;color:#687983;font-size:12px;line-height:1.55}.wa-error{margin-top:12px;padding:13px 15px;border:1px solid #fecdd3;border-radius:13px;background:#fff1f2;color:#9f1239;font-size:13px;font-weight:750;display:none}.wa-error.show{display:block}.wa-recs{display:grid;gap:9px}.wa-rec{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:11px 12px;border-radius:13px;border:1px solid #e4ebf0;background:#f9fbfc}.wa-rec i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-style:normal;font-weight:900;background:#eaf4f8;color:#255873}.wa-rec.warn i{background:#fff3d9;color:#9a6700}.wa-rec.bad i{background:#ffe9ec;color:#b4233d}.wa-rec.good i{background:#e8f8f0;color:#087f5b}.wa-rec b{display:block;color:#193f54;font-size:13px}.wa-rec p{margin:2px 0 0;color:#64748b;font-size:12px;line-height:1.45}
 @media(max-width:980px){.wa-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.wa-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:800px){.wa-form{grid-template-columns:1fr}.wa-form button{width:100%}.wa-sections{grid-template-columns:1fr}.wa-section.wide{grid-column:auto}.wa-row{grid-template-columns:1fr;gap:3px}.wa-score-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.wa-summary,.wa-metrics{grid-template-columns:1fr}.wa-summary-card strong,.wa-metric strong{font-size:20px}}
 </style>
-<link rel="stylesheet" href="../assets/site-shell.css?v=dk7full"></head>
+<link rel="stylesheet" href="../assets/site-shell.css?v=dk10"></head>
 <body class="standalone-tool-page">
 <header class="it-header"><div class="it-head-inner"><a class="it-brand" href="../index.html"><img src="../assets/logo.png?v=2" alt="DoKitly"></a><nav class="it-nav"><a href="../index.html">Home</a><a href="../all-tools.html">Categories</a><a href="../whats-new.html">What’s New</a></nav></div></header>
 <main class="tool-page-shell">
@@ -70,6 +70,29 @@
   const section=(title,body,small='')=>`<h2><span>${esc(title)}</span>${small?`<small>${esc(small)}</small>`:''}</h2>${body}`;
   const score=v=>v==null?'—':Math.round(v);
 
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const cacheKey=host=>`dokitly-analyzer-v10:${host}`;
+  function saveCachedReport(u,data){try{localStorage.setItem(cacheKey(u.hostname),JSON.stringify({savedAt:Date.now(),data}))}catch{}}
+  function getCachedReport(u,maxAge=60*60*1000){try{const raw=localStorage.getItem(cacheKey(u.hostname));if(!raw)return null;const hit=JSON.parse(raw);if(!hit?.data||Date.now()-Number(hit.savedAt||0)>maxAge)return null;return hit}catch{return null}}
+  async function fetchEngineWithRetry(u){
+    let lastError=null;
+    const delays=[0,350,850];
+    for(let i=0;i<delays.length;i++){
+      if(delays[i])await sleep(delays[i]);
+      try{
+        const controller=new AbortController();
+        const timeout=setTimeout(()=>controller.abort(),22000);
+        const r=await fetch(`${engineBase}/analyze?url=${encodeURIComponent(u.href)}`,{headers:{accept:'application/json'},signal:controller.signal});
+        clearTimeout(timeout);
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok||!j.ok)throw new Error(j.error||`Engine returned ${r.status}`);
+        saveCachedReport(u,j);
+        return j;
+      }catch(e){lastError=e}
+    }
+    throw lastError||new Error('Full engine temporarily unavailable');
+  }
+
   async function run(){
     let raw=$('waUrl').value.trim();
     if(!raw){showError('Enter a website URL or domain.');return;}
@@ -80,18 +103,24 @@
       let data,mode='engine';
       if(engineBase){
         try{
-          const r=await fetch(`${engineBase}/analyze?url=${encodeURIComponent(u.href)}`,{headers:{accept:'application/json'}});
-          const j=await r.json().catch(()=>({}));
-          if(!r.ok||!j.ok)throw new Error(j.error||`Engine returned ${r.status}`);
-          data=j;
+          data=await fetchEngineWithRetry(u);
         }catch(e){
-          mode='basic';
-          data=await basicAnalyze(u);
-          data._engineError=e.message||'Full engine unavailable';
+          const cached=getCachedReport(u);
+          if(cached){
+            mode='cached';
+            data=cached.data;
+            data._cachedReport=true;
+            data._engineError=e.message||'Full engine temporarily unavailable';
+          }else{
+            mode='basic';
+            data=await basicAnalyze(u);
+            data._engineError=e.message||'Full engine temporarily unavailable';
+          }
         }
       }else{
         mode='basic';
         data=await basicAnalyze(u);
+        data._engineError='Full engine is not configured';
       }
       render(data,mode);
     }catch(e){showError(e.message||'Could not analyze this website.');}
@@ -146,8 +175,9 @@
   function render(d,mode){
     const http=d.http||{},page=d.page||{},dns=d.dns||{},rdap=d.rdap||{},sec=d.security,ps=d.pagespeed||{},traffic=d.traffic||{};
     const seoScore=seoHealth(d),securityScore=securityHealth(sec),perf=ps.available?score(ps.performance):null;
-    $('waStatus').innerHTML=`<span class="wa-pill ${mode==='engine'?'ok':'warn'}">${mode==='engine'?'Full live engine':'Basic live mode'}</span><span>${esc(d.hostname||new URL(d.inputUrl).hostname)}</span>`;
-    $('waVersion').textContent=d.engineVersion?`Worker ${d.engineVersion}`:(mode==='engine'?'Live worker':'Basic mode');
+    const statusLabel=mode==='engine'?'Full live engine':mode==='cached'?'Cached full report':'Basic live mode';
+    $('waStatus').innerHTML=`<span class="wa-pill ${mode==='engine'?'ok':'warn'}">${statusLabel}</span><span>${esc(d.hostname||new URL(d.inputUrl).hostname)}</span>`;
+    $('waVersion').textContent=d.engineVersion?`Worker ${d.engineVersion}${mode==='cached'?' · cached':''}`:(mode==='engine'?'Live worker':mode==='cached'?'Cached report':'Basic mode');
     const visitText=traffic.available?range(traffic.monthlyVisits):'—';
     const earningText=traffic.available?range(traffic.revenueMonthlyUsd,true):'—';
     const cards=[
@@ -165,13 +195,13 @@
     if(traffic.available){
       const locs=(traffic.topLocations||[]).map(x=>x.locationName?`${x.locationName}${x.rank?` (#${x.rank})`:''}`:x.locationCode).filter(Boolean);
       $('waTraffic').innerHTML=`<div class="wa-traffic-title"><h2>Traffic & Earnings Estimate</h2><span class="wa-est-badge">Estimated · ${esc(traffic.confidence||'Low')} confidence</span></div><div class="wa-metrics"><div class="wa-metric primary"><span>Monthly visits</span><strong>${esc(range(traffic.monthlyVisits))}</strong></div><div class="wa-metric"><span>Daily visits</span><strong>${esc(range(traffic.dailyVisits))}</strong></div><div class="wa-metric"><span>Monthly pageviews</span><strong>${esc(range(traffic.pageviews))}</strong></div><div class="wa-metric primary"><span>Monthly ad revenue</span><strong>${esc(range(traffic.revenueMonthlyUsd,true))}</strong></div><div class="wa-metric"><span>Yearly ad revenue</span><strong>${esc(range(traffic.revenueYearlyUsd,true))}</strong></div><div class="wa-metric"><span>Estimated site value</span><strong>${esc(range(traffic.siteValueUsd,true))}</strong></div></div><div class="wa-confidence"><b>Source:</b> ${esc(traffic.source||'DoKitly estimation model')}${traffic.rank?` · Rank ${esc(traffic.rank)}`:''}${traffic.bucket?` · ${esc(traffic.bucket)}`:''}${locs.length?` · Top locations: ${esc(locs.join(', '))}`:''}</div><div class="wa-footnote">${esc(traffic.note||'This is an estimate from public signals, not private owner analytics. Actual traffic and earnings can be very different.')}</div>`;
-    }else $('waTraffic').innerHTML=`<div class="wa-traffic-title"><h2>Traffic & Earnings Estimate</h2><span class="wa-est-badge">Estimate unavailable</span></div><div class="wa-empty">Deploy the Build 9 Website Analyzer Worker to enable DoKitly's public-signal traffic and valuation estimate.</div>`;
+    }else $('waTraffic').innerHTML=`<div class="wa-traffic-title"><h2>Traffic & Earnings Estimate</h2><span class="wa-est-badge">Estimate unavailable</span></div><div class="wa-empty">Full engine temporarily unavailable. Retry in a moment; traffic estimates need the live Worker.</div>`;
 
     const seoBody=d.page?`<div class="wa-kv">${row('Title',page.title||'Missing')}${row('Title length',page.titleLength??0)}${row('Meta description',page.metaDescription||'Missing')}${row('Description length',page.metaDescriptionLength??0)}${row('H1',list(page.h1))}${row('H1 count',page.h1Count??0)}${row('Canonical',page.canonical||'Missing')}${row('Robots meta',page.robotsMeta||'—')}${row('Language',page.lang||'—')}${row('robots.txt',d.robots?(d.robots.exists?`Found (${d.robots.status})`:`Not found (${d.robots.status??'—'})`):'—')}${row('Sitemap',d.sitemap?(d.sitemap.exists?`Found (${d.sitemap.status})${d.sitemap.urlCount?` · ${d.sitemap.urlCount} entries detected`:''}`:`Not found (${d.sitemap.status??'—'})`):'—')}</div>`:'<div class="wa-empty">Page-level SEO inspection requires the full analyzer engine.</div>';
     $('waSeo').innerHTML=section('SEO Health',seoBody,seoScore==null?'':`${seoScore}/100`);
 
     if(ps.available)$('waSpeed').innerHTML=section('Performance',`<div class="wa-score-grid"><div class="wa-score"><strong>${score(ps.performance)}</strong><span>Performance</span></div><div class="wa-score"><strong>${score(ps.seo)}</strong><span>SEO</span></div><div class="wa-score"><strong>${score(ps.accessibility)}</strong><span>Accessibility</span></div><div class="wa-score"><strong>${score(ps.bestPractices)}</strong><span>Best Practices</span></div></div><div class="wa-kv" style="margin-top:13px">${row('First Contentful Paint',ps.fcp||'—')}${row('Largest Contentful Paint',ps.lcp||'—')}${row('Cumulative Layout Shift',ps.cls||'—')}${row('Total Blocking Time',ps.tbt||'—')}${row('Real-user field data',ps.hasFieldData?'Available':'Not detected')}</div>`,ps.cached?'Mobile · cached':'Mobile');
-    else $('waSpeed').innerHTML=section('Performance',`<div class="wa-empty">${ps.reason==='rate_limited'?'Google PageSpeed is rate-limited right now. Build 9 retries automatically and uses a cached successful result when one exists.':`PageSpeed data is currently unavailable${ps.status?` (HTTP ${esc(ps.status)})`:''}.`} Core domain checks are independent of PageSpeed.</div>`,'Mobile');
+    else $('waSpeed').innerHTML=section('Performance',`<div class="wa-empty">${ps.reason==='rate_limited'?'Google PageSpeed is rate-limited right now. Build 10 retries automatically and uses a cached successful result when one exists.':`PageSpeed data is currently unavailable${ps.status?` (HTTP ${esc(ps.status)})`:''}.`} Core domain checks are independent of PageSpeed.</div>`,'Mobile');
 
     if(sec){const c=sec.checks||{};$('waSecurity').innerHTML=section('Security',`<div class="wa-kv">${row('HTTPS',yesNo(sec.https))}${row('HSTS',yesNo(c.hsts))}${row('Content-Security-Policy',yesNo(c.csp))}${row('X-Content-Type-Options',yesNo(c.xContentTypeOptions))}${row('Frame protection',yesNo(c.frameProtection))}${row('Referrer-Policy',yesNo(c.referrerPolicy))}${row('Permissions-Policy',yesNo(c.permissionsPolicy))}</div>`,`${sec.passed}/${sec.total} headers`)}else $('waSecurity').innerHTML=section('Security','<div class="wa-empty">Security-header inspection requires the full analyzer engine.</div>');
 
@@ -180,7 +210,7 @@
     const tech=Array.isArray(d.technology)?d.technology:[];$('waTech').innerHTML=section('Technology',tech.length?`<div class="wa-tags">${tech.map(x=>`<span class="wa-tag">${esc(x)}</span>`).join('')}</div><div class="wa-footnote">Separate public technology signals; detection is best-effort.</div>`:'<div class="wa-empty">No technology signal detected.</div>');
     $('waOverview').innerHTML=section('Detailed Technical Data',`<div class="wa-kv">${row('Final URL',http.finalUrl||d.inputUrl)}${row('HTTP status',http.status==null?'Full engine required':http.status)}${row('Content type',http.contentType||'—')}${row('Redirect chain',Array.isArray(http.redirects)&&http.redirects.length?http.redirects.map(x=>`${x.status}: ${x.to}`).join('\n'):'None detected')}${row('Links detected',page.linkCount??'—')}${row('Images detected',page.imageCount??'—')}</div>`);
     const recs=recommendations(d);$('waRecommendations').innerHTML=section('Recommended Fixes',`<div class="wa-recs">${recs.map(r=>`<div class="wa-rec ${r.level}"><i>${r.level==='good'?'✓':r.level==='bad'?'!':'•'}</i><div><b>${esc(r.title)}</b><p>${esc(r.msg)}</p></div></div>`).join('')}</div>`);
-    $('waFootnote').textContent=mode==='engine'?'Live public checks plus clearly labelled estimates. Traffic/revenue ranges are not private analytics and should not be treated as exact.':'Basic mode is limited. Deploy/connect the DoKitly Worker for the full report.';
+    $('waFootnote').textContent=mode==='engine'?'Live public checks plus clearly labelled estimates. Traffic/revenue ranges are not private analytics and should not be treated as exact.':mode==='cached'?'Showing the last successful full report because the live engine is temporarily unavailable.':'Full engine temporarily unavailable. Basic browser checks are shown where possible.';
     $('waResults').classList.add('show');
   }
 
@@ -191,5 +221,5 @@
   $('waUrl').addEventListener('keydown',e=>{if(e.key==='Enter')run()});
 })();
 </script>
-<script src="../assets/site-shell.js?v=dk7full"></script></body>
+<script src="../assets/site-shell.js?v=dk10"></script></body>
 </html>
