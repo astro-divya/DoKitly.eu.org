@@ -1,4 +1,4 @@
-DoKitly Website Analyzer — Build 10
+DoKitly Website Analyzer — Build 11
 ===================================
 
 Frontend Worker URL:
@@ -8,10 +8,18 @@ Worker source:
 cloudflare-worker/website-analyzer-worker.js
 
 After deployment, open /health and confirm:
-1.2.0-build10
+1.3.0-build11
 
-Build 10 adds stronger public-signal traffic estimates, PageSpeed retry/cache logic,
-frontend Worker retries and creator public-link / Google Trends helper endpoints.
+Build 11 adds a premium Website Intelligence Report, larger readable cards,
+animated interactive charts/tooltips, stronger popularity + web-footprint
+traffic calibration, safer 403/429 handling, optional-check isolation,
+Worker retries, cached successful-report fallback and clearer PageSpeed states.
 
 Optional PageSpeed key:
 Add a Worker secret named PAGESPEED_API_KEY for better quota reliability.
+
+Data-source note:
+Traffic and engagement figures are directional estimates, not private analytics.
+The current popularity signal uses Tranco for testing/calibration. Before enabling
+ad monetization, review the licences of any upstream popularity data you use
+and switch/disable any source that is not suitable for commercial use.
