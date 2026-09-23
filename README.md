@@ -1,5 +1,6 @@
 <!-- GitAds-Verify: UG4J4CHSJBF86H3NT5AW5E4PZA1XC5UV -->
-
+## GitAds Sponsored
+[![Sponsored by GitAds](https://gitads.dev/v1/ad-serve?source=astro-divya/dokitly.eu.org@github)](https://gitads.dev/v1/ad-track?source=astro-divya/dokitly.eu.org@github)
 # DoKitly
 
 DoKitly is a browser-based collection of useful online tools for everyday tasks, productivity, files, images, PDFs, and web utilities.
