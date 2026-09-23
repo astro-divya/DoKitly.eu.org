@@ -5,27 +5,22 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#f7f9fc">
 <title>Website Analyzer — DoKitly</title>
-<meta name="description" content="Analyze live DNS, SEO, redirects, security headers, domain data, technology signals and PageSpeed for a website.">
+<meta name="description" content="Analyze live SEO, DNS, security, performance, technology and public traffic signals for any public website.">
 <link rel="icon" href="../assets/favicon-32.png">
-<link rel="stylesheet" href="../tool-page.css?v=dk9-analyzer">
+<link rel="stylesheet" href="../tool-page.css?v=dk11-analyzer">
+<link rel="stylesheet" href="website-analyzer.css?v=dk11">
 <link rel="canonical" href="https://astro-divya.github.io/DoKitly.eu.org/seo-tools/website-analyzer.html">
 <meta property="og:title" content="Website Analyzer — DoKitly">
-<meta property="og:description" content="Analyze live DNS, SEO, redirects, security headers, domain data, technology signals and PageSpeed for a website.">
+<meta property="og:description" content="Analyze live SEO, DNS, security, performance, technology and public traffic signals for any public website.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://astro-divya.github.io/DoKitly.eu.org/seo-tools/website-analyzer.html">
-<style>
-.wa-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end}.wa-form .math-field{min-width:0}.wa-form button{min-height:46px}.wa-status{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:14px;min-height:30px;color:#64748b;font-size:13px}.wa-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid #dbe7f3;background:#f8fbff;color:#334155;font-weight:850}.wa-pill.ok{background:#ecfdf5;border-color:#bbf7d0;color:#047857}.wa-pill.warn{background:#fff7ed;border-color:#fed7aa;color:#9a3412}.wa-pill.bad{background:#fff1f2;border-color:#fecdd3;color:#be123c}.wa-loading{display:none;margin-top:15px;padding:15px;border:1px solid #dce7f2;border-radius:15px;background:linear-gradient(135deg,#f8fbff,#effcfb);font-weight:850;color:#334155}.wa-loading.show{display:flex;align-items:center;gap:10px}.wa-spinner{width:18px;height:18px;border:2px solid #cbd5e1;border-top-color:#0ea5a5;border-radius:50%;animation:waSpin .8s linear infinite}@keyframes waSpin{to{transform:rotate(360deg)}}
-.wa-results{display:none;margin-top:18px;gap:16px}.wa-results.show{display:grid}.wa-report-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}.wa-report-head h2{font-size:22px;margin:0;color:#123a55}.wa-report-head p{margin:4px 0 0;color:#64748b;font-size:13px}.wa-version{font-size:11px;font-weight:850;color:#0f766e;background:#ecfdf5;border:1px solid #bbf7d0;border-radius:999px;padding:6px 9px}.wa-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}.wa-summary-card{border:1px solid #dbe7f0;border-radius:17px;background:linear-gradient(180deg,#fff,#f8fbfd);padding:16px;min-width:0;box-shadow:0 5px 16px rgba(15,61,86,.045)}.wa-summary-card b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.055em;color:#64748b;margin-bottom:7px}.wa-summary-card strong{display:block;font-size:22px;line-height:1.12;color:#123a55;overflow-wrap:anywhere}.wa-summary-card small{display:block;margin-top:5px;color:#7a8992;font-size:11px}.wa-summary-card.highlight{border-color:#9edbd8;background:linear-gradient(145deg,#effcfb,#f5faff)}.wa-summary-card.highlight strong{color:#087f7b}.wa-summary-card.good strong{color:#087f5b}.wa-summary-card.warn strong{color:#a16207}.wa-summary-card.bad strong{color:#b4233d}
-.wa-traffic-feature{border:1px solid #9edbd8!important;background:linear-gradient(135deg,#f0fcfb,#f4f9ff)!important;box-shadow:0 8px 24px rgba(12,122,122,.07)}.wa-traffic-title{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:13px}.wa-traffic-title h2{margin:0;font-size:20px;color:#0d4d5e}.wa-est-badge{display:inline-flex;padding:6px 10px;border-radius:999px;background:#fff;border:1px solid #a9d9d5;color:#0b766f;font-size:11px;font-weight:900}.wa-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.wa-metric{padding:14px;border:1px solid rgba(151,199,207,.65);border-radius:14px;background:rgba(255,255,255,.82)}.wa-metric span{display:block;color:#64748b;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.04em}.wa-metric strong{display:block;margin-top:5px;color:#103f58;font-size:21px;line-height:1.15}.wa-metric.primary strong{font-size:24px;color:#087f7b}.wa-confidence{margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;color:#5b6c76}.wa-confidence b{color:#0f4e62}
-.wa-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.wa-section{padding:18px;border:1px solid #dfe7f1;border-radius:17px;background:#fff;min-width:0}.wa-section.wide{grid-column:1/-1}.wa-section h2{font-size:18px;margin:0 0 13px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#173f56}.wa-section h2 small{font-size:11px;color:#64748b;font-weight:800}.wa-kv{display:grid}.wa-row{display:grid;grid-template-columns:minmax(145px,.42fr) minmax(0,1fr);gap:14px;padding:10px 0;border-top:1px solid #eef2f7;font-size:14px;line-height:1.45}.wa-row:first-child{border-top:0;padding-top:0}.wa-row:last-child{padding-bottom:0}.wa-row b{color:#526674}.wa-row span{color:#122f42;overflow-wrap:anywhere;white-space:pre-wrap}.wa-tags{display:flex;flex-wrap:wrap;gap:8px}.wa-tag{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#edf7ff;border:1px solid #cfe8f8;font-size:12px;font-weight:850;color:#16557a}.wa-score-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.wa-score{padding:14px;border:1px solid #e2e8f0;border-radius:14px;text-align:center;background:#f8fbff}.wa-score strong{display:block;font-size:26px;line-height:1.05;color:#0f3e59}.wa-score span{font-size:11px;color:#64748b;font-weight:850}.wa-empty{font-size:14px;color:#64748b;line-height:1.55}.wa-footnote{margin-top:12px;color:#687983;font-size:12px;line-height:1.55}.wa-error{margin-top:12px;padding:13px 15px;border:1px solid #fecdd3;border-radius:13px;background:#fff1f2;color:#9f1239;font-size:13px;font-weight:750;display:none}.wa-error.show{display:block}.wa-recs{display:grid;gap:9px}.wa-rec{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:11px 12px;border-radius:13px;border:1px solid #e4ebf0;background:#f9fbfc}.wa-rec i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-style:normal;font-weight:900;background:#eaf4f8;color:#255873}.wa-rec.warn i{background:#fff3d9;color:#9a6700}.wa-rec.bad i{background:#ffe9ec;color:#b4233d}.wa-rec.good i{background:#e8f8f0;color:#087f5b}.wa-rec b{display:block;color:#193f54;font-size:13px}.wa-rec p{margin:2px 0 0;color:#64748b;font-size:12px;line-height:1.45}
-@media(max-width:980px){.wa-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.wa-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:800px){.wa-form{grid-template-columns:1fr}.wa-form button{width:100%}.wa-sections{grid-template-columns:1fr}.wa-section.wide{grid-column:auto}.wa-row{grid-template-columns:1fr;gap:3px}.wa-score-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.wa-summary,.wa-metrics{grid-template-columns:1fr}.wa-summary-card strong,.wa-metric strong{font-size:20px}}
-</style>
-<link rel="stylesheet" href="../assets/site-shell.css?v=dk10"></head>
+<link rel="stylesheet" href="../assets/site-shell.css?v=dk11">
+</head>
 <body class="standalone-tool-page">
 <header class="it-header"><div class="it-head-inner"><a class="it-brand" href="../index.html"><img src="../assets/logo.png?v=2" alt="DoKitly"></a><nav class="it-nav"><a href="../index.html">Home</a><a href="../all-tools.html">Categories</a><a href="../whats-new.html">What’s New</a></nav></div></header>
 <main class="tool-page-shell">
   <div class="tool-breadcrumb"><a href="../index.html">Home</a> / <a href="index.html">SEO</a> / Website Analyzer</div>
-  <div class="tool-page-head"><span class="tool-page-icon">🔎</span><div><h1>Website Analyzer</h1><p>Live website checks for SEO, DNS, redirects, security, domain signals, technologies and PageSpeed.</p></div></div>
+  <div class="tool-page-head"><span class="tool-page-icon">🔎</span><div><h1>Website Analyzer</h1><p>Live website intelligence for SEO, traffic signals, performance, security, DNS, domain data and technologies.</p></div></div>
 
   <div class="math-card">
     <div class="wa-form">
@@ -33,193 +28,47 @@
       <button class="math-primary" id="waRun" type="button">Analyze Website</button>
     </div>
     <div class="wa-status" id="waStatus"><span class="wa-pill">Live checks</span><span>Enter a public website to start.</span></div>
-    <div class="wa-loading" id="waLoading"><span class="wa-spinner" aria-hidden="true"></span><span id="waLoadingText">Analyzing website…</span></div>
+    <div class="wa-loading" id="waLoading"><span class="wa-spinner" aria-hidden="true"></span><span id="waLoadingText">Analyzing public signals…</span></div>
     <div class="wa-error" id="waError" role="alert"></div>
 
     <div class="wa-results" id="waResults">
-      <div class="wa-report-head"><div><h2>Website Snapshot</h2><p>The signals that matter most, followed by the full technical report.</p></div><span class="wa-version" id="waVersion">Analyzer</span></div>
+      <div class="wa-report-head"><div><h2>Website Intelligence Report</h2><p>Important signals first. Technical details stay available without turning the report into a long debug list.</p></div><span class="wa-version" id="waVersion">Analyzer</span></div>
       <div class="wa-summary" id="waSummary"></div>
-      <section class="wa-section wa-traffic-feature wide" id="waTraffic"></section>
+
+      <section class="wa-panel wa-traffic-feature" id="waTraffic"></section>
+
+      <div class="wa-charts" id="waCharts">
+        <section class="wa-chart-card" id="waScaleChart"></section>
+        <section class="wa-chart-card" id="waRankChart"></section>
+        <section class="wa-chart-card" id="waSignalChart"></section>
+        <section class="wa-chart-card" id="waChannelChart"></section>
+      </div>
+
+      <section class="wa-panel" id="waEngagement"></section>
+      <section class="wa-panel wa-geo" id="waGeo"></section>
+
       <div class="wa-sections">
         <section class="wa-section" id="waSeo"></section>
         <section class="wa-section" id="waSpeed"></section>
         <section class="wa-section" id="waSecurity"></section>
         <section class="wa-section" id="waDomain"></section>
-        <section class="wa-section" id="waDns"></section>
         <section class="wa-section" id="waTech"></section>
-        <section class="wa-section wide" id="waOverview"></section>
         <section class="wa-section wide" id="waRecommendations"></section>
       </div>
+
+      <details class="wa-details" id="waTechnical">
+        <summary>Detailed technical data</summary>
+        <div class="wa-details-body" id="waOverview"></div>
+      </details>
       <div class="wa-footnote" id="waFootnote"></div>
     </div>
   </div>
 
-  <section class="seo-copy"><h2>What is checked?</h2><p>DoKitly checks public website and domain signals. Full engine mode can inspect the target page server-side, including HTTP status and redirects, title/meta/H1/canonical, robots and sitemap availability, DNS, RDAP registration data, security headers, technology signals, optional public popularity signals and PageSpeed/Lighthouse when available. Traffic, ad-revenue and site-value figures are shown as broad labelled estimates from public signals; they are not private owner analytics and can differ materially from real data.</p></section>
+  <section class="seo-copy"><h2>How to read the report</h2><p>Live technical checks are measured from public responses. Traffic, engagement, channel mix, revenue and website-value figures are clearly labelled estimates built from public popularity and web-footprint signals; they are not private owner analytics. Hover or tap interactive charts to inspect exact displayed values.</p></section>
 </main>
-<script src="../assets/website-analyzer-config.js?v=1"></script>
-<script>
-(()=>{
-  const $=id=>document.getElementById(id);
-  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const cfg=window.DOKITLY_WEBSITE_ANALYZER||{};
-  const engineBase=String(cfg.analyzerApi||'').trim().replace(/\/+$/,'');
-  const fmtDate=v=>{if(!v)return '—';const d=new Date(v);return isNaN(d)?String(v):d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})};
-  const yesNo=v=>v?'Yes':'No';
-  const list=v=>Array.isArray(v)&&v.length?v.join(', '):'—';
-  const row=(a,b)=>`<div class="wa-row"><b>${esc(a)}</b><span>${esc(b==null||b===''?'—':b)}</span></div>`;
-  const section=(title,body,small='')=>`<h2><span>${esc(title)}</span>${small?`<small>${esc(small)}</small>`:''}</h2>${body}`;
-  const score=v=>v==null?'—':Math.round(v);
-
-  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-  const cacheKey=host=>`dokitly-analyzer-v10:${host}`;
-  function saveCachedReport(u,data){try{localStorage.setItem(cacheKey(u.hostname),JSON.stringify({savedAt:Date.now(),data}))}catch{}}
-  function getCachedReport(u,maxAge=60*60*1000){try{const raw=localStorage.getItem(cacheKey(u.hostname));if(!raw)return null;const hit=JSON.parse(raw);if(!hit?.data||Date.now()-Number(hit.savedAt||0)>maxAge)return null;return hit}catch{return null}}
-  async function fetchEngineWithRetry(u){
-    let lastError=null;
-    const delays=[0,350,850];
-    for(let i=0;i<delays.length;i++){
-      if(delays[i])await sleep(delays[i]);
-      try{
-        const controller=new AbortController();
-        const timeout=setTimeout(()=>controller.abort(),22000);
-        const r=await fetch(`${engineBase}/analyze?url=${encodeURIComponent(u.href)}`,{headers:{accept:'application/json'},signal:controller.signal});
-        clearTimeout(timeout);
-        const j=await r.json().catch(()=>({}));
-        if(!r.ok||!j.ok)throw new Error(j.error||`Engine returned ${r.status}`);
-        saveCachedReport(u,j);
-        return j;
-      }catch(e){lastError=e}
-    }
-    throw lastError||new Error('Full engine temporarily unavailable');
-  }
-
-  async function run(){
-    let raw=$('waUrl').value.trim();
-    if(!raw){showError('Enter a website URL or domain.');return;}
-    if(!/^https?:\/\//i.test(raw))raw='https://'+raw;
-    let u;try{u=new URL(raw);if(!/^https?:$/.test(u.protocol))throw 0}catch{showError('Enter a valid HTTP or HTTPS website.');return;}
-    setBusy(true);hideError();$('waResults').classList.remove('show');
-    try{
-      let data,mode='engine';
-      if(engineBase){
-        try{
-          data=await fetchEngineWithRetry(u);
-        }catch(e){
-          const cached=getCachedReport(u);
-          if(cached){
-            mode='cached';
-            data=cached.data;
-            data._cachedReport=true;
-            data._engineError=e.message||'Full engine temporarily unavailable';
-          }else{
-            mode='basic';
-            data=await basicAnalyze(u);
-            data._engineError=e.message||'Full engine temporarily unavailable';
-          }
-        }
-      }else{
-        mode='basic';
-        data=await basicAnalyze(u);
-        data._engineError='Full engine is not configured';
-      }
-      render(data,mode);
-    }catch(e){showError(e.message||'Could not analyze this website.');}
-    finally{setBusy(false);}
-  }
-
-  async function basicAnalyze(u){
-    const host=u.hostname;
-    const dns=await getDnsBundle(host);
-    const [rdap,pagespeed]=await Promise.all([getRdap(host),getPageSpeed(u.href)]);
-    return {ok:true,hostname:host,inputUrl:u.href,http:{finalUrl:u.href,status:null,redirects:[],responseTimeMs:null,contentType:null},page:null,dns,rdap,robots:null,sitemap:null,headers:{},security:null,technology:[],pagespeed,traffic:{available:false,reason:'full_engine_required'},_basic:true};
-  }
-
-  async function dnsQuery(host,type){
-    try{
-      const r=await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(host)}&type=${type}`,{headers:{accept:'application/dns-json'}});
-      if(!r.ok)return[];
-      const j=await r.json();
-      return (j.Answer||[]).filter(x=>Number(x.type)!==5).map(x=>String(x.data||'').replace(/\.$/,''));
-    }catch{return[]}
-  }
-  async function getDnsBundle(host){
-    const types=['A','AAAA','NS','MX','TXT'];
-    const vals=await Promise.all(types.map(async t=>[t,await dnsQuery(host,t)]));
-    return Object.fromEntries(vals);
-  }
-  async function getRdap(host){
-    try{
-      const r=await fetch(`https://rdap.org/domain/${encodeURIComponent(host)}`,{headers:{accept:'application/rdap+json,application/json'}});
-      if(!r.ok)return{available:false,status:r.status};
-      const j=await r.json(),events={};(j.events||[]).forEach(e=>{if(e.eventAction&&e.eventDate)events[e.eventAction]=e.eventDate});
-      let registrar=null;(j.entities||[]).some(e=>{if(!(e.roles||[]).includes('registrar'))return false;const rows=e.vcardArray?.[1]||[];const fn=rows.find(x=>Array.isArray(x)&&x[0]==='fn');registrar=fn?.[3]||e.handle||null;return true});
-      return{available:true,registrar,status:j.status||[],nameservers:(j.nameservers||[]).map(n=>n.ldhName).filter(Boolean),registration:events.registration||null,expiration:events.expiration||null,lastChanged:events['last changed']||null};
-    }catch{return{available:false}}
-  }
-  async function getPageSpeed(url){
-    try{
-      const api=`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=PERFORMANCE&category=SEO&category=ACCESSIBILITY&category=BEST_PRACTICES`;
-      const r=await fetch(api);if(!r.ok)return{available:false,status:r.status};const j=await r.json();const c=j.lighthouseResult?.categories||{},a=j.lighthouseResult?.audits||{};
-      const s=k=>typeof c[k]?.score==='number'?Math.round(c[k].score*100):null;
-      return{available:true,performance:s('performance'),seo:s('seo'),accessibility:s('accessibility'),bestPractices:s('best-practices'),fcp:a['first-contentful-paint']?.displayValue||null,lcp:a['largest-contentful-paint']?.displayValue||null,cls:a['cumulative-layout-shift']?.displayValue||null,tbt:a['total-blocking-time']?.displayValue||null};
-    }catch{return{available:false}}
-  }
-
-  function compact(n){n=Number(n);if(!Number.isFinite(n))return '—';return new Intl.NumberFormat(undefined,{notation:'compact',maximumFractionDigits:n>=1000?1:0}).format(n)}
-  function range(v,currency=false){if(!v||!Number.isFinite(Number(v.low))||!Number.isFinite(Number(v.high)))return '—';const one=x=>currency?'$'+compact(x):compact(x);return `${one(v.low)}–${one(v.high)}`}
-  function domainAge(reg){if(!reg)return '—';const t=new Date(reg).getTime();if(!Number.isFinite(t))return '—';const y=Math.max(0,(Date.now()-t)/31557600000);return y<1?`${Math.max(1,Math.round(y*12))} mo`:`${y.toFixed(y<10?1:0)} yr`}
-  function seoHealth(d){const p=d.page||{};let pts=0,max=0;const add=(ok,w)=>{max+=w;if(ok)pts+=w};add(!!p.title,15);add(p.titleLength>=20&&p.titleLength<=65,8);add(!!p.metaDescription,15);add(p.metaDescriptionLength>=70&&p.metaDescriptionLength<=170,8);add(p.h1Count===1,12);add(!!p.canonical,10);add(!!p.lang,5);add(!!d.robots?.exists,10);add(!!d.sitemap?.exists,12);add(!!d.security?.https,5);const local=max?Math.round(pts/max*100):null;return d.pagespeed?.available&&Number.isFinite(d.pagespeed.seo)?Math.round(local*.55+d.pagespeed.seo*.45):local}
-  function securityHealth(sec){if(!sec)return null;const h=sec.total?sec.passed/sec.total:0;return Math.round((sec.https?20:0)+h*80)}
-  function tone(score){if(score==null)return'';return score>=80?'good':score>=55?'warn':'bad'}
-  function recommendations(d){const p=d.page||{},sec=d.security,ps=d.pagespeed||{},out=[];const push=(level,title,msg)=>out.push({level,title,msg});if(!p.title)push('bad','Add a page title','A descriptive title is one of the strongest basic SEO signals.');else if(p.titleLength<20||p.titleLength>65)push('warn','Review title length',`Current title length is ${p.titleLength}. Aim for a concise, descriptive search title.`);if(!p.metaDescription)push('bad','Add a meta description','Give search users a clear summary of the page.');else if(p.metaDescriptionLength<70||p.metaDescriptionLength>170)push('warn','Review meta description length',`Current description length is ${p.metaDescriptionLength}.`);if(p.h1Count!==1)push('warn','Use one clear H1',`Detected ${p.h1Count||0} H1 headings.`);if(!p.canonical)push('warn','Add a canonical URL','A canonical helps search engines understand the preferred URL.');if(!d.robots?.exists)push('warn','Add robots.txt','No robots.txt was found at the standard location.');if(!d.sitemap?.exists)push('warn','Add a sitemap','No sitemap.xml was found at the checked location.');if(sec){const c=sec.checks||{};if(!c.hsts)push('warn','Consider HSTS','HSTS tells supported browsers to prefer HTTPS for future visits.');if(!c.csp)push('warn','Consider a Content-Security-Policy','A well-tested CSP can reduce several classes of content-injection risk.');if(!c.xContentTypeOptions)push('warn','Add X-Content-Type-Options','Use nosniff where appropriate to reduce MIME-type confusion.')}if(ps.reason==='rate_limited')push('warn','PageSpeed temporarily rate-limited','Core checks still completed. Re-run later for Lighthouse scores.');if((d.http?.redirects||[]).length>2)push('warn','Shorten the redirect chain',`${d.http.redirects.length} redirects were detected before the final page.`);if(!out.length)push('good','No major basic issue detected','The checked public signals look healthy. Continue monitoring content quality, performance and real analytics.');return out}
-  function render(d,mode){
-    const http=d.http||{},page=d.page||{},dns=d.dns||{},rdap=d.rdap||{},sec=d.security,ps=d.pagespeed||{},traffic=d.traffic||{};
-    const seoScore=seoHealth(d),securityScore=securityHealth(sec),perf=ps.available?score(ps.performance):null;
-    const statusLabel=mode==='engine'?'Full live engine':mode==='cached'?'Cached full report':'Basic live mode';
-    $('waStatus').innerHTML=`<span class="wa-pill ${mode==='engine'?'ok':'warn'}">${statusLabel}</span><span>${esc(d.hostname||new URL(d.inputUrl).hostname)}</span>`;
-    $('waVersion').textContent=d.engineVersion?`Worker ${d.engineVersion}${mode==='cached'?' · cached':''}`:(mode==='engine'?'Live worker':mode==='cached'?'Cached report':'Basic mode');
-    const visitText=traffic.available?range(traffic.monthlyVisits):'—';
-    const earningText=traffic.available?range(traffic.revenueMonthlyUsd,true):'—';
-    const cards=[
-      ['HTTP',http.status==null?'—':http.status,http.status>=200&&http.status<400?'good':http.status?'bad':'','Live response'],
-      ['Response',http.responseTimeMs==null?'—':http.responseTimeMs+' ms',http.responseTimeMs!=null?(http.responseTimeMs<800?'good':http.responseTimeMs<1800?'warn':'bad'):'','Server response'],
-      ['SEO Score',seoScore==null?'—':seoScore+'/100',tone(seoScore),'DoKitly health score'],
-      ['Security',securityScore==null?'—':securityScore+'/100',tone(securityScore),'HTTPS + headers'],
-      ['Domain Age',domainAge(rdap.registration),'','Registration age'],
-      ['Est. Visits',visitText,'highlight','Monthly range'],
-      ['Est. Earnings',earningText,'highlight','Monthly ad range'],
-      ['Performance',perf==null?'—':perf+'/100',tone(perf),ps.cached?'Cached PageSpeed':'Mobile PageSpeed']
-    ];
-    $('waSummary').innerHTML=cards.map(([a,b,c,sm])=>`<div class="wa-summary-card ${c}"><b>${esc(a)}</b><strong>${esc(b)}</strong><small>${esc(sm)}</small></div>`).join('');
-
-    if(traffic.available){
-      const locs=(traffic.topLocations||[]).map(x=>x.locationName?`${x.locationName}${x.rank?` (#${x.rank})`:''}`:x.locationCode).filter(Boolean);
-      $('waTraffic').innerHTML=`<div class="wa-traffic-title"><h2>Traffic & Earnings Estimate</h2><span class="wa-est-badge">Estimated · ${esc(traffic.confidence||'Low')} confidence</span></div><div class="wa-metrics"><div class="wa-metric primary"><span>Monthly visits</span><strong>${esc(range(traffic.monthlyVisits))}</strong></div><div class="wa-metric"><span>Daily visits</span><strong>${esc(range(traffic.dailyVisits))}</strong></div><div class="wa-metric"><span>Monthly pageviews</span><strong>${esc(range(traffic.pageviews))}</strong></div><div class="wa-metric primary"><span>Monthly ad revenue</span><strong>${esc(range(traffic.revenueMonthlyUsd,true))}</strong></div><div class="wa-metric"><span>Yearly ad revenue</span><strong>${esc(range(traffic.revenueYearlyUsd,true))}</strong></div><div class="wa-metric"><span>Estimated site value</span><strong>${esc(range(traffic.siteValueUsd,true))}</strong></div></div><div class="wa-confidence"><b>Source:</b> ${esc(traffic.source||'DoKitly estimation model')}${traffic.rank?` · Rank ${esc(traffic.rank)}`:''}${traffic.bucket?` · ${esc(traffic.bucket)}`:''}${locs.length?` · Top locations: ${esc(locs.join(', '))}`:''}</div><div class="wa-footnote">${esc(traffic.note||'This is an estimate from public signals, not private owner analytics. Actual traffic and earnings can be very different.')}</div>`;
-    }else $('waTraffic').innerHTML=`<div class="wa-traffic-title"><h2>Traffic & Earnings Estimate</h2><span class="wa-est-badge">Estimate unavailable</span></div><div class="wa-empty">Full engine temporarily unavailable. Retry in a moment; traffic estimates need the live Worker.</div>`;
-
-    const seoBody=d.page?`<div class="wa-kv">${row('Title',page.title||'Missing')}${row('Title length',page.titleLength??0)}${row('Meta description',page.metaDescription||'Missing')}${row('Description length',page.metaDescriptionLength??0)}${row('H1',list(page.h1))}${row('H1 count',page.h1Count??0)}${row('Canonical',page.canonical||'Missing')}${row('Robots meta',page.robotsMeta||'—')}${row('Language',page.lang||'—')}${row('robots.txt',d.robots?(d.robots.exists?`Found (${d.robots.status})`:`Not found (${d.robots.status??'—'})`):'—')}${row('Sitemap',d.sitemap?(d.sitemap.exists?`Found (${d.sitemap.status})${d.sitemap.urlCount?` · ${d.sitemap.urlCount} entries detected`:''}`:`Not found (${d.sitemap.status??'—'})`):'—')}</div>`:'<div class="wa-empty">Page-level SEO inspection requires the full analyzer engine.</div>';
-    $('waSeo').innerHTML=section('SEO Health',seoBody,seoScore==null?'':`${seoScore}/100`);
-
-    if(ps.available)$('waSpeed').innerHTML=section('Performance',`<div class="wa-score-grid"><div class="wa-score"><strong>${score(ps.performance)}</strong><span>Performance</span></div><div class="wa-score"><strong>${score(ps.seo)}</strong><span>SEO</span></div><div class="wa-score"><strong>${score(ps.accessibility)}</strong><span>Accessibility</span></div><div class="wa-score"><strong>${score(ps.bestPractices)}</strong><span>Best Practices</span></div></div><div class="wa-kv" style="margin-top:13px">${row('First Contentful Paint',ps.fcp||'—')}${row('Largest Contentful Paint',ps.lcp||'—')}${row('Cumulative Layout Shift',ps.cls||'—')}${row('Total Blocking Time',ps.tbt||'—')}${row('Real-user field data',ps.hasFieldData?'Available':'Not detected')}</div>`,ps.cached?'Mobile · cached':'Mobile');
-    else $('waSpeed').innerHTML=section('Performance',`<div class="wa-empty">${ps.reason==='rate_limited'?'Google PageSpeed is rate-limited right now. Build 10 retries automatically and uses a cached successful result when one exists.':`PageSpeed data is currently unavailable${ps.status?` (HTTP ${esc(ps.status)})`:''}.`} Core domain checks are independent of PageSpeed.</div>`,'Mobile');
-
-    if(sec){const c=sec.checks||{};$('waSecurity').innerHTML=section('Security',`<div class="wa-kv">${row('HTTPS',yesNo(sec.https))}${row('HSTS',yesNo(c.hsts))}${row('Content-Security-Policy',yesNo(c.csp))}${row('X-Content-Type-Options',yesNo(c.xContentTypeOptions))}${row('Frame protection',yesNo(c.frameProtection))}${row('Referrer-Policy',yesNo(c.referrerPolicy))}${row('Permissions-Policy',yesNo(c.permissionsPolicy))}</div>`,`${sec.passed}/${sec.total} headers`)}else $('waSecurity').innerHTML=section('Security','<div class="wa-empty">Security-header inspection requires the full analyzer engine.</div>');
-
-    $('waDomain').innerHTML=section('Domain / RDAP',rdap.available?`<div class="wa-kv">${row('Registrar',rdap.registrar||'—')}${row('Registered',fmtDate(rdap.registration))}${row('Expires',fmtDate(rdap.expiration))}${row('Last changed',fmtDate(rdap.lastChanged))}${row('Domain status',list(rdap.status))}</div>`:'<div class="wa-empty">RDAP information was not available for this domain.</div>');
-    $('waDns').innerHTML=section('DNS',`<div class="wa-kv">${row('A',list((dns.A||[]).map(x=>x.data||x)))}${row('AAAA',list((dns.AAAA||[]).map(x=>x.data||x)))}${row('Nameservers',list((dns.NS||[]).map(x=>x.data||x)))}${row('MX',list((dns.MX||[]).map(x=>x.data||x)))}${row('TXT',list((dns.TXT||[]).map(x=>x.data||x)))}</div>`);
-    const tech=Array.isArray(d.technology)?d.technology:[];$('waTech').innerHTML=section('Technology',tech.length?`<div class="wa-tags">${tech.map(x=>`<span class="wa-tag">${esc(x)}</span>`).join('')}</div><div class="wa-footnote">Separate public technology signals; detection is best-effort.</div>`:'<div class="wa-empty">No technology signal detected.</div>');
-    $('waOverview').innerHTML=section('Detailed Technical Data',`<div class="wa-kv">${row('Final URL',http.finalUrl||d.inputUrl)}${row('HTTP status',http.status==null?'Full engine required':http.status)}${row('Content type',http.contentType||'—')}${row('Redirect chain',Array.isArray(http.redirects)&&http.redirects.length?http.redirects.map(x=>`${x.status}: ${x.to}`).join('\n'):'None detected')}${row('Links detected',page.linkCount??'—')}${row('Images detected',page.imageCount??'—')}</div>`);
-    const recs=recommendations(d);$('waRecommendations').innerHTML=section('Recommended Fixes',`<div class="wa-recs">${recs.map(r=>`<div class="wa-rec ${r.level}"><i>${r.level==='good'?'✓':r.level==='bad'?'!':'•'}</i><div><b>${esc(r.title)}</b><p>${esc(r.msg)}</p></div></div>`).join('')}</div>`);
-    $('waFootnote').textContent=mode==='engine'?'Live public checks plus clearly labelled estimates. Traffic/revenue ranges are not private analytics and should not be treated as exact.':mode==='cached'?'Showing the last successful full report because the live engine is temporarily unavailable.':'Full engine temporarily unavailable. Basic browser checks are shown where possible.';
-    $('waResults').classList.add('show');
-  }
-
-  function setBusy(v){$('waLoading').classList.toggle('show',v);$('waRun').disabled=v;$('waRun').textContent=v?'Analyzing…':'Analyze Website';}
-  function showError(msg){$('waError').textContent=msg;$('waError').classList.add('show');}
-  function hideError(){$('waError').classList.remove('show');$('waError').textContent='';}
-  $('waRun').addEventListener('click',run);
-  $('waUrl').addEventListener('keydown',e=>{if(e.key==='Enter')run()});
-})();
-</script>
-<script src="../assets/site-shell.js?v=dk10"></script></body>
+<div class="wa-tooltip" id="waTooltip" role="status"></div>
+<script src="../assets/website-analyzer-config.js?v=2"></script>
+<script src="website-analyzer.js?v=dk11"></script>
+<script src="../assets/site-shell.js?v=dk11"></script>
+</body>
 </html>
