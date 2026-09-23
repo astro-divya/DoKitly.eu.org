@@ -27,7 +27,7 @@ export default {
     }
 
     if (reqUrl.pathname === '/' || reqUrl.pathname === '/health') {
-      return json({ ok: true, service: 'DoKitly Website Analyzer Engine', version: '1.2.0-build10' }, 200, cors);
+      return json({ ok: true, service: 'DoKitly Website Analyzer Engine', version: '1.3.0-build11' }, 200, cors);
     }
 
     if (reqUrl.pathname === '/creator-context') {
@@ -234,6 +234,20 @@ async function safeFetch(startUrl, init = {}, maxRedirects = 5) {
 }
 
 
+async function safeFetchWithRetry(startUrl, init = {}, maxRedirects = 5, attempts = 2) {
+  let lastError = null;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await safeFetch(startUrl, init, maxRedirects);
+    } catch (e) {
+      lastError = e;
+      if (i < attempts - 1) await sleep(300 * (i + 1));
+    }
+  }
+  throw lastError || new Error('Website fetch failed.');
+}
+
+
 async function getCreatorContext(target) {
   const main = await safeFetch(target.toString(), { method:'GET' }, 4);
   const r = main.response;
@@ -310,7 +324,8 @@ async function analyzeWebsite(target, env) {
   const host = target.hostname.toLowerCase();
   const dnsPromise = getDnsBundle(host);
   const rdapPromise = getRdap(host);
-  const main = await safeFetch(target.toString(), { method: 'GET' });
+  const trafficSignalsPromise = getTrafficSignals(host, env);
+  const main = await safeFetchWithRetry(target.toString(), { method: 'GET' }, 5, 2);
   const response = main.response;
   const contentType = response.headers.get('content-type') || '';
   const html = /text\/html|application\/xhtml\+xml/i.test(contentType)
@@ -326,14 +341,21 @@ async function analyzeWebsite(target, env) {
   const robotsUrl = `${final.origin}/robots.txt`;
   const sitemapUrl = page.sitemaps[0] || `${final.origin}/sitemap.xml`;
 
-  const [dns, rdap, robots, sitemap, pagespeed, radar] = await Promise.all([
+  const jobs = await Promise.allSettled([
     dnsPromise,
     rdapPromise,
     checkTextResource(robotsUrl, 'robots'),
     checkTextResource(sitemapUrl, 'sitemap'),
     getPageSpeed(main.finalUrl, env),
-    getTrafficSignals(host, env)
+    trafficSignalsPromise
   ]);
+  const val = (i, fallback) => jobs[i] && jobs[i].status === 'fulfilled' ? jobs[i].value : fallback;
+  const dns = val(0, {A:[],AAAA:[],NS:[],MX:[],TXT:[],CNAME:[]});
+  const rdap = val(1, {available:false});
+  const robots = val(2, {ok:false,status:null,finalUrl:robotsUrl,text:''});
+  const sitemap = val(3, {ok:false,status:null,finalUrl:sitemapUrl,text:''});
+  const pagespeed = val(4, {available:false,reason:'request_failed'});
+  const radar = val(5, {available:false,commonCrawl:{available:false},tranco:{available:false},radar:{available:false}});
 
   if (robots.text) {
     const fromRobots = [...robots.text.matchAll(/^\s*Sitemap:\s*(\S+)/gmi)].map(m => m[1]).slice(0, 6);
@@ -355,7 +377,7 @@ async function analyzeWebsite(target, env) {
 
   return {
     analyzedAt: new Date().toISOString(),
-    engineVersion: '1.2.0-build10',
+    engineVersion: '1.3.0-build11',
     inputUrl: target.toString(),
     hostname: host,
     http: {
@@ -451,15 +473,64 @@ async function checkTextResource(url, kind) {
 }
 
 async function getTrafficSignals(host, env) {
-  const [commonCrawl, radar] = await Promise.all([
+  const [commonCrawl, tranco, radar] = await Promise.all([
     getCommonCrawlFootprint(host),
+    getTrancoSignal(host),
     getRadarSignal(host, env)
   ]);
   return {
-    available: !!(commonCrawl.available || radar.available),
+    available: !!(commonCrawl.available || tranco.available || radar.available),
     commonCrawl,
+    tranco,
     radar
   };
+}
+
+async function getTrancoSignal(host) {
+  const cache = typeof caches !== 'undefined' ? caches.default : null;
+  const cacheKey = new Request(`https://dokitly-tranco-cache.invalid/?host=${encodeURIComponent(host)}`);
+  if (cache) {
+    try {
+      const hit = await cache.match(cacheKey);
+      if (hit) return { ...(await hit.json()), cached:true };
+    } catch {}
+  }
+  try {
+    const r = await fetchWithTimeout(`https://tranco-list.eu/api/ranks/domain/${encodeURIComponent(host)}`, {
+      headers: { 'accept':'application/json', 'user-agent':'DoKitly-Website-Analyzer/1.3 (+https://dokitly.eu.org)' }
+    }, 9000);
+    if (!r.ok) return { available:false, status:r.status, reason:'tranco_unavailable' };
+    const j = await r.json();
+    const rows = Array.isArray(j && j.ranks) ? j.ranks : [];
+    const ranks = rows.map(x => ({ date:String(x.date || ''), rank:Number(x.rank) }))
+      .filter(x => x.date && Number.isFinite(x.rank) && x.rank > 0 && x.rank <= 100000000)
+      .sort((a,b) => a.date.localeCompare(b.date));
+    if (!ranks.length) return { available:false, reason:'not_ranked' };
+    const latest = ranks[ranks.length - 1];
+    const recent = ranks.slice(-30);
+    const nums = recent.map(x => x.rank).sort((a,b)=>a-b);
+    const median = nums.length ? nums[Math.floor(nums.length/2)] : latest.rank;
+    const best = nums.length ? nums[0] : latest.rank;
+    const result = {
+      available:true,
+      source:'Tranco popularity rank',
+      rank:latest.rank,
+      medianRank:median,
+      bestRank:best,
+      ranks:recent,
+      attribution:'Tranco — Le Pochat et al., NDSS 2019'
+    };
+    if (cache) {
+      try {
+        await cache.put(cacheKey, new Response(JSON.stringify(result), {
+          headers:{'content-type':'application/json','cache-control':'public, max-age=86400'}
+        }));
+      } catch {}
+    }
+    return result;
+  } catch {
+    return { available:false, reason:'request_failed' };
+  }
 }
 
 async function getRadarSignal(host, env) {
@@ -502,7 +573,7 @@ async function getLatestCommonCrawlIndex() {
   }
   try {
     const r = await fetchWithTimeout('https://index.commoncrawl.org/collinfo.json', {
-      headers: { 'accept':'application/json', 'user-agent':'DoKitly-Website-Analyzer/1.2 (+https://dokitly.eu.org)' }
+      headers: { 'accept':'application/json', 'user-agent':'DoKitly-Website-Analyzer/1.3 (+https://dokitly.eu.org)' }
     }, 8000);
     if (!r.ok) return 'CC-MAIN-2026-34';
     const list = await r.json();
@@ -533,7 +604,7 @@ async function getCommonCrawlFootprint(host) {
     const indexId = await getLatestCommonCrawlIndex();
     const api = `https://index.commoncrawl.org/${encodeURIComponent(indexId)}-index?url=${encodeURIComponent(host)}&matchType=domain&output=json&showNumPages=true&pageSize=5`;
     const r = await fetchWithTimeout(api, {
-      headers: { 'accept':'application/json,text/plain', 'user-agent':'DoKitly-Website-Analyzer/1.2 (+https://dokitly.eu.org)' }
+      headers: { 'accept':'application/json,text/plain', 'user-agent':'DoKitly-Website-Analyzer/1.3 (+https://dokitly.eu.org)' }
     }, 10000);
     if (!r.ok) return { available:false, status:r.status, indexId };
     const text = (await r.text()).trim();
@@ -638,10 +709,13 @@ function commonCrawlVisitRange(cc, hasCruxFieldData) {
   }
   return r;
 }
-function inferSiteCategory(page, technology) {
-  const text = [page?.title,page?.metaDescription,...(page?.h1||[]),...(technology||[])].filter(Boolean).join(' ').toLowerCase();
+function inferSiteCategory(page, technology, host='') {
+  const h = String(host || '').toLowerCase();
+  const text = [page?.title,page?.metaDescription,...(page?.h1||[]),...(technology||[]),h].filter(Boolean).join(' ').toLowerCase();
   const has = re => re.test(text);
-  if (has(/shop|shopping|store|marketplace|buy online|cart|e-?commerce|product/)) return 'ecommerce';
+  // Host text is included so a blocked homepage can still get a broad category when the domain name is informative.
+  if (has(/godaddy|namecheap|hostinger|bluehost|dreamhost|siteground|web hosting|domain registrar|domain registration|website builder|hosting provider/)) return 'hosting_domain';
+  if (has(/flipkart|amazon\.|ebay|walmart|etsy|alibaba|shopping|shop online|store|marketplace|buy online|cart|e-?commerce|product/)) return 'ecommerce';
   if (has(/bank|finance|loan|credit|insurance|invest|stock|broker|mortgage|tax/)) return 'finance';
   if (has(/news|magazine|journal|newspaper|breaking|media/)) return 'media';
   if (has(/school|college|university|course|learn|education|exam|quiz|student|tutorial/)) return 'education';
@@ -652,7 +726,8 @@ function inferSiteCategory(page, technology) {
 }
 function categoryEconomics(category) {
   const map = {
-    ecommerce:{pages:[2.8,6.2],rpm:[0.7,5.0]},
+    ecommerce:{pages:[3.0,7.0],rpm:[0.7,5.0]},
+    hosting_domain:{pages:[2.0,5.2],rpm:[2.0,15.0]},
     finance:{pages:[1.7,3.6],rpm:[4.0,24.0]},
     media:{pages:[1.8,4.5],rpm:[1.0,9.0]},
     education:{pages:[1.6,3.4],rpm:[1.2,8.0]},
@@ -663,11 +738,67 @@ function categoryEconomics(category) {
   };
   return map[category] || map.general;
 }
-function estimateTrafficAndValue({page,rdap,sitemapUrlCount,pagespeed,security,responseTimeMs,radar,technology}) {
-  const signals = radar && radar.commonCrawl !== undefined ? radar : {radar:radar||{available:false},commonCrawl:{available:false}};
+function trancoVisitRange(tranco) {
+  if (!tranco || !tranco.available) return null;
+  const rank = Number(tranco.medianRank || tranco.rank);
+  if (!Number.isFinite(rank) || rank <= 0 || rank > 1_000_000) return null;
+  // Log-interpolated calibration anchors. These are deliberately broad because popularity rank is not a visit counter.
+  const anchors = [
+    [1,5_000_000_000],[10,1_500_000_000],[100,350_000_000],[500,180_000_000],
+    [1_000,170_000_000],[5_000,55_000_000],[10_000,25_000_000],[50_000,7_000_000],
+    [100_000,3_000_000],[500_000,500_000],[1_000_000,120_000]
+  ];
+  let a=anchors[0], b=anchors[anchors.length-1];
+  for (let i=0;i<anchors.length-1;i++) {
+    if (rank >= anchors[i][0] && rank <= anchors[i+1][0]) { a=anchors[i]; b=anchors[i+1]; break; }
+  }
+  const x=(Math.log(rank)-Math.log(a[0]))/Math.max(.0001,(Math.log(b[0])-Math.log(a[0])));
+  const likely=Math.exp(Math.log(a[1])+(Math.log(b[1])-Math.log(a[1]))*clamp(x,0,1));
+  return { ...rangeObj(likely*.20, likely*3.6), likely:roundNice(likely), rank };
+}
+
+function categoryTrafficFactor(category) {
+  return ({ecommerce:1.35,hosting_domain:.28,finance:.75,media:1.0,education:.68,software_tools:.65,community:1.15,entertainment:1.1,general:1.0})[category] || 1;
+}
+function rangeFloat(low, high, digits=1) {
+  const f = 10 ** digits;
+  return { low:Math.round(Number(low)*f)/f, high:Math.round(Number(high)*f)/f };
+}
+function categoryEngagement(category) {
+  const map = {
+    ecommerce:{bounce:[38,58],duration:[150,360]},
+    hosting_domain:{bounce:[40,62],duration:[170,440]},
+    finance:{bounce:[40,64],duration:[150,340]},
+    media:{bounce:[50,74],duration:[80,260]},
+    education:{bounce:[42,66],duration:[130,330]},
+    software_tools:{bounce:[44,68],duration:[130,360]},
+    community:{bounce:[28,55],duration:[260,780]},
+    entertainment:{bounce:[34,61],duration:[220,650]},
+    general:{bounce:[44,70],duration:[100,320]}
+  };
+  return map[category] || map.general;
+}
+function modeledChannelMix(category) {
+  const map = {
+    ecommerce:{Direct:38,'Organic Search':34,Referral:10,Social:9,'Paid Search':9},
+    hosting_domain:{Direct:36,'Organic Search':42,Referral:8,Social:3,'Paid Search':11},
+    finance:{Direct:34,'Organic Search':45,Referral:10,Social:4,'Paid Search':7},
+    media:{Direct:24,'Organic Search':40,Referral:10,Social:22,'Paid Search':4},
+    education:{Direct:28,'Organic Search':50,Referral:8,Social:10,'Paid Search':4},
+    software_tools:{Direct:35,'Organic Search':45,Referral:9,Social:6,'Paid Search':5},
+    community:{Direct:44,'Organic Search':25,Referral:8,Social:21,'Paid Search':2},
+    entertainment:{Direct:34,'Organic Search':30,Referral:8,Social:25,'Paid Search':3},
+    general:{Direct:35,'Organic Search':40,Referral:10,Social:10,'Paid Search':5}
+  };
+  return map[category] || map.general;
+}
+function estimateTrafficAndValue({host,page,rdap,sitemapUrlCount,pagespeed,security,responseTimeMs,radar,technology}) {
+  const signals = radar && radar.commonCrawl !== undefined ? radar : {radar:radar||{available:false},commonCrawl:{available:false},tranco:{available:false}};
   const radarSignal = signals.radar || {available:false};
+  const tranco = signals.tranco || {available:false};
   const cc = signals.commonCrawl || {available:false};
   const hasCrux = !!(pagespeed && pagespeed.hasFieldData);
+  const category = inferSiteCategory(page, technology, host);
 
   let modelScore = 10;
   const years = ageYears(rdap && rdap.registration);
@@ -679,35 +810,70 @@ function estimateTrafficAndValue({page,rdap,sitemapUrlCount,pagespeed,security,r
   if (page && page.h1Count === 1) modelScore += 3;
   if (page && page.canonical) modelScore += 2;
   if (page && Number(page.linkCount || 0) > 20) modelScore += 3;
-  if (hasCrux) modelScore += 20;
-  if (cc.available) modelScore += clamp(Math.log10(Number(cc.blocks||0)+1)*12, 3, 25);
-  if (pagespeed && Number.isFinite(pagespeed.seo)) modelScore += clamp((pagespeed.seo - 50) / 7, 0, 7);
+  if (hasCrux) modelScore += 18;
+  if (tranco.available) modelScore += 26;
+  if (cc.available) modelScore += clamp(Math.log10(Number(cc.blocks||0)+1)*10, 2, 20);
+  if (pagespeed && Number.isFinite(pagespeed.seo)) modelScore += clamp((pagespeed.seo - 50) / 8, 0, 6);
   if (security && security.https) modelScore += 2;
   if (Number.isFinite(responseTimeMs) && responseTimeMs < 800) modelScore += 2;
   modelScore = clamp(Math.round(modelScore), 0, 100);
 
+  const trancoRange = trancoVisitRange(tranco);
   const radarRange = radarVisitRange(radarSignal);
   const ccRange = commonCrawlVisitRange(cc, hasCrux);
-  let monthly = blendRanges(radarRange, ccRange);
+  let monthly = null;
+  let likelyVisits = null;
 
-  if (!monthly && hasCrux) monthly = rangeObj(8_000, 250_000);
-  if (!monthly) {
-    if (modelScore >= 82) monthly = rangeObj(30_000, 500_000);
-    else if (modelScore >= 68) monthly = rangeObj(8_000, 180_000);
-    else if (modelScore >= 54) monthly = rangeObj(2_000, 60_000);
-    else if (modelScore >= 40) monthly = rangeObj(400, 18_000);
-    else monthly = rangeObj(100, 5_000);
+  if (trancoRange) {
+    const factor = categoryTrafficFactor(category);
+    likelyVisits = roundNice(trancoRange.likely * factor);
+    // Common Crawl is only a supporting footprint signal; crawlers can be blocked, so it cannot collapse a strong popularity rank.
+    if (ccRange) {
+      const trMid = Math.max(1, likelyVisits);
+      const ccMid = geometricMean(ccRange.low, ccRange.high);
+      const evidence = clamp(Math.pow(ccMid / trMid, 0.10), 0.86, 1.18);
+      likelyVisits = roundNice(likelyVisits * evidence);
+    }
+    const ranked = Number(trancoRange.rank || tranco.medianRank || tranco.rank || 0);
+    const tightRankBand = ranked > 0 && ranked <= 10_000;
+    const mediumRankBand = ranked > 0 && ranked <= 100_000;
+    const lowFactor = tightRankBand ? .35 : mediumRankBand ? .28 : .20;
+    const highFactor = tightRankBand ? 2.2 : mediumRankBand ? 2.8 : 3.6;
+    monthly = rangeObj(likelyVisits * lowFactor, likelyVisits * highFactor);
+    if (radarRange) monthly = blendRanges(monthly, radarRange);
+  } else {
+    monthly = blendRanges(radarRange, ccRange);
+    if (monthly) likelyVisits = roundNice(geometricMean(monthly.low, monthly.high));
   }
 
-  const category = inferSiteCategory(page, technology);
+  if (!monthly && hasCrux) {
+    monthly = rangeObj(20_000, 1_500_000);
+    likelyVisits = 180_000;
+  }
+  if (!monthly) {
+    if (modelScore >= 82) monthly = rangeObj(60_000, 2_000_000);
+    else if (modelScore >= 68) monthly = rangeObj(15_000, 600_000);
+    else if (modelScore >= 54) monthly = rangeObj(3_000, 180_000);
+    else if (modelScore >= 40) monthly = rangeObj(600, 45_000);
+    else monthly = rangeObj(100, 12_000);
+    likelyVisits = roundNice(geometricMean(monthly.low, monthly.high));
+  }
+  likelyVisits = clamp(likelyVisits || roundNice(geometricMean(monthly.low, monthly.high)), monthly.low, monthly.high);
+
   const economics = categoryEconomics(category);
-  const pageviews = rangeObj(monthly.low * economics.pages[0], monthly.high * economics.pages[1]);
+  const engagement = categoryEngagement(category);
+  const pagesPerVisit = rangeFloat(economics.pages[0], economics.pages[1], 1);
+  const bounceRatePct = rangeFloat(engagement.bounce[0], engagement.bounce[1], 0);
+  const avgVisitDurationSec = rangeFloat(engagement.duration[0], engagement.duration[1], 0);
+  const pageviews = rangeObj(monthly.low * pagesPerVisit.low, monthly.high * pagesPerVisit.high);
+  const likelyPageviews = roundNice(likelyVisits * ((pagesPerVisit.low + pagesPerVisit.high) / 2));
   const daily = rangeObj(monthly.low/30, monthly.high/30);
   const revenueMonthlyUsd = rangeObj((pageviews.low/1000)*economics.rpm[0], (pageviews.high/1000)*economics.rpm[1]);
   const revenueYearlyUsd = rangeObj(revenueMonthlyUsd.low*12, revenueMonthlyUsd.high*12);
   const siteValueUsd = rangeObj(revenueMonthlyUsd.low*18, revenueMonthlyUsd.high*42);
 
   const signalNames = [];
+  if (tranco.available) signalNames.push('Tranco popularity rank');
   if (cc.available) signalNames.push('Common Crawl footprint');
   if (hasCrux) signalNames.push('Chrome real-user field-data signal');
   if (radarSignal.available) signalNames.push('Cloudflare Radar rank');
@@ -715,21 +881,43 @@ function estimateTrafficAndValue({page,rdap,sitemapUrlCount,pagespeed,security,r
   if (sm > 0) signalNames.push('sitemap footprint');
 
   let confidence = 'Low';
-  const popularitySignalCount = Number(cc.available) + Number(hasCrux) + Number(radarSignal.available);
-  if (popularitySignalCount >= 3) confidence = 'High';
-  else if (popularitySignalCount >= 2) confidence = 'Medium';
-  else if ((cc.available && Number(cc.blocks||0)>=50) || radarSignal.available) confidence = 'Medium';
+  let confidenceScore = 30;
+  if (tranco.available) confidenceScore += 32;
+  if (cc.available) confidenceScore += Math.min(16, 4 + Math.log10(Number(cc.blocks||0)+1)*4);
+  if (hasCrux) confidenceScore += 12;
+  if (radarSignal.available) confidenceScore += 12;
+  if (rdap && rdap.registration) confidenceScore += 4;
+  confidenceScore = clamp(Math.round(confidenceScore), 20, 95);
+  if (confidenceScore >= 76) confidence = 'High';
+  else if (confidenceScore >= 55) confidence = 'Medium';
+
+  const strengths = {
+    Popularity: tranco.available ? clamp(100 - Math.log10(Math.max(1,Number(tranco.medianRank||tranco.rank))) * 14, 18, 98) : (radarSignal.available?70:10),
+    'Web footprint': cc.available ? clamp(20 + Math.log10(Number(cc.blocks||0)+1)*22, 18, 96) : 8,
+    'Real-user data': hasCrux ? 88 : 8,
+    'Site footprint': sm > 0 ? clamp(30 + Math.log10(sm+1)*18, 30, 92) : 12,
+    Longevity: years > 0 ? clamp(years*6, 10, 92) : 8
+  };
 
   return {
     available:true,
     estimated:true,
-    source: signalNames.length ? `${signalNames.join(' + ')} + DoKitly model` : 'DoKitly public-signal estimation model',
+    source: signalNames.length ? `${signalNames.join(' + ')} + DoKitly calibration model` : 'DoKitly public-signal estimation model',
     confidence,
+    confidenceScore,
     modelScore,
     category,
-    rank: radarSignal.available ? (radarSignal.rank ?? null) : null,
+    rank: tranco.available ? (tranco.rank ?? null) : (radarSignal.available ? (radarSignal.rank ?? null) : null),
     bucket: radarSignal.available ? (radarSignal.bucket ?? null) : null,
     topLocations: radarSignal.available ? (radarSignal.topLocations || []) : [],
+    tranco: tranco.available ? {
+      rank:tranco.rank||null,
+      medianRank:tranco.medianRank||null,
+      bestRank:tranco.bestRank||null,
+      ranks:tranco.ranks||[],
+      attribution:tranco.attribution||'Tranco — Le Pochat et al., NDSS 2019',
+      cached:!!tranco.cached
+    } : null,
     commonCrawl: cc.available ? {
       indexId:cc.indexId||null,
       blocks:cc.blocks||0,
@@ -739,12 +927,19 @@ function estimateTrafficAndValue({page,rdap,sitemapUrlCount,pagespeed,security,r
     } : null,
     cruxFieldData:hasCrux,
     monthlyVisits: monthly,
+    likelyMonthlyVisits: likelyVisits,
     dailyVisits: daily,
     pageviews,
+    likelyMonthlyPageviews: likelyPageviews,
+    pagesPerVisit,
+    bounceRatePct,
+    avgVisitDurationSec,
+    modeledChannelMix:modeledChannelMix(category),
+    signalStrengths:strengths,
     revenueMonthlyUsd,
     revenueYearlyUsd,
     siteValueUsd,
-    note:'Directional estimate from public web-footprint and real-user availability signals. It is not private analytics or a Similarweb/HypeStat measurement, so the real traffic and revenue can still differ substantially.'
+    note:'Directional estimate from public popularity and web-footprint signals. Tranco gives a relative popularity rank, not measured visits; engagement and channel mix are modelled ranges. This is not private analytics or a Similarweb/Semrush measurement.'
   };
 }
 

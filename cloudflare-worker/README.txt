@@ -23,7 +23,14 @@ When dokitly.eu.org is active behind Cloudflare, you can route /api/* to this Wo
 SECURITY
 The Worker blocks localhost/private-network destinations and validates redirect targets. CORS is limited to DoKitly/GitHub Pages origins by default.
 
-OPTIONAL CLOUDFLARE RADAR TOKEN (Build 10)
-Build 10 can show Cloudflare Radar popularity rank/bucket and top-location signals when a Radar token is configured.
+OPTIONAL CLOUDFLARE RADAR TOKEN (Build 11)
+Build 11 can show Cloudflare Radar popularity rank/bucket and top-location signals when a Radar token is configured.
 Add a Worker secret named CLOUDFLARE_RADAR_TOKEN with Radar read permission.
-Important: Radar does not provide exact monthly visit counts, so DoKitly does not invent visits, revenue or site value from rank alone.
+Important: Radar is disabled by default. Review its licence before enabling it for your intended use. Build 11 traffic figures remain labelled directional estimates, not measured visits.
+
+
+BUILD 11 POPULARITY SIGNAL
+Build 11 can use Tranco rank history as a calibration signal. Tranco is a popularity
+ranking, not a visit counter. The report therefore displays broad estimated ranges
+and confidence instead of claiming measured traffic. Because upstream rankings can
+have their own licences, review source licensing before commercial monetization.
