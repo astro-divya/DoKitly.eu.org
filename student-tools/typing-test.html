@@ -7,9 +7,9 @@
 <title>Typing Test — DoKitly</title>
 <meta content="Take focused timed typing tests with Easy, Medium and Hard passages plus Normal, Strict and God modes." name="description"/>
 <link href="../assets/favicon-32.png" rel="icon"/>
-<link href="../tool-page.css?v=dk2final" rel="stylesheet"/>
-<link href="../assets/site-shell.css?v=dk13" rel="stylesheet"/>
-<link href="typing-test.css?v=dk13" rel="stylesheet"/>
+<link href="../tool-page.css?v=dk14" rel="stylesheet"/>
+<link href="../assets/site-shell.css?v=dk14" rel="stylesheet"/>
+<link href="typing-test.css?v=dk14" rel="stylesheet"/>
 <link href="https://dokitly.in/student-tools/typing-test.html" rel="canonical"/>
 <meta content="Typing Test — DoKitly" property="og:title"/>
 <meta content="Focused timed typing with locked completed words, live stats and Normal, Strict and God modes." property="og:description"/>
@@ -18,55 +18,125 @@
 <meta content="https://dokitly.in/assets/logo.png" property="og:image"/>
 <meta content="summary_large_image" name="twitter:card"/>
 </head>
-<body class="standalone-tool-page">
-<header class="it-header"><div class="it-head-inner"><a class="it-brand" href="/"><img alt="DoKitly" src="../assets/logo.png?v=2"/></a><nav class="it-nav"><a href="/">Home</a><a href="../all-tools.html">Categories</a><a href="../whats-new.html">What’s New</a></nav></div></header>
-<main class="tool-page-shell">
-<div class="tool-breadcrumb"><a href="/">Home</a> / <a href="index.html">Student</a> / Typing Test</div>
-<div class="tool-page-head"><span class="tool-page-icon">⌨️</span><div><h1>Typing Test</h1><p>Compact 2–3 line passage, live stats and a floating typing dock that stays visible while you type.</p></div></div>
+<body class="standalone-tool-page tt-page">
+<header class="it-header">
+  <div class="it-head-inner">
+    <a class="it-brand" href="/"><img alt="DoKitly" src="../assets/logo.png?v=2"/></a>
+    <nav class="it-nav"><a href="/">Home</a><a href="../all-tools.html">Categories</a><a href="../whats-new.html">What’s New</a></nav>
+  </div>
+</header>
 
-<section class="math-card tt-config-card">
-<div class="tt-config">
-<div class="math-field"><label>Language</label><select id="ttLang"><option value="en">English</option><option value="hi">हिन्दी</option></select></div>
-<div class="math-field"><label>Duration</label><select id="ttDuration"><option value="60">1 minute</option><option value="120">2 minutes</option><option selected value="300">5 minutes</option><option value="600">10 minutes</option></select></div>
-<div class="math-field"><label>Difficulty</label><select id="ttDifficulty"><option value="easy">Easy</option><option selected value="medium">Medium</option><option value="hard">Hard</option></select></div>
-<div class="math-field"><label>Typing Mode</label><div class="tt-mode-seg" aria-label="Typing mode"><button class="active" data-mode="normal" type="button">Normal</button><button data-mode="strict" type="button">Strict</button><button data-mode="god" type="button">God</button></div></div>
-<div class="math-field"><label>Passage</label><button class="dk-btn tt-small" id="ttNew" type="button">New Passage</button></div>
-</div>
-<p class="tt-mode-help" id="ttModeHelp"></p>
-</section>
+<main class="tool-page-shell tt-shell">
+  <div class="tool-breadcrumb"><a href="/">Home</a> / <a href="index.html">Student</a> / Typing Test</div>
 
-<section class="tt-workspace">
-<section class="math-card tt-main">
-<div class="tt-stats">
-<div class="tt-stat"><b id="ttTime">05:00</b><span>TIME LEFT</span></div>
-<div class="tt-stat"><b id="ttWpm">0</b><span>WPM</span></div>
-<div class="tt-stat"><b id="ttCpm">0</b><span>CPM</span></div>
-<div class="tt-stat"><b id="ttAcc">100%</b><span>ACCURACY</span></div>
-<div class="tt-stat"><b id="ttErrors">0</b><span>ERRORS</span></div>
-</div>
-<div class="tt-progress"><span id="ttBar"></span></div>
-<div class="tt-passage-card"><div class="tt-passage-window" id="ttWindow"><div class="tt-passage-flow" id="ttFlow" aria-live="polite"></div></div></div>
-<div class="tt-dock">
-<div class="tt-dock-icon" aria-hidden="true"><svg width="27" height="27" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="5" width="19" height="14" rx="3.5" stroke="#1769ff" stroke-width="1.7"/><path d="M6 10H8M9.5 10H11.5M13 10H15M16.5 10H18" stroke="#14b8a6" stroke-width="1.8" stroke-linecap="round"/><path d="M6 13.5H8M9.5 13.5H11.5M13 13.5H18" stroke="#1769ff" stroke-width="1.8" stroke-linecap="round"/></svg></div>
-<input id="ttInput" class="tt-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" disabled placeholder="Type here… Space locks the current word"/>
-<button class="dk-btn tt-small" id="ttRestart" type="button">↻ Restart</button>
-<button class="dk-btn primary tt-small" id="ttFinish" type="button">Finish</button>
-</div>
-<div class="tt-footer-row"><div class="tt-current-label" id="ttCurrentLabel">Press Start Test to begin.</div><div class="tt-actions"><button class="dk-btn tt-small" id="ttFocus" type="button">⛶ Focus</button><button class="dk-btn tt-small" id="ttPause" type="button" disabled>Ⅱ Pause</button><button class="dk-btn primary tt-small" id="ttStart" type="button">▶ Start Test</button></div></div>
-<div class="tt-result" id="ttResult">Choose your settings, then press Start Test. Completed words stay visible; only completed lines slide upward.</div>
-</section>
+  <div class="tt-title-row">
+    <div class="tt-title-copy">
+      <span class="tt-title-icon" aria-hidden="true">⌨</span>
+      <div><h1>Typing Test</h1><p>Fast, compact and distraction-free. Space locks a word; locked words stay visible.</p></div>
+    </div>
+    <button class="dk-btn ghost tt-focus-btn" id="ttFocus" type="button" title="Toggle Focus Mode">⛶ Focus</button>
+  </div>
 
-<aside class="math-card tt-sidebar">
-<div class="tt-visual"><div class="tt-visual-icon" aria-hidden="true"><svg width="33" height="33" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="5" width="19" height="14" rx="3.5" stroke="white" stroke-width="1.7"/><path d="M6 10H8M9.5 10H11.5M13 10H15M16.5 10H18" stroke="white" stroke-width="1.8" stroke-linecap="round"/><path d="M6 13.5H8M9.5 13.5H11.5M13 13.5H18" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg></div><div><h3>Focused Typing</h3><p>Same visual direction you picked: compact test area with a premium keyboard visual.</p></div></div>
-<div class="tt-side-row"><span>Mode</span><b id="ttModeSide">Normal</b></div>
-<div class="tt-side-row"><span>Locked words</span><b id="ttLocked">0</b></div>
-<div class="tt-side-row"><span>Passage view</span><b>2–3 lines</b></div>
-<div class="tt-side-row"><span>Word rule</span><b>Space = Lock</b></div>
-<div class="tt-legend"><span><i class="tt-dot ok"></i>Correct locked word</span><span><i class="tt-dot bad"></i>Wrong locked word</span><span><i class="tt-dot cur"></i>Current word</span></div>
-<p class="tt-side-note">A completed word never disappears after Space. It remains in the passage and only moves upward when its completed line leaves the 2–3 line reading window.</p>
-</aside>
-</section>
+  <section class="math-card tt-topbar">
+    <div class="tt-settings">
+      <label><span>Language</span><select id="ttLang"><option value="en">English</option><option value="hi">हिन्दी</option></select></label>
+      <label><span>Duration</span><select id="ttDuration"><option value="60">1 min</option><option value="120">2 min</option><option selected value="300">5 min</option><option value="600">10 min</option><option value="900">15 min</option></select></label>
+      <label><span>Difficulty</span><select id="ttDifficulty"><option value="easy">Easy</option><option selected value="medium">Medium</option><option value="hard">Hard</option></select></label>
+      <div class="tt-mode-box">
+        <span class="tt-label">Mode</span>
+        <div class="tt-mode-seg" aria-label="Typing mode">
+          <button class="active" data-mode="normal" type="button">Normal</button>
+          <button data-mode="strict" type="button">Strict</button>
+          <button data-mode="god" type="button">God</button>
+        </div>
+      </div>
+      <button class="dk-btn ghost" id="ttNew" type="button">↻ New Passage</button>
+    </div>
+
+    <div class="tt-top-actions">
+      <button class="dk-btn primary" id="ttStart" type="button">▶ Start Test</button>
+      <button class="dk-btn" id="ttPause" type="button" disabled>Ⅱ Pause</button>
+      <button class="dk-btn" id="ttRestart" type="button">↺ Restart</button>
+      <button class="dk-btn danger" id="ttFinish" type="button">Finish</button>
+    </div>
+  </section>
+
+  <section class="tt-workspace">
+    <section class="math-card tt-main">
+      <div class="tt-stat-strip" aria-label="Live typing statistics">
+        <div><b id="ttTime">05:00</b><span>Time</span></div>
+        <i></i><div><b id="ttWpm">0</b><span>WPM</span></div>
+        <i></i><div><b id="ttCpm">0</b><span>CPM</span></div>
+        <i></i><div><b id="ttAcc">100%</b><span>Accuracy</span></div>
+        <i></i><div><b id="ttErrors">0</b><span>Errors</span></div>
+      </div>
+      <div class="tt-progress"><span id="ttBar"></span></div>
+
+      <div class="tt-passage-card">
+        <div class="tt-passage-head">
+          <span id="ttDifficultyBadge">Medium passage</span>
+          <small id="ttPassageCount">Passage 1</small>
+        </div>
+        <div class="tt-passage-window" id="ttWindow">
+          <div class="tt-passage-flow" id="ttFlow" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div class="tt-typebox" id="ttTypebox">
+        <div class="tt-typebox-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <rect x="2.5" y="5" width="19" height="14" rx="3.5" stroke="#1769ff" stroke-width="1.7"/>
+            <path d="M6 10H8M9.5 10H11.5M13 10H15M16.5 10H18" stroke="#14b8a6" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M6 13.5H8M9.5 13.5H11.5M13 13.5H18" stroke="#1769ff" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="tt-typed-viewport" id="ttTypedViewport">
+          <div class="tt-typed-stream" id="ttTypedStream">
+            <span class="tt-empty-hint" id="ttEmptyHint">Your typed words will stay here…</span>
+            <input id="ttInput" class="tt-inline-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" disabled aria-label="Type the current word"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="tt-status-line">
+        <span id="ttCurrentLabel">Press Start Test to begin.</span>
+        <span id="ttModeHelp">Normal mode</span>
+      </div>
+      <div class="tt-result" id="ttResult" hidden></div>
+    </section>
+
+    <aside class="math-card tt-sidebar">
+      <div class="tt-keyboard-visual">
+        <div class="tt-glow tt-glow-a"></div><div class="tt-glow tt-glow-b"></div>
+        <div class="tt-kb-top"><span>LIVE</span><b>DoKitly Typing</b></div>
+        <div class="tt-kb-graphic" aria-hidden="true">
+          <svg viewBox="0 0 320 180" role="img">
+            <defs><linearGradient id="kbgrad" x1="0" x2="1"><stop offset="0" stop-color="#1769ff"/><stop offset="1" stop-color="#14b8a6"/></linearGradient></defs>
+            <rect x="24" y="30" width="272" height="120" rx="24" fill="url(#kbgrad)" opacity=".13"/>
+            <rect x="34" y="40" width="252" height="100" rx="19" fill="#ffffff" stroke="#dceaf5" stroke-width="2"/>
+            <g fill="#eef6ff" stroke="#d5e7f4" stroke-width="1.5">
+              <rect x="50" y="57" width="25" height="20" rx="6"/><rect x="80" y="57" width="25" height="20" rx="6"/><rect x="110" y="57" width="25" height="20" rx="6"/><rect x="140" y="57" width="25" height="20" rx="6"/><rect x="170" y="57" width="25" height="20" rx="6"/><rect x="200" y="57" width="25" height="20" rx="6"/><rect x="230" y="57" width="25" height="20" rx="6"/>
+              <rect x="56" y="84" width="25" height="20" rx="6"/><rect x="86" y="84" width="25" height="20" rx="6"/><rect x="116" y="84" width="25" height="20" rx="6"/><rect x="146" y="84" width="25" height="20" rx="6"/><rect x="176" y="84" width="25" height="20" rx="6"/><rect x="206" y="84" width="25" height="20" rx="6"/>
+              <rect x="70" y="111" width="32" height="18" rx="6"/><rect x="108" y="111" width="104" height="18" rx="7"/><rect x="218" y="111" width="32" height="18" rx="6"/>
+            </g>
+            <rect x="146" y="84" width="25" height="20" rx="6" fill="url(#kbgrad)" opacity=".9"/>
+          </svg>
+        </div>
+        <div class="tt-current-word-card"><span>Current word</span><b id="ttCurrentWord">—</b></div>
+      </div>
+
+      <div class="tt-side-grid">
+        <div><span>Mode</span><b id="ttModeSide">Normal</b></div>
+        <div><span>Locked</span><b id="ttLocked">0</b></div>
+        <div><span>View</span><b>2–3 lines</b></div>
+        <div><span>Space</span><b>Lock word</b></div>
+      </div>
+      <p class="tt-side-note">Typed words remain in the lower typing box. Backspace edits only the current word and can never cross a Space boundary.</p>
+    </aside>
+  </section>
 </main>
-<script src="typing-test.js?v=dk13"></script>
-<script src="../assets/site-shell.js?v=dk13"></script>
-</body></html>
+
+<script src="typing-test.js?v=dk14"></script>
+<script src="../assets/site-shell.js?v=dk14"></script>
+</body>
+</html>
