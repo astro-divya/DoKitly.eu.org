@@ -18,19 +18,19 @@ Google PageSpeed works without a key only when public quota permits. For reliabl
 Cloudflare Dashboard -> Worker -> Settings -> Variables and Secrets -> Add secret.
 
 OPTIONAL CUSTOM API ROUTE
-When dokitly.eu.org is active behind Cloudflare, you can route /api/* to this Worker. If you do that, set analyzerApi to "https://dokitly.eu.org" and keep the /analyze endpoint.
+When dokitly.in is active behind Cloudflare, you can route /api/* to this Worker. If you do that, set analyzerApi to "https://dokitly.in" and keep the /analyze endpoint.
 
 SECURITY
-The Worker blocks localhost/private-network destinations and validates redirect targets. CORS is limited to DoKitly/GitHub Pages origins by default.
+The Worker blocks localhost/private-network destinations and validates redirect targets. CORS is limited to the DoKitly custom-domain origins by default (dokitly.in and www.dokitly.in).
 
-OPTIONAL CLOUDFLARE RADAR TOKEN (Build 11)
-Build 11 can show Cloudflare Radar popularity rank/bucket and top-location signals when a Radar token is configured.
+OPTIONAL CLOUDFLARE RADAR TOKEN (Build 12)
+Build 12 can show Cloudflare Radar popularity rank/bucket and top-location signals when a Radar token is configured.
 Add a Worker secret named CLOUDFLARE_RADAR_TOKEN with Radar read permission.
-Important: Radar is disabled by default. Review its licence before enabling it for your intended use. Build 11 traffic figures remain labelled directional estimates, not measured visits.
+Important: Radar is disabled by default. Review its licence before enabling it for your intended use. Build 12 traffic figures remain labelled directional estimates, not measured visits.
 
 
-BUILD 11 POPULARITY SIGNAL
-Build 11 can use Tranco rank history as a calibration signal. Tranco is a popularity
+BUILD 12 POPULARITY SIGNAL
+Build 12 can use Tranco rank history as a calibration signal. Tranco is a popularity
 ranking, not a visit counter. The report therefore displays broad estimated ranges
 and confidence instead of claiming measured traffic. Because upstream rankings can
 have their own licences, review source licensing before commercial monetization.

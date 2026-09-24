@@ -4,12 +4,14 @@
   const href=p=>new URL(p,root).href;
   const cleanPath=p=>{try{return new URL(p,location.href).pathname.replace(/\/+$/,'')}catch{return''}};
   const current=cleanPath(location.href);
+  const siteRootPath=cleanPath(root.href);
+  const homePath=cleanPath(href('index.html'));
 
   function navLink(label,path){
     const a=document.createElement('a');
     a.className='dk-nav-link';a.textContent=label;a.href=href(path);
     const target=cleanPath(a.href);
-    if((path==='index.html'&&/\/DoKitly\.eu\.org$|\/DoKitly\.eu\.org\/index\.html$/.test(current))||current===target)a.setAttribute('aria-current','page');
+    if((path==='index.html'&&(current===siteRootPath||current===homePath))||current===target)a.setAttribute('aria-current','page');
     return a;
   }
 
@@ -40,7 +42,8 @@
     {label:'Text Studio',path:'text-tools/text-studio.html'},
     {label:'Universal Converter',path:'converter-tools/unit.html'},
     {label:'World Quiz',path:'student-tools/world-quiz.html'},
-    {label:'Typing Practice',path:'student-tools/typing-practice.html'},
+    {label:'Typing Test',path:'student-tools/typing-test.html'},
+    {label:'Hindi InScript Tutor',path:'student-tools/hindi-typing-tutor.html'},
     {label:'Website Analyzer',path:'seo-tools/website-analyzer.html'},
     {label:'QR Studio',path:'developer-tools/qr-studio.html'},
     {label:'Barcode Studio',path:'developer-tools/barcode-studio.html'},

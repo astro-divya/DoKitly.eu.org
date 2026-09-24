@@ -1,7 +1,6 @@
 const DEFAULT_ALLOWED_ORIGINS = [
-  'https://astro-divya.github.io',
-  'https://dokitly.eu.org',
-  'https://www.dokitly.eu.org'
+  'https://dokitly.in',
+  'https://www.dokitly.in'
 ];
 
 export default {
@@ -27,7 +26,7 @@ export default {
     }
 
     if (reqUrl.pathname === '/' || reqUrl.pathname === '/health') {
-      return json({ ok: true, service: 'DoKitly Website Analyzer Engine', version: '1.3.0-build11' }, 200, cors);
+      return json({ ok: true, service: 'DoKitly Website Analyzer Engine', version: '1.4.0-build12' }, 200, cors);
     }
 
     if (reqUrl.pathname === '/creator-context') {
@@ -320,11 +319,45 @@ async function getCreatorTrends(geo, platform, category) {
   return result;
 }
 
+
+function getRegistrableDomain(hostname) {
+  const h = String(hostname || '').toLowerCase().replace(/\.$/, '').replace(/^www\d*\./, '');
+  const parts = h.split('.').filter(Boolean);
+  if (parts.length <= 2) return h;
+  const publicSecondLevel = new Set([
+    'co.in','firm.in','net.in','org.in','gen.in','ind.in',
+    'co.uk','org.uk','me.uk','ac.uk','gov.uk',
+    'com.au','net.au','org.au','edu.au',
+    'co.nz','org.nz','net.nz','ac.nz',
+    'co.jp','ne.jp','or.jp','ac.jp',
+    'com.br','com.mx','com.sg','com.tr','com.cn','com.hk','com.tw','co.za','co.kr','co.id'
+  ]);
+  const tail2 = parts.slice(-2).join('.');
+  return publicSecondLevel.has(tail2) && parts.length >= 3 ? parts.slice(-3).join('.') : tail2;
+}
+
+async function firstExistingTextResource(urls, kind) {
+  const seen = new Set();
+  let last = null;
+  for (const raw of urls) {
+    if (!raw) continue;
+    let url;
+    try { url = new URL(raw).toString(); } catch { continue; }
+    if (seen.has(url)) continue;
+    seen.add(url);
+    const r = await checkTextResource(url, kind);
+    last = r;
+    if (r && r.ok) return r;
+  }
+  return last || { ok:false, status:null, finalUrl:urls[0] || '', text:'' };
+}
+
 async function analyzeWebsite(target, env) {
   const host = target.hostname.toLowerCase();
-  const dnsPromise = getDnsBundle(host);
-  const rdapPromise = getRdap(host);
-  const trafficSignalsPromise = getTrafficSignals(host, env);
+  const rootDomain = getRegistrableDomain(host);
+  const dnsPromise = getDnsBundle(host, rootDomain);
+  const rdapPromise = getRdap(rootDomain);
+  const trafficSignalsPromise = getTrafficSignals(rootDomain, env);
   const main = await safeFetchWithRetry(target.toString(), { method: 'GET' }, 5, 2);
   const response = main.response;
   const contentType = response.headers.get('content-type') || '';
@@ -338,33 +371,43 @@ async function analyzeWebsite(target, env) {
   const tech = detectTechnology(html, response.headers);
 
   const final = new URL(main.finalUrl);
-  const robotsUrl = `${final.origin}/robots.txt`;
-  const sitemapUrl = page.sitemaps[0] || `${final.origin}/sitemap.xml`;
+  const rootOrigin = `https://${rootDomain}`;
+  const robotsCandidates = [
+    `${final.origin}/robots.txt`,
+    rootDomain !== final.hostname ? `${rootOrigin}/robots.txt` : null
+  ];
 
   const jobs = await Promise.allSettled([
     dnsPromise,
     rdapPromise,
-    checkTextResource(robotsUrl, 'robots'),
-    checkTextResource(sitemapUrl, 'sitemap'),
+    firstExistingTextResource(robotsCandidates, 'robots'),
     getPageSpeed(main.finalUrl, env),
     trafficSignalsPromise
   ]);
   const val = (i, fallback) => jobs[i] && jobs[i].status === 'fulfilled' ? jobs[i].value : fallback;
   const dns = val(0, {A:[],AAAA:[],NS:[],MX:[],TXT:[],CNAME:[]});
   const rdap = val(1, {available:false});
-  const robots = val(2, {ok:false,status:null,finalUrl:robotsUrl,text:''});
-  const sitemap = val(3, {ok:false,status:null,finalUrl:sitemapUrl,text:''});
-  const pagespeed = val(4, {available:false,reason:'request_failed'});
-  const radar = val(5, {available:false,commonCrawl:{available:false},tranco:{available:false},radar:{available:false}});
+  const robots = val(2, {ok:false,status:null,finalUrl:robotsCandidates[0],text:''});
+  const pagespeed = val(3, {available:false,reason:'request_failed'});
+  const radar = val(4, {available:false,commonCrawl:{available:false},tranco:{available:false},radar:{available:false}});
 
   if (robots.text) {
-    const fromRobots = [...robots.text.matchAll(/^\s*Sitemap:\s*(\S+)/gmi)].map(m => m[1]).slice(0, 6);
+    const fromRobots = [...robots.text.matchAll(/^\s*Sitemap:\s*(\S+)/gmi)].map(m => m[1]).slice(0, 12);
     if (fromRobots.length) page.sitemaps = [...new Set([...page.sitemaps, ...fromRobots])];
   }
 
+  const sitemapCandidates = [
+    ...(page.sitemaps || []),
+    `${final.origin}/sitemap.xml`,
+    `${final.origin}/sitemap_index.xml`,
+    `${final.origin}/sitemap`,
+    rootDomain !== final.hostname ? `${rootOrigin}/sitemap.xml` : null,
+    rootDomain !== final.hostname ? `${rootOrigin}/sitemap_index.xml` : null
+  ];
+  const sitemap = await firstExistingTextResource(sitemapCandidates, 'sitemap');
   const sitemapUrlCount = countSitemapEntries(sitemap.text);
   const traffic = estimateTrafficAndValue({
-    host,
+    host: rootDomain,
     page,
     rdap,
     sitemapUrlCount,
@@ -377,9 +420,10 @@ async function analyzeWebsite(target, env) {
 
   return {
     analyzedAt: new Date().toISOString(),
-    engineVersion: '1.3.0-build11',
+    engineVersion: '1.4.0-build12',
     inputUrl: target.toString(),
     hostname: host,
+    registrableDomain: rootDomain,
     http: {
       status: response.status,
       ok: response.ok,
@@ -392,8 +436,8 @@ async function analyzeWebsite(target, env) {
     page,
     dns,
     rdap,
-    robots: { url: robotsUrl, status: robots.status, exists: robots.ok },
-    sitemap: { url: sitemapUrl, status: sitemap.status, exists: sitemap.ok, urlCount: sitemapUrlCount || null },
+    robots: { url: robots.finalUrl || robotsCandidates[0], status: robots.status, exists: robots.ok },
+    sitemap: { url: sitemap.finalUrl || sitemapCandidates.find(Boolean), status: sitemap.status, exists: sitemap.ok, urlCount: sitemapUrlCount || null },
     headers,
     security,
     technology: tech,
@@ -410,9 +454,13 @@ function countSitemapEntries(text) {
   return Math.max(urls, maps);
 }
 
-async function getDnsBundle(host) {
-  const types = ['A','AAAA','NS','MX','TXT','CNAME'];
-  const entries = await Promise.all(types.map(async t => [t, await dnsQuery(host, t).catch(() => [])]));
+async function getDnsBundle(host, rootDomain = host) {
+  const hostTypes = ['A','AAAA','CNAME'];
+  const rootTypes = ['NS','MX','TXT'];
+  const entries = await Promise.all([
+    ...hostTypes.map(async t => [t, await dnsQuery(host, t).catch(() => [])]),
+    ...rootTypes.map(async t => [t, await dnsQuery(rootDomain, t).catch(() => [])])
+  ]);
   return Object.fromEntries(entries);
 }
 
@@ -497,7 +545,7 @@ async function getTrancoSignal(host) {
   }
   try {
     const r = await fetchWithTimeout(`https://tranco-list.eu/api/ranks/domain/${encodeURIComponent(host)}`, {
-      headers: { 'accept':'application/json', 'user-agent':'DoKitly-Website-Analyzer/1.3 (+https://dokitly.eu.org)' }
+      headers: { 'accept':'application/json', 'user-agent':'DoKitly-Website-Analyzer/1.4 (+https://dokitly.in)' }
     }, 9000);
     if (!r.ok) return { available:false, status:r.status, reason:'tranco_unavailable' };
     const j = await r.json();
@@ -573,7 +621,7 @@ async function getLatestCommonCrawlIndex() {
   }
   try {
     const r = await fetchWithTimeout('https://index.commoncrawl.org/collinfo.json', {
-      headers: { 'accept':'application/json', 'user-agent':'DoKitly-Website-Analyzer/1.3 (+https://dokitly.eu.org)' }
+      headers: { 'accept':'application/json', 'user-agent':'DoKitly-Website-Analyzer/1.4 (+https://dokitly.in)' }
     }, 8000);
     if (!r.ok) return 'CC-MAIN-2026-34';
     const list = await r.json();
@@ -604,7 +652,7 @@ async function getCommonCrawlFootprint(host) {
     const indexId = await getLatestCommonCrawlIndex();
     const api = `https://index.commoncrawl.org/${encodeURIComponent(indexId)}-index?url=${encodeURIComponent(host)}&matchType=domain&output=json&showNumPages=true&pageSize=5`;
     const r = await fetchWithTimeout(api, {
-      headers: { 'accept':'application/json,text/plain', 'user-agent':'DoKitly-Website-Analyzer/1.3 (+https://dokitly.eu.org)' }
+      headers: { 'accept':'application/json,text/plain', 'user-agent':'DoKitly-Website-Analyzer/1.4 (+https://dokitly.in)' }
     }, 10000);
     if (!r.ok) return { available:false, status:r.status, indexId };
     const text = (await r.text()).trim();
@@ -851,6 +899,17 @@ function estimateTrafficAndValue({host,page,rdap,sitemapUrlCount,pagespeed,secur
     likelyVisits = 180_000;
   }
   if (!monthly) {
+    const links = Number(page && page.linkCount || 0);
+    const images = Number(page && page.imageCount || 0);
+    if (category === 'ecommerce' && links >= 250 && images >= 40) {
+      monthly = rangeObj(2_000_000, 120_000_000);
+      likelyVisits = 18_000_000;
+    } else if (links >= 300 && (cc.available || hasCrux)) {
+      monthly = rangeObj(500_000, 35_000_000);
+      likelyVisits = 5_000_000;
+    }
+  }
+  if (!monthly) {
     if (modelScore >= 82) monthly = rangeObj(60_000, 2_000_000);
     else if (modelScore >= 68) monthly = rangeObj(15_000, 600_000);
     else if (modelScore >= 54) monthly = rangeObj(3_000, 180_000);
@@ -939,7 +998,7 @@ function estimateTrafficAndValue({host,page,rdap,sitemapUrlCount,pagespeed,secur
     revenueMonthlyUsd,
     revenueYearlyUsd,
     siteValueUsd,
-    note:'Directional estimate from public popularity and web-footprint signals. Tranco gives a relative popularity rank, not measured visits; engagement and channel mix are modelled ranges. This is not private analytics or a Similarweb/Semrush measurement.'
+    note:'Directional estimate from root-domain popularity and web-footprint signals. Popularity ranks are not measured visits; engagement and channel mix are modelled ranges. This is not private analytics or a Similarweb/Semrush measurement.'
   };
 }
 
