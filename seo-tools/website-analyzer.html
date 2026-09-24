@@ -1,74 +1,67 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#f7f9fc">
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="#f7f9fc" name="theme-color"/>
 <title>Website Analyzer — DoKitly</title>
-<meta name="description" content="Analyze live SEO, DNS, security, performance, technology and public traffic signals for any public website.">
-<link rel="icon" href="../assets/favicon-32.png">
-<link rel="stylesheet" href="../tool-page.css?v=dk11-analyzer">
-<link rel="stylesheet" href="website-analyzer.css?v=dk11">
-<link rel="canonical" href="https://astro-divya.github.io/DoKitly.eu.org/seo-tools/website-analyzer.html">
-<meta property="og:title" content="Website Analyzer — DoKitly">
-<meta property="og:description" content="Analyze live SEO, DNS, security, performance, technology and public traffic signals for any public website.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://astro-divya.github.io/DoKitly.eu.org/seo-tools/website-analyzer.html">
-<link rel="stylesheet" href="../assets/site-shell.css?v=dk11">
-</head>
+<meta content="Analyze live SEO, DNS, security, performance, technology and public traffic signals for any public website." name="description"/>
+<link href="../assets/favicon-32.png" rel="icon"/>
+<link href="../tool-page.css?v=dk12-analyzer" rel="stylesheet"/>
+<link href="website-analyzer.css?v=dk12" rel="stylesheet"/>
+<link href="https://dokitly.in/seo-tools/website-analyzer.html" rel="canonical"/>
+<meta content="Website Analyzer — DoKitly" property="og:title"/>
+<meta content="Analyze live SEO, DNS, security, performance, technology and public traffic signals for any public website." property="og:description"/>
+<meta content="website" property="og:type"/>
+<meta content="https://dokitly.in/seo-tools/website-analyzer.html" property="og:url"/>
+<link href="../assets/site-shell.css?v=dk12" rel="stylesheet"/>
+<meta content="https://dokitly.in/assets/logo.png" property="og:image"/><meta content="summary_large_image" name="twitter:card"/><meta content="Website Analyzer — DoKitly" name="twitter:title"/><meta content="Analyze live SEO, DNS, security, performance, technology and public traffic signals for any public website." name="twitter:description"/><meta content="https://dokitly.in/assets/logo.png" name="twitter:image"/></head>
 <body class="standalone-tool-page">
-<header class="it-header"><div class="it-head-inner"><a class="it-brand" href="../index.html"><img src="../assets/logo.png?v=2" alt="DoKitly"></a><nav class="it-nav"><a href="../index.html">Home</a><a href="../all-tools.html">Categories</a><a href="../whats-new.html">What’s New</a></nav></div></header>
+<header class="it-header"><div class="it-head-inner"><a class="it-brand" href="../index.html"><img alt="DoKitly" src="../assets/logo.png?v=2"/></a><nav class="it-nav"><a href="../index.html">Home</a><a href="../all-tools.html">Categories</a><a href="../whats-new.html">What’s New</a></nav></div></header>
 <main class="tool-page-shell">
-  <div class="tool-breadcrumb"><a href="../index.html">Home</a> / <a href="index.html">SEO</a> / Website Analyzer</div>
-  <div class="tool-page-head"><span class="tool-page-icon">🔎</span><div><h1>Website Analyzer</h1><p>Live website intelligence for SEO, traffic signals, performance, security, DNS, domain data and technologies.</p></div></div>
-
-  <div class="math-card">
-    <div class="wa-form">
-      <div class="math-field"><label for="waUrl">Website URL or domain</label><input id="waUrl" inputmode="url" autocomplete="url" placeholder="example.com"></div>
-      <button class="math-primary" id="waRun" type="button">Analyze Website</button>
-    </div>
-    <div class="wa-status" id="waStatus"><span class="wa-pill">Live checks</span><span>Enter a public website to start.</span></div>
-    <div class="wa-loading" id="waLoading"><span class="wa-spinner" aria-hidden="true"></span><span id="waLoadingText">Analyzing public signals…</span></div>
-    <div class="wa-error" id="waError" role="alert"></div>
-
-    <div class="wa-results" id="waResults">
-      <div class="wa-report-head"><div><h2>Website Intelligence Report</h2><p>Important signals first. Technical details stay available without turning the report into a long debug list.</p></div><span class="wa-version" id="waVersion">Analyzer</span></div>
-      <div class="wa-summary" id="waSummary"></div>
-
-      <section class="wa-panel wa-traffic-feature" id="waTraffic"></section>
-
-      <div class="wa-charts" id="waCharts">
-        <section class="wa-chart-card" id="waScaleChart"></section>
-        <section class="wa-chart-card" id="waRankChart"></section>
-        <section class="wa-chart-card" id="waSignalChart"></section>
-        <section class="wa-chart-card" id="waChannelChart"></section>
-      </div>
-
-      <section class="wa-panel" id="waEngagement"></section>
-      <section class="wa-panel wa-geo" id="waGeo"></section>
-
-      <div class="wa-sections">
-        <section class="wa-section" id="waSeo"></section>
-        <section class="wa-section" id="waSpeed"></section>
-        <section class="wa-section" id="waSecurity"></section>
-        <section class="wa-section" id="waDomain"></section>
-        <section class="wa-section" id="waTech"></section>
-        <section class="wa-section wide" id="waRecommendations"></section>
-      </div>
-
-      <details class="wa-details" id="waTechnical">
-        <summary>Detailed technical data</summary>
-        <div class="wa-details-body" id="waOverview"></div>
-      </details>
-      <div class="wa-footnote" id="waFootnote"></div>
-    </div>
-  </div>
-
-  <section class="seo-copy"><h2>How to read the report</h2><p>Live technical checks are measured from public responses. Traffic, engagement, channel mix, revenue and website-value figures are clearly labelled estimates built from public popularity and web-footprint signals; they are not private owner analytics. Hover or tap interactive charts to inspect exact displayed values.</p></section>
+<div class="tool-breadcrumb"><a href="../index.html">Home</a> / <a href="index.html">SEO</a> / Website Analyzer</div>
+<div class="tool-page-head"><span class="tool-page-icon">🔎</span><div><h1>Website Analyzer</h1><p>Live website intelligence for SEO, traffic signals, performance, security, DNS, domain data and technologies.</p></div></div>
+<div class="math-card">
+<div class="wa-form">
+<div class="math-field"><label for="waUrl">Website URL or domain</label><input autocomplete="url" id="waUrl" inputmode="url" placeholder="example.com"/></div>
+<button class="math-primary" id="waRun" type="button">Analyze Website</button>
+</div>
+<div class="wa-status" id="waStatus"><span class="wa-pill">Live checks</span><span>Enter a public website to start.</span></div>
+<div class="wa-loading" id="waLoading"><span aria-hidden="true" class="wa-spinner"></span><span id="waLoadingText">Analyzing public signals…</span></div>
+<div class="wa-error" id="waError" role="alert"></div>
+<div class="wa-results" id="waResults">
+<div class="wa-report-head"><div><h2>Website Intelligence Report</h2><p>Important signals first. Technical details stay available without turning the report into a long debug list.</p></div><span class="wa-version" id="waVersion">Analyzer</span></div>
+<div class="wa-summary" id="waSummary"></div>
+<section class="wa-panel wa-traffic-feature" id="waTraffic"></section>
+<div class="wa-charts" id="waCharts">
+<section class="wa-chart-card" id="waScaleChart"></section>
+<section class="wa-chart-card" id="waRankChart"></section>
+<section class="wa-chart-card" id="waSignalChart"></section>
+<section class="wa-chart-card" id="waChannelChart"></section>
+</div>
+<section class="wa-panel" id="waEngagement"></section>
+<section class="wa-panel wa-geo" id="waGeo"></section>
+<div class="wa-sections">
+<section class="wa-section" id="waSeo"></section>
+<section class="wa-section" id="waSpeed"></section>
+<section class="wa-section" id="waSecurity"></section>
+<section class="wa-section" id="waDomain"></section>
+<section class="wa-section" id="waTech"></section>
+<section class="wa-section wide" id="waRecommendations"></section>
+</div>
+<details class="wa-details" id="waTechnical">
+<summary>Detailed technical data</summary>
+<div class="wa-details-body" id="waOverview"></div>
+</details>
+<div class="wa-footnote" id="waFootnote"></div>
+</div>
+</div>
+<section class="seo-copy"><h2>How to read the report</h2><p>Live technical checks are measured from public responses. Traffic, engagement, channel mix, revenue and website-value figures are clearly labelled estimates built from public popularity and web-footprint signals; they are not private owner analytics. Hover or tap interactive charts to inspect exact displayed values.</p></section>
 </main>
 <div class="wa-tooltip" id="waTooltip" role="status"></div>
 <script src="../assets/website-analyzer-config.js?v=2"></script>
-<script src="website-analyzer.js?v=dk11"></script>
-<script src="../assets/site-shell.js?v=dk11"></script>
+<script src="website-analyzer.js?v=dk12"></script>
+<script src="../assets/site-shell.js?v=dk12"></script>
 </body>
 </html>

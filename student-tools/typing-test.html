@@ -1,1 +1,124 @@
-<!doctype html><meta charset="utf-8"><title>Typing Test — DoKitly</title><script>location.replace('typing-practice.html?mode=test')</script><p><a href="typing-practice.html">Open Typing Practice</a></p>
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="#f7f9fc" name="theme-color"/>
+<title>Typing Test — DoKitly</title>
+<meta content="Take focused timed typing tests with Easy, Medium and Hard passages plus Normal, Strict and God modes." name="description"/>
+<link href="../assets/favicon-32.png" rel="icon"/>
+<link href="../tool-page.css?v=dk12" rel="stylesheet"/>
+<style>
+:root{--tp-blue:#1769ff;--tp-teal:#14b8a6;--tp-ink:#15364a;--tp-soft:#f5f9fc;--tp-line:#d8e4ed}
+.tt-config{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;transition:.35s ease}.tt-config .math-field:last-child{display:flex;flex-direction:column}.tt-config .dk-btn{width:100%;height:100%}
+.dk-btn{min-height:44px;border:1px solid #cbdde8;border-radius:12px;padding:10px 16px;background:linear-gradient(180deg,#fff,#f7fbfd);color:#17445e;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(15,61,86,.06);transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}.dk-btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(15,61,86,.10)}.dk-btn.primary{border-color:transparent;background:linear-gradient(135deg,#1769ff,#10b8ad);color:#fff;box-shadow:0 9px 22px rgba(23,105,255,.18)}.dk-btn.ghost{background:#fff}.dk-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.tt-mode-help{font-size:12px;color:#64748b;line-height:1.45;margin:9px 0 0}.tt-focus-launch{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.tt-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:12px 0;transition:.3s ease}.tt-stat{padding:10px;border:1px solid var(--tp-line);border-radius:12px;background:#f8fbff;text-align:center}.tt-stat b{display:block;font-size:20px;color:#122d42}.tt-stat span{font-size:10px;color:#64748b;font-weight:850;letter-spacing:.04em}
+.tt-progress{height:7px;border-radius:999px;background:#e7eef5;overflow:hidden}.tt-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#1769ff,#14b8a6);transition:width .2s linear}
+.tt-stage{margin-top:10px;border:1px solid var(--tp-line);border-radius:18px;background:linear-gradient(180deg,#fff,#fbfdff);padding:16px;box-shadow:0 12px 28px rgba(15,61,86,.05)}
+.tt-passage-window{height:8.4em;overflow:hidden;border:1px solid #dce7ef;border-radius:15px;background:#fff;padding:14px 16px;position:relative}.tt-passage-flow{font-size:19px;line-height:2.2;transition:transform .28s cubic-bezier(.2,.7,.2,1);will-change:transform}.tt-word{display:inline-block;margin-right:.34em;border-radius:5px;padding:0 1px}.tt-word.done-ok{color:#198754}.tt-word.done-bad{color:#b42342;background:#fff0f3;text-decoration:underline}.tt-word.current{background:#e8fbf8;color:#0f5b57;box-shadow:inset 0 -2px 0 #19a89e}.tt-word.touched{background:#fff5df;color:#8b5a00}
+.tt-input-wrap{margin-top:12px;transition:.3s ease}.tt-current-label{font-size:11px;font-weight:900;color:#64748b;margin-bottom:6px}.tt-input{width:100%;min-height:58px;border:2px solid #b9d7f4;border-radius:14px;padding:11px 14px;font:inherit;font-size:20px;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}.tt-input:focus{border-color:#3c8cff;box-shadow:0 0 0 4px rgba(60,140,255,.12)}.tt-input.bad-flash{animation:ttBad .18s ease}@keyframes ttBad{50%{border-color:#fb7185;background:#fff4f5}}
+.tt-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.tt-result{margin-top:10px;padding:11px 12px;border-radius:12px;background:#f8fbff;border:1px solid var(--tp-line);font-size:13px;color:#475569}.tt-result.ok{background:#ecfdf5;border-color:#bbf7d0;color:#047857}
+body.tt-focus{overflow:hidden;background:#eef7fb}body.tt-focus .it-header,body.tt-focus .tool-breadcrumb,body.tt-focus .tool-page-head,body.tt-focus .tt-config,body.tt-focus .tt-mode-help,body.tt-focus .tt-focus-launch,body.tt-focus .dk-footer{opacity:0;max-height:0!important;margin:0!important;padding-top:0!important;padding-bottom:0!important;overflow:hidden;pointer-events:none;transform:translateY(-12px)}
+.it-header,.tool-breadcrumb,.tool-page-head,.tt-config,.tt-mode-help,.tt-focus-launch{transition:opacity .34s ease,transform .34s ease,max-height .34s ease,margin .34s ease,padding .34s ease;max-height:240px}
+body.tt-focus .tool-page-shell{max-width:1180px;padding-top:8px;padding-bottom:8px}body.tt-focus .math-card{padding:8px 10px;border-radius:18px}body.tt-focus .tt-stats{position:sticky;top:6px;z-index:20;margin-top:0}body.tt-focus .tt-stage{height:calc(100vh - 145px);display:flex;flex-direction:column;margin-top:8px;padding:12px}body.tt-focus .tt-passage-window{flex:0 0 8.4em}body.tt-focus .tt-input-wrap{position:sticky;bottom:6px;z-index:15;margin-top:auto;background:linear-gradient(180deg,rgba(255,255,255,.55),#fff 30%);padding-top:10px}body.tt-focus .tt-actions{justify-content:flex-end}.tt-exit-focus{display:none}body.tt-focus .tt-exit-focus{display:inline-flex}
+@media(max-width:900px){.tt-config{grid-template-columns:repeat(2,minmax(0,1fr))}.tt-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.tt-passage-flow{font-size:17px}.tt-passage-window{height:8em}body.tt-focus .tt-stage{height:calc(100vh - 190px)}}
+@media(max-width:560px){.tt-config{grid-template-columns:1fr 1fr}.tt-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tt-stat:nth-child(5){grid-column:span 2}.tt-passage-flow{font-size:16px;line-height:2}.tt-passage-window{height:7.2em;padding:10px 12px}.tt-input{font-size:18px}.tt-actions .dk-btn{flex:1}body.tt-focus .tt-stage{height:calc(100vh - 210px)}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.tt-passage-flow,.it-header,.tool-breadcrumb,.tool-page-head,.tt-config,.tt-mode-help,.tt-focus-launch{transition:none!important}}
+</style>
+<link href="../assets/site-shell.css?v=dk12" rel="stylesheet"/>
+<link href="https://dokitly.in/student-tools/typing-test.html" rel="canonical"/><meta content="Typing Test — DoKitly" property="og:title"/><meta content="Take focused timed typing tests with Easy, Medium and Hard passages plus Normal, Strict and God modes." property="og:description"/><meta content="website" property="og:type"/><meta content="https://dokitly.in/student-tools/typing-test.html" property="og:url"/><meta content="https://dokitly.in/assets/logo.png" property="og:image"/><meta content="summary_large_image" name="twitter:card"/><meta content="Typing Test — DoKitly" name="twitter:title"/><meta content="Take focused timed typing tests with Easy, Medium and Hard passages plus Normal, Strict and God modes." name="twitter:description"/><meta content="https://dokitly.in/assets/logo.png" name="twitter:image"/></head>
+<body class="standalone-tool-page">
+<header class="it-header"><div class="it-head-inner"><a class="it-brand" href="../index.html"><img alt="DoKitly" src="../assets/logo.png?v=2"/></a><nav class="it-nav"><a href="../index.html">Home</a><a href="../all-tools.html">Categories</a><a href="../whats-new.html">What’s New</a></nav></div></header>
+<main class="tool-page-shell">
+<div class="tool-breadcrumb"><a href="../index.html">Home</a> / <a href="index.html">Student</a> / Typing Test</div>
+<div class="tool-page-head"><span class="tool-page-icon">⌨️</span><div><h1>Typing Test</h1><p>Focused timed typing with real keystroke accuracy, locked completed words and an optional no-correction God Mode.</p></div></div>
+<div class="math-card">
+<div class="tt-config">
+<div class="math-field"><label>Language</label><select id="ttLang"><option value="en">English</option><option value="hi">हिन्दी</option></select></div>
+<div class="math-field"><label>Duration</label><select id="ttDuration"><option value="60">1 minute</option><option value="120">2 minutes</option><option selected="" value="300">5 minutes</option><option value="600">10 minutes</option></select></div>
+<div class="math-field"><label>Difficulty</label><select id="ttDifficulty"><option value="easy">Easy</option><option selected="" value="medium">Medium</option><option value="hard">Hard</option></select></div>
+<div class="math-field"><label>Typing Mode</label><select id="ttMode"><option value="normal">Normal</option><option value="strict">Strict</option><option value="god">God Mode</option></select></div>
+<div class="math-field"><label>Passage</label><button class="dk-btn" id="ttNew" type="button">New Passage</button></div>
+</div>
+<p class="tt-mode-help" id="ttModeHelp">Normal: Backspace works only inside the current word. Pressing Space locks that word forever. Wrong keystrokes still remain in accuracy.</p>
+<div class="tt-focus-launch"><button class="dk-btn primary" id="ttStart" type="button">Start Test</button></div>
+<div class="tt-stats"><div class="tt-stat"><b id="ttTime">05:00</b><span>TIME LEFT</span></div><div class="tt-stat"><b id="ttWpm">0</b><span>WPM</span></div><div class="tt-stat"><b id="ttCpm">0</b><span>CPM</span></div><div class="tt-stat"><b id="ttAcc">100%</b><span>ACCURACY</span></div><div class="tt-stat"><b id="ttErrors">0</b><span>ERRORS</span></div></div>
+<div class="tt-progress"><span id="ttBar"></span></div>
+<div class="tt-stage">
+<div class="tt-passage-window" id="ttWindow"><div aria-live="polite" class="tt-passage-flow" id="ttFlow"></div></div>
+<div class="tt-input-wrap"><div class="tt-current-label" id="ttCurrentLabel">Press Start Test to begin.</div><input autocapitalize="off" autocomplete="off" class="tt-input" disabled="" id="ttInput" placeholder="Type the highlighted word here…" spellcheck="false"/></div>
+<div class="tt-actions"><button class="dk-btn" id="ttRestart" type="button">Restart Test</button><button class="dk-btn ghost" id="ttFinish" type="button">Finish Now</button><button class="dk-btn tt-exit-focus" id="ttExitFocus" type="button">Exit Focus View</button></div>
+<div class="tt-result" id="ttResult">Choose your settings, then press Start Test. Only 2–3 passage lines stay visible while completed lines move smoothly upward.</div>
+</div>
+</div>
+</main>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const EN={
+ easy:[
+  'Rain changes the sound of a city. Cars move more slowly, roofs begin to tap, and the smell of wet soil reaches the streets. After a strong shower, trees often look brighter and the evening air feels fresh.',
+  'Early in the morning, a small park can feel like a different world. Birds move between the trees, people walk at an easy pace, and the air feels cooler than it will later in the day.',
+  'A good library is quiet but never dull. Every shelf holds stories, facts, ideas, and questions from different places and times. A reader can spend an hour with history, science, travel, or fiction without leaving the same chair.',
+  'A train journey can be simple and relaxing. The platform gets busy, the doors open, people find their seats, and the view begins to change as the train moves away from the station.'
+ ],
+ medium:[
+  'A railway station is a small lesson in coordination. Trains must arrive on the correct track, passengers need clear information, luggage and supplies move through limited space, and safety rules must be followed. Even a brief delay can affect several later services across a large network.',
+  'Modern cities depend on many invisible systems working together. Water, electricity, data networks, public transport, waste collection, emergency services, and thousands of daily deliveries must remain reliable even when demand changes suddenly.',
+  'Good decisions rarely come from one number alone. Context matters, assumptions should be visible, and useful comparisons require the same definitions. A quick estimate can guide attention, but important conclusions deserve stronger evidence and careful checking.',
+  'A long walk through an unfamiliar neighborhood can reveal details that disappear from a moving vehicle. Small shops, old trees, building materials, local signs, street sounds, and patterns of movement slowly form a clearer picture of the place.'
+ ],
+ hard:[
+  'Historical claims become stronger when independent evidence converges. Written records may contain bias, archaeological layers can be incomplete, and oral traditions can change over generations; however, dates, inscriptions, material remains, climate evidence, and records from different observers can be compared to test whether a proposed explanation is credible.',
+  'Complex systems often behave differently from their individual parts. A network may remain stable after several small failures yet react sharply when a critical threshold is crossed, which is why resilience planning considers redundancy, feedback loops, dependencies, and recovery time instead of relying on a single performance metric.',
+  'Scientific measurement is not merely the act of recording a value. Instruments have limits, samples contain variation, definitions influence what is counted, and uncertainty must be communicated honestly; otherwise, a precise-looking result can imply far more confidence than the evidence supports.',
+  'Software reliability depends on more than writing code that works once. Clear interfaces, defensive validation, predictable state transitions, useful diagnostics, repeatable tests, and graceful handling of partial failure all reduce the chance that a small unexpected condition becomes a larger system-wide problem.'
+ ]
+};
+const HI={
+ easy:['सुबह की हवा ठंडी और साफ होती है। लोग पार्क में धीरे धीरे चलते हैं और पक्षियों की आवाज सुनते हैं। नियमित अभ्यास से टाइपिंग की गति और शुद्धता दोनों बेहतर होती हैं।','पानी जीवन के लिए बहुत जरूरी है। हमें पानी बचाना चाहिए और जरूरत के अनुसार ही उसका उपयोग करना चाहिए। छोटी अच्छी आदतें समय के साथ बड़ा फर्क पैदा कर सकती हैं।'],
+ medium:['किसी भी कौशल में सुधार के लिए नियमित अभ्यास, सही तकनीक और धैर्य जरूरी है। तेज टाइप करने से पहले सही अक्षर और सही उंगली का अभ्यास करना अधिक उपयोगी होता है।','शहर की व्यवस्था कई अलग सेवाओं पर निर्भर करती है। परिवहन, बिजली, पानी, संचार और आपात सेवाएं मिलकर रोजमर्रा के जीवन को सुचारु रूप से चलाती हैं।'],
+ hard:['विश्वसनीय निष्कर्ष केवल आकर्षक आंकड़ों से नहीं बनते। स्रोत, परिभाषा, समय अवधि, नमूना और अनिश्चितता को समझे बिना कोई भी सटीक दिखाई देने वाला आंकड़ा भ्रामक हो सकता है।','तकनीकी प्रणालियों की विश्वसनीयता बढ़ाने के लिए परीक्षण, त्रुटि प्रबंधन, स्पष्ट संकेत, सुरक्षित डिफॉल्ट और पुनर्प्राप्ति प्रक्रिया का व्यवस्थित रूप से डिजाइन किया जाना आवश्यक है।']
+};
+let words=[],states=[],index=0,wrongKeys=0,printableKeys=0,currentTouched=false,started=false,ended=false,timer=null,startAt=0,remaining=300,total=300;
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function buildPassage(){
+ const lang=$('ttLang').value,diff=$('ttDifficulty').value,src=(lang==='hi'?HI:EN)[diff];
+ const target=Math.max(260,Math.ceil(Number($('ttDuration').value)/60*330));let out=[];let pool=shuffle(src),i=0;
+ while(out.length<target){out.push(...pool[i%pool.length].trim().split(/\s+/));i++;if(i%pool.length===0)pool=shuffle(src)}
+ words=out;states=new Array(words.length).fill(null);index=0;currentTouched=false;render();syncPosition(true)
+}
+function fmt(sec){sec=Math.max(0,Math.floor(sec));return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}
+function modeHelp(){const m=$('ttMode').value;const t={normal:'Normal: Backspace works only inside the current word. Pressing Space locks that word forever. Wrong keystrokes still remain in accuracy.',strict:'Strict: Backspace still works inside the current word, but any mistake made in that word permanently marks it as an error after Space.',god:'God Mode: every key is final. Backspace is disabled, and Space permanently locks the word.'};$('ttModeHelp').textContent=t[m]}
+function render(){
+ const flow=$('ttFlow');flow.innerHTML=words.map((w,i)=>{let c='tt-word';if(i<index)c+=states[i]?.ok?' done-ok':' done-bad';else if(i===index)c+=currentTouched&&$('ttMode').value!=='normal'?' current touched':' current';return `<span class="${c}" data-i="${i}">${escapeHtml(w)}</span>`}).join(' ');
+ $('ttCurrentLabel').textContent=ended?'Test finished.':started?`Current word ${index+1} of ${words.length}`:'Press Start Test to begin.';
+ requestAnimationFrame(()=>syncPosition(false));
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function syncPosition(reset){const flow=$('ttFlow'),cur=flow.querySelector('.tt-word.current');if(reset||!cur){flow.style.transform='translateY(0)';return}const cs=getComputedStyle(flow),lh=parseFloat(cs.lineHeight)||42;const desired=Math.max(0,cur.offsetTop-lh);flow.style.transform=`translateY(-${desired}px)`}
+function stats(){const mins=Math.max((Date.now()-startAt)/60000,1/60000);const typed=printableKeys;const wpm=started?Math.max(0,Math.round((typed/5)/mins)):0;const cpm=started?Math.max(0,Math.round(typed/mins)):0;const acc=typed?Math.max(0,Math.round((typed-wrongKeys)/typed*100)):100;$('ttWpm').textContent=wpm;$('ttCpm').textContent=cpm;$('ttAcc').textContent=acc+'%';$('ttErrors').textContent=wrongKeys;$('ttBar').style.width=((total-remaining)/total*100)+'%'}
+function begin(){if(started&&!ended)return;resetRuntime(false);started=true;ended=false;document.body.classList.add('tt-focus');$('ttInput').disabled=false;$('ttStart').disabled=true;setTimeout(()=>{$('ttInput').focus();startAt=Date.now();timer=setInterval(()=>{remaining--; $('ttTime').textContent=fmt(remaining);stats();if(remaining<=0)finish()},1000)},330);render()}
+function finish(){if(ended)return;ended=true;clearInterval(timer);timer=null;$('ttInput').disabled=true;remaining=Math.max(0,remaining);$('ttTime').textContent=fmt(remaining);$('ttBar').style.width='100%';stats();document.body.classList.remove('tt-focus');$('ttStart').disabled=false;const acc=$('ttAcc').textContent;$('ttResult').className='tt-result ok';$('ttResult').textContent=`Finished — ${$('ttWpm').textContent} WPM, ${$('ttCpm').textContent} CPM, ${acc} accuracy, ${wrongKeys} wrong keystrokes.`}
+function resetRuntime(rebuild=true){clearInterval(timer);timer=null;started=false;ended=false;wrongKeys=0;printableKeys=0;index=0;currentTouched=false;states=new Array(words.length).fill(null);total=Number($('ttDuration').value);remaining=total;$('ttTime').textContent=fmt(remaining);$('ttInput').value='';$('ttInput').disabled=true;$('ttWpm').textContent='0';$('ttCpm').textContent='0';$('ttAcc').textContent='100%';$('ttErrors').textContent='0';$('ttBar').style.width='0%';$('ttResult').className='tt-result';$('ttResult').textContent='Choose your settings, then press Start Test. Only 2–3 passage lines stay visible while completed lines move smoothly upward.';document.body.classList.remove('tt-focus');$('ttStart').disabled=false;if(rebuild)buildPassage();else{render();syncPosition(true)}}
+function commit(){if(!started||ended)return;const typed=$('ttInput').value;const expected=words[index]||'';if(!typed)return;const mode=$('ttMode').value;const exact=typed===expected;const ok=mode==='normal'?exact:(exact&&!currentTouched);states[index]={ok,typed,touched:currentTouched};index++;$('ttInput').value='';currentTouched=false;if(index>=words.length){const extra=buildExtra();words.push(...extra);states.push(...new Array(extra.length).fill(null))}render();stats()}
+function buildExtra(){const src=(($('ttLang').value==='hi'?HI:EN)[$('ttDifficulty').value]);return shuffle(src).join(' ').split(/\s+/)}
+$('ttInput').addEventListener('keydown',e=>{
+ if(!started||ended)return;
+ if(e.key==='Backspace'){if($('ttMode').value==='god'){e.preventDefault();flashBad()}return}
+ if(e.code==='Space'||e.key===' '){e.preventDefault();commit();return}
+ if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown','Tab','Enter','Delete'].includes(e.key)){e.preventDefault();return}
+ if((e.ctrlKey||e.metaKey)&&['v','x','z','y'].includes(e.key.toLowerCase())){e.preventDefault();return}
+ if(e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey){const pos=Array.from($('ttInput').value).length;const exp=Array.from(words[index]||'')[pos]||'';printableKeys++;if(e.key!==exp){wrongKeys++;currentTouched=true;flashBad()}setTimeout(stats,0)}
+});
+$('ttInput').addEventListener('paste',e=>e.preventDefault());
+function flashBad(){const x=$('ttInput');x.classList.remove('bad-flash');void x.offsetWidth;x.classList.add('bad-flash')}
+$('ttStart').onclick=begin;$('ttRestart').onclick=()=>resetRuntime(true);$('ttNew').onclick=()=>resetRuntime(true);$('ttFinish').onclick=finish;$('ttExitFocus').onclick=()=>document.body.classList.remove('tt-focus');
+['ttLang','ttDuration','ttDifficulty'].forEach(id=>$(id).addEventListener('change',()=>resetRuntime(true)));$('ttMode').addEventListener('change',()=>{modeHelp();resetRuntime(false)});
+modeHelp();buildPassage();resetRuntime(false);
+})();
+</script>
+<script src="../assets/site-shell.js?v=dk12"></script>
+</body></html>
