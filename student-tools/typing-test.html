@@ -1,119 +1,733 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DoKitly Typing Test – Floating Dock UI</title>
-  <link rel="stylesheet" href="typing-test.css">
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="#f7f9fc" name="theme-color"/>
+<title>Typing Test — DoKitly</title>
+<meta content="Take focused timed typing tests with Easy, Medium and Hard passages plus Normal, Strict and God modes." name="description"/>
+<link href="../assets/favicon-32.png" rel="icon"/>
+<link href="../tool-page.css?v=dk12" rel="stylesheet"/>
+
+<style>
+:root{
+  --tt-blue:#1769ff;
+  --tt-teal:#14b8a6;
+  --tt-ink:#15364a;
+  --tt-muted:#64748b;
+  --tt-line:#d8e4ed;
+  --tt-soft:#f5f9fc;
+  --tt-green:#14865b;
+  --tt-red:#c93f52;
+}
+.dk-btn{
+  min-height:44px;border:1px solid #cbdde8;border-radius:13px;padding:10px 16px;
+  background:linear-gradient(180deg,#fff,#f7fbfd);color:#17445e;font:inherit;font-weight:900;
+  cursor:pointer;box-shadow:0 4px 12px rgba(15,61,86,.06);
+  transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease
+}
+.dk-btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(15,61,86,.10)}
+.dk-btn.primary{border-color:transparent;background:linear-gradient(135deg,#1769ff,#10b8ad);color:#fff;box-shadow:0 9px 22px rgba(23,105,255,.18)}
+.dk-btn.ghost{background:#fff}
+.dk-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+.tt-config-card{padding:16px 16px 14px}
+.tt-config{display:grid;grid-template-columns:1fr 1fr 1fr 1.35fr auto;gap:10px;align-items:end}
+.tt-config .math-field{margin:0}
+.tt-config .math-field:last-child{display:flex;flex-direction:column}
+.tt-config .dk-btn{white-space:nowrap}
+.tt-mode-seg{
+  min-height:44px;display:flex;gap:4px;padding:4px;border:1px solid #d8e5ef;border-radius:13px;
+  background:#eff5fa
+}
+.tt-mode-seg button{
+  flex:1;border:0;border-radius:9px;background:transparent;color:#607086;font:inherit;font-size:12px;
+  font-weight:900;padding:7px 8px;cursor:pointer
+}
+.tt-mode-seg button.active{background:#fff;color:#1769ff;box-shadow:0 4px 12px rgba(15,61,86,.09)}
+.tt-mode-help{font-size:12px;color:var(--tt-muted);line-height:1.45;margin:9px 2px 0}
+
+.tt-workspace{display:grid;grid-template-columns:minmax(0,1fr) 255px;gap:14px;margin-top:14px}
+.tt-main{min-width:0;padding:16px}
+.tt-sidebar{padding:16px}
+.tt-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.tt-stat{
+  padding:11px 8px;border:1px solid var(--tt-line);border-radius:14px;background:#f8fbff;text-align:center
+}
+.tt-stat b{display:block;font-size:21px;color:#122d42;line-height:1.05}
+.tt-stat span{display:block;margin-top:4px;font-size:9px;color:#64748b;font-weight:900;letter-spacing:.05em}
+
+.tt-progress{height:6px;border-radius:999px;background:#e7eef5;overflow:hidden;margin:11px 0 12px}
+.tt-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#1769ff,#14b8a6);transition:width .2s linear}
+
+.tt-passage-card{
+  border:1px solid #dbe7ef;border-radius:18px;background:linear-gradient(180deg,#fff,#fbfdff);
+  padding:14px 15px;box-shadow:0 9px 24px rgba(15,61,86,.045)
+}
+.tt-passage-window{
+  height:8.35em;overflow:hidden;position:relative;scroll-behavior:smooth
+}
+.tt-passage-flow{
+  font-size:20px;line-height:2.05;color:#24364a
+}
+.tt-word{
+  display:inline-block;margin-right:.34em;border-radius:6px;padding:0 2px;
+  transition:background .15s ease,color .15s ease,box-shadow .15s ease
+}
+.tt-word.current{background:#e8f4ff;color:#0a5dc7;box-shadow:inset 0 -3px 0 #1769ff}
+.tt-word.locked-ok{color:var(--tt-green);background:#ecfbf4}
+.tt-word.locked-bad{color:var(--tt-red);background:#fff0f3;text-decoration:underline;text-decoration-thickness:1px}
+.tt-word.upcoming{color:#27384d}
+
+.tt-dock{
+  position:sticky;bottom:9px;z-index:16;margin-top:12px;padding:9px 10px;
+  display:flex;align-items:center;gap:8px;border:1px solid #cfe1f2;border-radius:18px;
+  background:rgba(255,255,255,.95);backdrop-filter:blur(12px);
+  box-shadow:0 14px 34px rgba(18,74,123,.13)
+}
+.tt-dock-icon{
+  width:42px;height:42px;display:grid;place-items:center;flex:none;border-radius:13px;
+  background:linear-gradient(135deg,#e8f1ff,#e8fffa);border:1px solid #d8ebf9
+}
+.tt-input{
+  min-width:0;flex:1;height:52px;border:0;background:transparent;outline:none;padding:0 7px;
+  font:inherit;font-size:19px;color:#173148
+}
+.tt-input::placeholder{color:#91a0b2}
+.tt-input.bad-flash{animation:ttBad .19s ease}
+@keyframes ttBad{50%{background:#fff0f2;border-radius:10px}}
+
+.tt-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px}
+.tt-current-label{font-size:11px;font-weight:900;color:#6b7b8f}
+.tt-actions{display:flex;gap:8px;flex-wrap:wrap}
+.tt-result{
+  margin-top:10px;padding:10px 12px;border-radius:12px;background:#f8fbff;
+  border:1px solid var(--tt-line);font-size:13px;color:#475569
+}
+.tt-result.ok{background:#ecfdf5;border-color:#bbf7d0;color:#047857}
+
+.tt-visual{
+  display:flex;align-items:center;gap:12px;padding:14px;border-radius:18px;
+  background:linear-gradient(135deg,#f5faff,#effffc);border:1px solid #d7e8f7;
+  margin-bottom:12px
+}
+.tt-visual-icon{
+  width:58px;height:58px;border-radius:18px;display:grid;place-items:center;flex:none;
+  color:#fff;background:linear-gradient(135deg,#1769ff,#11bdb0);
+  box-shadow:0 12px 25px rgba(23,105,255,.22)
+}
+.tt-visual h3{font-size:17px;margin:0 0 4px;color:#173148}
+.tt-visual p{font-size:12px;line-height:1.45;color:#718096;margin:0}
+.tt-side-row{display:flex;justify-content:space-between;gap:10px;padding:11px 1px;border-bottom:1px solid #e8eef5}
+.tt-side-row span{font-size:12px;color:#728197}
+.tt-side-row b{font-size:12px;color:#18364d;text-align:right}
+.tt-side-note{font-size:12px;color:#718096;line-height:1.55;margin:12px 0 0}
+
+body.tt-focus{overflow:hidden;background:#eef7fb}
+body.tt-focus .it-header,
+body.tt-focus .tool-breadcrumb,
+body.tt-focus .tool-page-head,
+body.tt-focus .tt-config-card,
+body.tt-focus .dk-footer{
+  opacity:0;max-height:0!important;margin:0!important;padding-top:0!important;padding-bottom:0!important;
+  overflow:hidden;pointer-events:none;transform:translateY(-12px)
+}
+.it-header,.tool-breadcrumb,.tool-page-head,.tt-config-card{
+  transition:opacity .32s ease,transform .32s ease,max-height .32s ease,margin .32s ease,padding .32s ease;
+  max-height:300px
+}
+body.tt-focus .tool-page-shell{max-width:1180px;padding-top:8px;padding-bottom:8px}
+body.tt-focus .tt-workspace{grid-template-columns:1fr;margin-top:0}
+body.tt-focus .tt-sidebar{display:none}
+body.tt-focus .tt-main{
+  position:fixed;inset:14px;z-index:40;border-radius:20px;padding:15px;
+  background:linear-gradient(180deg,#fff,#f5fbff)
+}
+body.tt-focus .tt-passage-window{height:9.1em}
+body.tt-focus .tt-passage-flow{font-size:23px}
+body.tt-focus .tt-dock{position:absolute;left:15px;right:15px;bottom:14px}
+body.tt-focus .tt-bottom{padding-bottom:73px}
+
+@media(max-width:980px){
+  .tt-config{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tt-workspace{grid-template-columns:1fr}
+  .tt-sidebar{display:none}
+}
+@media(max-width:700px){
+  .tt-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .tt-stat:nth-child(4),.tt-stat:nth-child(5){grid-column:auto}
+  .tt-passage-flow{font-size:17px;line-height:2}
+  .tt-passage-window{height:7.6em}
+  .tt-dock{flex-wrap:wrap}
+  .tt-input{order:1;flex:1 1 calc(100% - 55px)}
+  .tt-dock .dk-btn{order:2;flex:1}
+}
+@media(max-width:520px){
+  .tt-config{grid-template-columns:1fr}
+  .tt-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tt-stat:nth-child(5){grid-column:span 2}
+  .tt-passage-flow{font-size:16px}
+  .tt-passage-window{height:7.2em}
+}
+@media(prefers-reduced-motion:reduce){
+  *{scroll-behavior:auto!important}
+  .it-header,.tool-breadcrumb,.tool-page-head,.tt-config-card{transition:none!important}
+}
+</style>
+
+<link href="../assets/site-shell.css?v=dk12" rel="stylesheet"/>
+<link href="https://dokitly.in/student-tools/typing-test.html" rel="canonical"/>
+<meta content="Typing Test — DoKitly" property="og:title"/>
+<meta content="Take focused timed typing tests with Easy, Medium and Hard passages plus Normal, Strict and God modes." property="og:description"/>
+<meta content="website" property="og:type"/>
+<meta content="https://dokitly.in/student-tools/typing-test.html" property="og:url"/>
+<meta content="https://dokitly.in/assets/logo.png" property="og:image"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="Typing Test — DoKitly" name="twitter:title"/>
+<meta content="Take focused timed typing tests with Easy, Medium and Hard passages plus Normal, Strict and God modes." name="twitter:description"/>
+<meta content="https://dokitly.in/assets/logo.png" name="twitter:image"/>
 </head>
-<body>
-  <div class="page" id="pageRoot">
-    <section class="hero">
-      <div>
-        <h1>Typing Test</h1>
-        <p>Floating typing dock + compact 2–3 line passage + locked completed words.</p>
-      </div>
-      <div class="badge">Prototype · Example 4 Refined</div>
-    </section>
 
-    <section class="card toolbar-card">
-      <div class="toolbar">
-        <div>
-          <label for="languageSelect">Language</label>
-          <select id="languageSelect">
-            <option>English</option>
-            <option>Hindi</option>
-          </select>
-        </div>
-        <div>
-          <label for="difficultySelect">Difficulty</label>
-          <select id="difficultySelect">
-            <option>Easy</option>
-            <option>Medium</option>
-            <option>Hard</option>
-          </select>
-        </div>
-        <div>
-          <label for="durationSelect">Duration</label>
-          <select id="durationSelect">
-            <option value="1">1 minute</option>
-            <option value="2">2 minutes</option>
-            <option value="5">5 minutes</option>
-            <option value="10">10 minutes</option>
-          </select>
-        </div>
-        <div>
-          <label>Typing Mode</label>
-          <div class="segment">
-            <button type="button" class="active" data-mode-btn="normal">Normal</button>
-            <button type="button" data-mode-btn="strict">Strict</button>
-            <button type="button" data-mode-btn="god">God</button>
-          </div>
-        </div>
-        <div>
-          <label>Action</label>
-          <button type="button" class="btn primary" id="startBtn">▶ Start Test</button>
-        </div>
-      </div>
-    </section>
+<body class="standalone-tool-page">
+<header class="it-header">
+  <div class="it-head-inner">
+    <a class="it-brand" href="../index.html"><img alt="DoKitly" src="../assets/logo.png?v=2"/></a>
+    <nav class="it-nav">
+      <a href="../index.html">Home</a>
+      <a href="../all-tools.html">Categories</a>
+      <a href="../whats-new.html">What’s New</a>
+    </nav>
+  </div>
+</header>
 
-    <section class="workspace">
-      <section class="card main-card">
-        <div class="stats">
-          <div class="stat"><b id="timeStat">01:00</b><small>TIME</small></div>
-          <div class="stat"><b id="wpmStat">0</b><small>WPM</small></div>
-          <div class="stat"><b id="accuracyStat">100%</b><small>ACCURACY</small></div>
-          <div class="stat"><b id="errorStat">0</b><small>ERRORS</small></div>
-        </div>
-
-        <div class="passage-wrap">
-          <div class="passage-viewport" id="passageViewport">
-            <div class="passage" id="passage"></div>
-          </div>
-        </div>
-
-        <div class="input-dock">
-          <div class="icon" aria-hidden="true">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="2.5" y="5" width="19" height="14" rx="3.5" stroke="#0b7cff" stroke-width="1.8"/>
-              <path d="M6 10H8M9.5 10H11.5M13 10H15M16.5 10H18" stroke="#14c8b7" stroke-width="1.8" stroke-linecap="round"/>
-              <path d="M6 13.5H8M9.5 13.5H11.5M13 13.5H18" stroke="#0b7cff" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <input id="typingInput" class="typing-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type here… Space locks the current word">
-          <button type="button" class="btn ghost" id="restartBtn">↻ Restart</button>
-          <button type="button" class="btn primary" id="finishBtn">Finish</button>
-        </div>
-
-        <div class="actions">
-          <button type="button" class="btn ghost" id="focusBtn">⛶ Focus Mode</button>
-        </div>
-      </section>
-
-      <aside class="card sidebar">
-        <div class="right-icon-card">
-          <div class="big-icon" aria-hidden="true">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="2.5" y="5" width="19" height="14" rx="3.5" stroke="white" stroke-width="1.7"/>
-              <path d="M6 10H8M9.5 10H11.5M13 10H15M16.5 10H18" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-              <path d="M6 13.5H8M9.5 13.5H11.5M13 13.5H18" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div>
-            <h3>Focused Typing</h3>
-            <p>Compact passage, locked words, and an always-visible typing dock.</p>
-          </div>
-        </div>
-
-        <div class="mini-panel"><span>Mode</span><b id="modeLabel">Normal</b></div>
-        <div class="mini-panel"><span>Locked words</span><b id="lockedCount">0</b></div>
-        <div class="mini-panel"><span>Passage view</span><b>2–3 lines</b></div>
-        <div class="mini-panel"><span>Word rule</span><b>Space = Lock</b></div>
-        <p class="note">Completed words stay visible inside the passage. Correct ones turn green and wrong ones turn red. They do not disappear after pressing Space.</p>
-      </aside>
-    </section>
+<main class="tool-page-shell">
+  <div class="tool-breadcrumb">
+    <a href="../index.html">Home</a> / <a href="index.html">Student</a> / Typing Test
   </div>
 
-  <script src="typing-test.js"></script>
+  <div class="tool-page-head">
+    <span class="tool-page-icon">⌨️</span>
+    <div>
+      <h1>Typing Test</h1>
+      <p>Focused timed typing with real keystroke accuracy, locked completed words and an optional no-correction God Mode.</p>
+    </div>
+  </div>
+
+  <section class="math-card tt-config-card">
+    <div class="tt-config">
+      <div class="math-field">
+        <label>Language</label>
+        <select id="ttLang">
+          <option value="en">English</option>
+          <option value="hi">हिन्दी</option>
+        </select>
+      </div>
+
+      <div class="math-field">
+        <label>Duration</label>
+        <select id="ttDuration">
+          <option value="60">1 minute</option>
+          <option value="120">2 minutes</option>
+          <option selected value="300">5 minutes</option>
+          <option value="600">10 minutes</option>
+        </select>
+      </div>
+
+      <div class="math-field">
+        <label>Difficulty</label>
+        <select id="ttDifficulty">
+          <option value="easy">Easy</option>
+          <option selected value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+
+      <div class="math-field">
+        <label>Typing Mode</label>
+        <div class="tt-mode-seg" aria-label="Typing mode">
+          <button class="active" data-mode="normal" type="button">Normal</button>
+          <button data-mode="strict" type="button">Strict</button>
+          <button data-mode="god" type="button">God</button>
+        </div>
+      </div>
+
+      <div class="math-field">
+        <label>Passage</label>
+        <button class="dk-btn" id="ttNew" type="button">New Passage</button>
+      </div>
+    </div>
+    <p class="tt-mode-help" id="ttModeHelp">
+      Normal: Backspace works only inside the current word. Space locks the word, but the word stays visible in the passage.
+    </p>
+  </section>
+
+  <section class="tt-workspace">
+    <div class="math-card tt-main">
+      <div class="tt-stats">
+        <div class="tt-stat"><b id="ttTime">05:00</b><span>TIME LEFT</span></div>
+        <div class="tt-stat"><b id="ttWpm">0</b><span>WPM</span></div>
+        <div class="tt-stat"><b id="ttCpm">0</b><span>CPM</span></div>
+        <div class="tt-stat"><b id="ttAcc">100%</b><span>ACCURACY</span></div>
+        <div class="tt-stat"><b id="ttErrors">0</b><span>ERRORS</span></div>
+      </div>
+
+      <div class="tt-progress"><span id="ttBar"></span></div>
+
+      <div class="tt-passage-card">
+        <div class="tt-passage-window" id="ttWindow">
+          <div aria-live="polite" class="tt-passage-flow" id="ttFlow"></div>
+        </div>
+      </div>
+
+      <div class="tt-dock">
+        <div class="tt-dock-icon" aria-hidden="true">
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="none">
+            <rect x="2.5" y="5" width="19" height="14" rx="3.5" stroke="#1769ff" stroke-width="1.7"/>
+            <path d="M6 10H8M9.5 10H11.5M13 10H15M16.5 10H18" stroke="#14b8a6" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M6 13.5H8M9.5 13.5H11.5M13 13.5H18" stroke="#1769ff" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <input
+          autocapitalize="off"
+          autocomplete="off"
+          class="tt-input"
+          disabled
+          id="ttInput"
+          placeholder="Type here… Space locks the current word"
+          spellcheck="false"
+        />
+
+        <button class="dk-btn ghost" id="ttRestart" type="button">↻ Restart</button>
+        <button class="dk-btn primary" id="ttFinish" type="button">Finish</button>
+      </div>
+
+      <div class="tt-bottom">
+        <div class="tt-current-label" id="ttCurrentLabel">Press Start Test to begin.</div>
+        <div class="tt-actions">
+          <button class="dk-btn ghost" id="ttFocus" type="button">⛶ Focus Mode</button>
+          <button class="dk-btn primary" id="ttStart" type="button">▶ Start Test</button>
+        </div>
+      </div>
+
+      <div class="tt-result" id="ttResult">
+        Choose your settings, then press Start Test. Completed words remain visible; the passage moves only when you advance to a new line.
+      </div>
+    </div>
+
+    <aside class="math-card tt-sidebar">
+      <div class="tt-visual">
+        <div class="tt-visual-icon" aria-hidden="true">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+            <rect x="2.5" y="5" width="19" height="14" rx="3.5" stroke="white" stroke-width="1.7"/>
+            <path d="M6 10H8M9.5 10H11.5M13 10H15M16.5 10H18" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M6 13.5H8M9.5 13.5H11.5M13 13.5H18" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <h3>Focused Typing</h3>
+          <p>Compact passage, live stats and an always-visible typing dock.</p>
+        </div>
+      </div>
+
+      <div class="tt-side-row"><span>Mode</span><b id="ttModeSide">Normal</b></div>
+      <div class="tt-side-row"><span>Locked words</span><b id="ttLocked">0</b></div>
+      <div class="tt-side-row"><span>Passage view</span><b>2–3 lines</b></div>
+      <div class="tt-side-row"><span>Word rule</span><b>Space = Lock</b></div>
+
+      <p class="tt-side-note">
+        Correct locked words stay green. Wrong locked words stay red. A word never disappears just because Space was pressed; only completed lines slide upward naturally.
+      </p>
+    </aside>
+  </section>
+</main>
+
+<script>
+(()=>{
+'use strict';
+
+const $ = id => document.getElementById(id);
+
+const EN = {
+  easy:[
+    'A quiet morning can make a familiar street feel new. Birds move between the trees while people walk to work, open small shops, and begin another ordinary day.',
+    'Good habits grow through simple actions repeated over time. A short walk, a glass of water, a clean desk, and a few focused minutes can make a busy day easier.',
+    'Rain changes the sound of a city. Cars move more slowly, roofs begin to tap, and the smell of wet soil reaches the streets after a strong shower.',
+    'Learning becomes easier when a large task is divided into small steps. Each finished step gives useful feedback and makes the next step clearer.'
+  ],
+  medium:[
+    'A modern website may look simple on the screen, yet many small systems work together behind it. The browser loads files, applies styles, runs scripts, stores temporary data, and communicates with servers across a large network.',
+    'Modern cities depend on many invisible systems working together. Water, electricity, data networks, public transport, waste collection, emergency services, and thousands of daily deliveries must remain reliable even when demand changes suddenly.',
+    'Good decisions rarely come from one number alone. Context matters, assumptions should be visible, and useful comparisons require the same definitions. A quick estimate can guide attention, but important conclusions deserve stronger evidence and careful checking.',
+    'A long walk through an unfamiliar neighborhood can reveal details that disappear from a moving vehicle. Small shops, old trees, building materials, local signs, street sounds, and patterns of movement slowly form a clearer picture of the place.'
+  ],
+  hard:[
+    'Historical claims become stronger when independent evidence converges. Written records may contain bias, archaeological layers can be incomplete, and oral traditions can change over generations; however, dates, inscriptions, material remains, climate evidence, and records from different observers can be compared to test whether a proposed explanation is credible.',
+    'Complex systems often behave differently from their individual parts. A network may remain stable after several small failures yet react sharply when a critical threshold is crossed, which is why resilience planning considers redundancy, feedback loops, dependencies, and recovery time instead of relying on a single performance metric.',
+    'Scientific measurement is not merely the act of recording a value. Instruments have limits, samples contain variation, definitions influence what is counted, and uncertainty must be communicated honestly; otherwise, a precise-looking result can imply far more confidence than the evidence supports.',
+    'Software reliability depends on more than writing code that works once. Clear interfaces, defensive validation, predictable state transitions, useful diagnostics, repeatable tests, and graceful handling of partial failure all reduce the chance that a small unexpected condition becomes a larger system-wide problem.'
+  ]
+};
+
+const HI = {
+  easy:[
+    'सुबह की हवा ठंडी और साफ होती है। लोग पार्क में धीरे धीरे चलते हैं और पक्षियों की आवाज सुनते हैं। नियमित अभ्यास से टाइपिंग की गति और शुद्धता दोनों बेहतर होती हैं।',
+    'पानी जीवन के लिए बहुत जरूरी है। हमें पानी बचाना चाहिए और जरूरत के अनुसार ही उसका उपयोग करना चाहिए। छोटी अच्छी आदतें समय के साथ बड़ा फर्क पैदा कर सकती हैं।'
+  ],
+  medium:[
+    'किसी भी कौशल में सुधार के लिए नियमित अभ्यास, सही तकनीक और धैर्य जरूरी है। तेज टाइप करने से पहले सही अक्षर और सही उंगली का अभ्यास करना अधिक उपयोगी होता है।',
+    'शहर की व्यवस्था कई अलग सेवाओं पर निर्भर करती है। परिवहन, बिजली, पानी, संचार और आपात सेवाएं मिलकर रोजमर्रा के जीवन को सुचारु रूप से चलाती हैं।'
+  ],
+  hard:[
+    'विश्वसनीय निष्कर्ष केवल आकर्षक आंकड़ों से नहीं बनते। स्रोत, परिभाषा, समय अवधि, नमूना और अनिश्चितता को समझे बिना कोई भी सटीक दिखाई देने वाला आंकड़ा भ्रामक हो सकता है।',
+    'तकनीकी प्रणालियों की विश्वसनीयता बढ़ाने के लिए परीक्षण, त्रुटि प्रबंधन, स्पष्ट संकेत, सुरक्षित डिफॉल्ट और पुनर्प्राप्ति प्रक्रिया का व्यवस्थित रूप से डिजाइन किया जाना आवश्यक है।'
+  ]
+};
+
+let words = [];
+let states = [];
+let index = 0;
+let wrongKeys = 0;
+let printableKeys = 0;
+let currentTouched = false;
+let started = false;
+let ended = false;
+let timer = null;
+let startAt = 0;
+let remaining = 300;
+let total = 300;
+let mode = 'normal';
+let lastLineTop = null;
+
+function shuffle(a){
+  const copy = [...a];
+  for(let i=copy.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [copy[i],copy[j]]=[copy[j],copy[i]];
+  }
+  return copy;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function buildPassage(){
+  const lang = $('ttLang').value;
+  const diff = $('ttDifficulty').value;
+  const source = (lang === 'hi' ? HI : EN)[diff];
+  const durationMinutes = Number($('ttDuration').value)/60;
+  const targetWords = Math.max(260, Math.ceil(durationMinutes * 330));
+
+  let out = [];
+  let pool = shuffle(source);
+  let i = 0;
+
+  while(out.length < targetWords){
+    out.push(...pool[i % pool.length].trim().split(/\s+/));
+    i++;
+    if(i % pool.length === 0) pool = shuffle(source);
+  }
+
+  words = out;
+  states = new Array(words.length).fill(null);
+  index = 0;
+  currentTouched = false;
+  renderAllWords(true);
+}
+
+function renderAllWords(resetScroll=false){
+  $('ttFlow').innerHTML = words.map((word,i)=>{
+    let cls = 'tt-word upcoming';
+    if(i < index){
+      cls = states[i]?.ok ? 'tt-word locked-ok' : 'tt-word locked-bad';
+    }else if(i === index){
+      cls = 'tt-word current';
+    }
+    return `<span class="${cls}" data-i="${i}">${escapeHtml(word)}</span>`;
+  }).join(' ');
+
+  if(resetScroll){
+    $('ttWindow').scrollTop = 0;
+    requestAnimationFrame(()=>{
+      const cur = getCurrentWordEl();
+      lastLineTop = cur ? cur.offsetTop : null;
+    });
+  }
+
+  updateLabels();
+}
+
+function getCurrentWordEl(){
+  return $('ttFlow').querySelector(`.tt-word[data-i="${index}"]`);
+}
+
+function moveToNextWordVisually(previousLineTop){
+  const cur = getCurrentWordEl();
+  if(!cur) return;
+
+  const newLineTop = cur.offsetTop;
+  if(lastLineTop === null) lastLineTop = previousLineTop ?? newLineTop;
+
+  const lineChanged = Math.abs(newLineTop - lastLineTop) > 4;
+
+  if(lineChanged){
+    const flowStyle = getComputedStyle($('ttFlow'));
+    const lineHeight = parseFloat(flowStyle.lineHeight) || 40;
+    const targetTop = Math.max(0, newLineTop - lineHeight * 1.05);
+    $('ttWindow').scrollTo({top:targetTop,behavior:'smooth'});
+    lastLineTop = newLineTop;
+  }
+}
+
+function updateLabels(){
+  $('ttLocked').textContent = index;
+  $('ttCurrentLabel').textContent = ended
+    ? 'Test finished.'
+    : started
+      ? `Current word ${index+1} of ${words.length}`
+      : 'Press Start Test to begin.';
+}
+
+function fmt(sec){
+  sec = Math.max(0,Math.floor(sec));
+  return String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(sec%60).padStart(2,'0');
+}
+
+function modeHelp(){
+  const text = {
+    normal:'Normal: Backspace works only inside the current word. Space locks the word, but the word stays visible. Wrong keystrokes still remain in accuracy even after correction.',
+    strict:'Strict: Backspace works inside the current word, but if that word ever contains a wrong keystroke it stays marked wrong after Space. Previous words remain locked and visible.',
+    god:'God Mode: Backspace is disabled. Every key is final. Space locks the current word and it remains visible in the passage.'
+  };
+  $('ttModeHelp').textContent = text[mode];
+  $('ttModeSide').textContent = mode === 'god' ? 'God Mode' : mode.charAt(0).toUpperCase()+mode.slice(1);
+}
+
+function stats(){
+  const mins = Math.max((Date.now()-startAt)/60000,1/60000);
+  const typed = printableKeys;
+  const wpm = started ? Math.max(0,Math.round((typed/5)/mins)) : 0;
+  const cpm = started ? Math.max(0,Math.round(typed/mins)) : 0;
+  const acc = typed ? Math.max(0,Math.round((typed-wrongKeys)/typed*100)) : 100;
+
+  $('ttWpm').textContent = wpm;
+  $('ttCpm').textContent = cpm;
+  $('ttAcc').textContent = acc+'%';
+  $('ttErrors').textContent = wrongKeys;
+  $('ttBar').style.width = ((total-remaining)/total*100)+'%';
+}
+
+function begin(){
+  if(started && !ended) return;
+
+  resetRuntime(false);
+  started = true;
+  ended = false;
+  document.body.classList.add('tt-focus');
+  $('ttInput').disabled = false;
+  $('ttStart').disabled = true;
+  $('ttInput').focus();
+
+  startAt = Date.now();
+  timer = setInterval(()=>{
+    remaining--;
+    $('ttTime').textContent = fmt(remaining);
+    stats();
+    if(remaining <= 0) finish();
+  },1000);
+
+  updateLabels();
+}
+
+function finish(){
+  if(ended) return;
+  ended = true;
+  clearInterval(timer);
+  timer = null;
+  $('ttInput').disabled = true;
+  remaining = Math.max(0,remaining);
+  $('ttTime').textContent = fmt(remaining);
+  stats();
+  document.body.classList.remove('tt-focus');
+  $('ttStart').disabled = false;
+
+  $('ttResult').className = 'tt-result ok';
+  $('ttResult').textContent =
+    `Finished — ${$('ttWpm').textContent} WPM, ${$('ttCpm').textContent} CPM, ${$('ttAcc').textContent} accuracy, ${wrongKeys} wrong keystrokes.`;
+  updateLabels();
+}
+
+function resetRuntime(rebuild=true){
+  clearInterval(timer);
+  timer = null;
+  started = false;
+  ended = false;
+  wrongKeys = 0;
+  printableKeys = 0;
+  index = 0;
+  currentTouched = false;
+  total = Number($('ttDuration').value);
+  remaining = total;
+  states = new Array(words.length).fill(null);
+
+  $('ttTime').textContent = fmt(remaining);
+  $('ttInput').value = '';
+  $('ttInput').disabled = true;
+  $('ttWpm').textContent = '0';
+  $('ttCpm').textContent = '0';
+  $('ttAcc').textContent = '100%';
+  $('ttErrors').textContent = '0';
+  $('ttBar').style.width = '0%';
+  $('ttResult').className = 'tt-result';
+  $('ttResult').textContent =
+    'Choose your settings, then press Start Test. Completed words remain visible; the passage moves only when you advance to a new line.';
+  document.body.classList.remove('tt-focus');
+  $('ttStart').disabled = false;
+
+  if(rebuild) buildPassage();
+  else renderAllWords(true);
+
+  stats();
+}
+
+function appendExtraWords(){
+  const source = (($('ttLang').value === 'hi' ? HI : EN)[$('ttDifficulty').value]);
+  const extra = shuffle(source).join(' ').split(/\s+/);
+  const start = words.length;
+  words.push(...extra);
+  states.push(...new Array(extra.length).fill(null));
+
+  const frag = document.createDocumentFragment();
+  extra.forEach((word,offset)=>{
+    const span = document.createElement('span');
+    span.className = 'tt-word upcoming';
+    span.dataset.i = start + offset;
+    span.textContent = word;
+    frag.appendChild(span);
+    frag.appendChild(document.createTextNode(' '));
+  });
+  $('ttFlow').appendChild(frag);
+}
+
+function commitWord(){
+  if(!started || ended) return;
+
+  const input = $('ttInput');
+  const typed = input.value;
+  const expected = words[index] || '';
+
+  if(!typed) return;
+
+  const oldCurrent = getCurrentWordEl();
+  const previousLineTop = oldCurrent ? oldCurrent.offsetTop : lastLineTop;
+  const exact = typed === expected;
+  const ok = mode === 'normal' ? exact : (exact && !currentTouched);
+
+  states[index] = {ok,typed,touched:currentTouched};
+
+  if(oldCurrent){
+    oldCurrent.className = ok ? 'tt-word locked-ok' : 'tt-word locked-bad';
+  }
+
+  index++;
+  input.value = '';
+  currentTouched = false;
+
+  if(index >= words.length - 20) appendExtraWords();
+
+  const next = getCurrentWordEl();
+  if(next) next.className = 'tt-word current';
+
+  updateLabels();
+  requestAnimationFrame(()=>moveToNextWordVisually(previousLineTop));
+  stats();
+}
+
+function flashBad(){
+  const input = $('ttInput');
+  input.classList.remove('bad-flash');
+  void input.offsetWidth;
+  input.classList.add('bad-flash');
+}
+
+$('ttInput').addEventListener('keydown',e=>{
+  if(!started || ended) return;
+
+  if(e.key === 'Backspace'){
+    if(mode === 'god'){
+      e.preventDefault();
+      flashBad();
+      return;
+    }
+    if(!$('ttInput').value.length){
+      // Previous word is locked: Backspace cannot cross the Space boundary.
+      e.preventDefault();
+    }
+    return;
+  }
+
+  if(e.code === 'Space' || e.key === ' '){
+    e.preventDefault();
+    commitWord();
+    return;
+  }
+
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown','Tab','Enter','Delete'].includes(e.key)){
+    e.preventDefault();
+    return;
+  }
+
+  if((e.ctrlKey || e.metaKey) && ['v','x','z','y'].includes(e.key.toLowerCase())){
+    e.preventDefault();
+    return;
+  }
+
+  if(e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey){
+    const pos = Array.from($('ttInput').value).length;
+    const expectedChar = Array.from(words[index] || '')[pos] || '';
+
+    printableKeys++;
+    if(e.key !== expectedChar){
+      wrongKeys++;
+      currentTouched = true;
+      flashBad();
+    }
+    setTimeout(stats,0);
+  }
+});
+
+$('ttInput').addEventListener('paste',e=>e.preventDefault());
+
+document.querySelectorAll('[data-mode]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-mode]').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.mode;
+    modeHelp();
+    resetRuntime(false);
+  });
+});
+
+$('ttStart').addEventListener('click',begin);
+$('ttRestart').addEventListener('click',()=>resetRuntime(true));
+$('ttNew').addEventListener('click',()=>resetRuntime(true));
+$('ttFinish').addEventListener('click',finish);
+$('ttFocus').addEventListener('click',()=>{
+  document.body.classList.toggle('tt-focus');
+  if(started) $('ttInput').focus();
+});
+
+['ttLang','ttDuration','ttDifficulty'].forEach(id=>{
+  $(id).addEventListener('change',()=>resetRuntime(true));
+});
+
+modeHelp();
+buildPassage();
+resetRuntime(false);
+})();
+</script>
+
+<script src="../assets/site-shell.js?v=dk12"></script>
 </body>
 </html>
