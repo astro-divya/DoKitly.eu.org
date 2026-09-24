@@ -40,3 +40,24 @@ input[type="file"]::file-selector-button{border:1px solid #d7e2ee;border-radius:
 .creator-trend-box{margin-top:12px;padding:13px;border:1px solid rgba(20,184,166,.2);border-radius:15px;background:linear-gradient(135deg,rgba(37,99,235,.035),rgba(20,184,166,.06));display:grid;gap:8px}
 .creator-trend-box>b{font-size:13px}.creator-trend-box>small{color:var(--muted,#64748b);font-size:11px}.creator-chip-row{display:flex;gap:7px;flex-wrap:wrap}.creator-chip-row button{min-height:34px;padding:7px 10px;border:1px solid #dbe7ef;background:#fff;color:#17435b;border-radius:999px;font-size:11px}.creator-chip-row.live button{border-color:rgba(20,184,166,.32);background:#f0fdfa;color:#0f766e}
 .seo-copy details{border-top:1px solid var(--line,#e5eaf1);padding:10px 0}.seo-copy details:first-of-type{border-top:0}.seo-copy summary{cursor:pointer;color:var(--text,#0f172a);font-size:14px}.seo-copy details p{margin:8px 0 2px}
+
+
+/* DoKitly Build 16 — balanced tool headers and one premium duotone icon family */
+.dk-balanced-hero{
+  --dk-hero:none;position:relative;min-height:116px;margin:6px 0 14px;padding:18px 20px;overflow:hidden;
+  display:flex;align-items:center;justify-content:space-between;gap:22px;border:1px solid #d9e8f4;border-radius:22px;
+  background:linear-gradient(105deg,#fff 0%,#f8fcff 48%,#ecfaff 100%);box-shadow:0 12px 32px rgba(18,74,123,.065)
+}
+.dk-balanced-hero::before{content:"";position:absolute;inset:-22px -10px -28px 40%;background-image:var(--dk-hero);background-repeat:no-repeat;background-position:72% 50%;background-size:190px 190px;opacity:.055;filter:blur(.2px);transform:rotate(-8deg)}
+.dk-balanced-hero::after{content:"";position:absolute;width:330px;height:170px;right:-45px;top:-55px;border-radius:50%;background:radial-gradient(circle at 45% 55%,rgba(23,105,255,.17),rgba(20,184,166,.08) 48%,transparent 70%);pointer-events:none}
+.dk-hero-copy{position:relative;z-index:2;display:flex;align-items:center;gap:15px;min-width:0;max-width:72%}
+.dk-tool-badge{width:62px;height:62px;min-width:62px;display:grid;place-items:center}.dk-tool-badge img{display:block;width:62px;height:62px;filter:drop-shadow(0 8px 14px rgba(19,80,126,.13))}
+.dk-hero-text{min-width:0}.dk-hero-text h1{margin:0;color:#102d43;font-size:30px;line-height:1.08;letter-spacing:-.025em}.dk-hero-text p{margin:6px 0 0;color:#62758b;font-size:13px;line-height:1.55;max-width:690px}.dk-hero-chip{display:inline-flex;margin-top:7px;padding:5px 9px;border:1px solid #bcdcff;border-radius:999px;background:#eef7ff;color:#0762bd;font-size:10px;font-weight:900}
+.dk-hero-visual{position:relative;z-index:2;width:225px;height:84px;flex:0 0 225px}.dk-hero-art-card{position:absolute;right:38px;top:2px;width:82px;height:82px;display:grid;place-items:center;transform:rotate(-7deg)}.dk-hero-art-card img{width:82px;height:82px;filter:drop-shadow(0 14px 18px rgba(18,74,123,.16))}
+.dk-hero-visual i{position:absolute;display:block;border-radius:13px;border:1px solid rgba(166,204,235,.8);background:linear-gradient(145deg,rgba(255,255,255,.95),rgba(226,246,255,.9));box-shadow:0 8px 18px rgba(18,74,123,.09)}
+.dk-float-a{width:37px;height:37px;right:5px;top:3px;transform:rotate(9deg)}.dk-float-b{width:29px;height:29px;right:2px;bottom:2px;transform:rotate(-9deg)}.dk-float-c{width:32px;height:32px;left:32px;top:22px;transform:rotate(-7deg)}
+.dk-float-a::after,.dk-float-b::after,.dk-float-c::after{content:"";position:absolute;left:50%;top:50%;width:12px;height:3px;border-radius:6px;background:linear-gradient(90deg,#1769ff,#14b8a6);transform:translate(-50%,-50%)}.dk-float-a::before{content:"";position:absolute;left:50%;top:50%;width:3px;height:12px;border-radius:6px;background:#14b8a6;transform:translate(-50%,-50%)}
+/* Dynamic engines sometimes render their own heading. The balanced static header is the single page heading. */
+#toolRoot>.it-title,#toolRoot>.tool-page-head{display:none!important}
+.tool-card .ti,.tool .tool-ico{display:grid!important;place-items:center!important;overflow:visible!important}.tool-card .ti img,.tool .tool-ico img{display:block;width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 5px 8px rgba(18,74,123,.10))}.tool .tool-ico img{width:48px;height:48px}.dk-inline-icon{width:22px;height:22px;vertical-align:middle;object-fit:contain}
+@media(max-width:760px){.dk-balanced-hero{min-height:94px;padding:14px 15px}.dk-hero-copy{max-width:100%}.dk-tool-badge,.dk-tool-badge img{width:52px;height:52px;min-width:52px}.dk-hero-text h1{font-size:24px}.dk-hero-text p{font-size:12px}.dk-hero-visual{display:none}.dk-balanced-hero::before{left:55%;background-size:135px 135px;opacity:.04}}
