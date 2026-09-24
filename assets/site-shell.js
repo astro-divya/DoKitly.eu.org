@@ -5,13 +5,13 @@
   const cleanPath=p=>{try{return new URL(p,location.href).pathname.replace(/\/+$/,'')}catch{return''}};
   const current=cleanPath(location.href);
   const siteRootPath=cleanPath(root.href);
-  const homePath=cleanPath(href('index.html'));
+  const homePath=cleanPath(href(''));
 
   function navLink(label,path){
     const a=document.createElement('a');
     a.className='dk-nav-link';a.textContent=label;a.href=href(path);
     const target=cleanPath(a.href);
-    if((path==='index.html'&&(current===siteRootPath||current===homePath))||current===target)a.setAttribute('aria-current','page');
+    if((path===''&&(current===siteRootPath||current===homePath))||current===target)a.setAttribute('aria-current','page');
     return a;
   }
 
@@ -20,7 +20,7 @@
     if(!nav)return;
     const theme=nav.querySelector('#theme');
     nav.innerHTML='';
-    nav.append(navLink('Home','index.html'),navLink('Categories','all-tools.html'),navLink("What’s New",'whats-new.html'));
+    nav.append(navLink('Home',''),navLink('Categories','all-tools.html'),navLink("What’s New",'whats-new.html'));
     if(theme)nav.append(theme);
   }
 
