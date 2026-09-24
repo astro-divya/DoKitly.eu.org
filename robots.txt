@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://astro-divya.github.io/DoKitly.eu.org/sitemap.xml
+Sitemap: https://dokitly.in/sitemap.xml

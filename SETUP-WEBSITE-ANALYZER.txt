@@ -1,25 +1,20 @@
-DoKitly Website Analyzer — Build 11
-===================================
+DoKitly Website Analyzer — Build 12
 
-Frontend Worker URL:
-https://dokitly-analyzer.softcrafted.workers.dev
+Production site:
+https://dokitly.in/
 
-Worker source:
-cloudflare-worker/website-analyzer-worker.js
+Cloudflare Worker deployment
+1. Open the existing DoKitly Website Analyzer Worker in Cloudflare.
+2. Replace the Worker code with DoKitly-Build-12-Website-Analyzer-Worker.txt.
+3. Deploy.
+4. Open the Worker /health endpoint.
+5. Confirm the response contains:
+   1.4.0-build12
 
-After deployment, open /health and confirm:
-1.3.0-build11
-
-Build 11 adds a premium Website Intelligence Report, larger readable cards,
-animated interactive charts/tooltips, stronger popularity + web-footprint
-traffic calibration, safer 403/429 handling, optional-check isolation,
-Worker retries, cached successful-report fallback and clearer PageSpeed states.
-
-Optional PageSpeed key:
-Add a Worker secret named PAGESPEED_API_KEY for better quota reliability.
-
-Data-source note:
-Traffic and engagement figures are directional estimates, not private analytics.
-The current popularity signal uses Tranco for testing/calibration. Before enabling
-ad monetization, review the licences of any upstream popularity data you use
-and switch/disable any source that is not suitable for commercial use.
+Build 12 analyzer changes
+- Root/registrable domain is used for RDAP, NS, MX, TXT and popularity signals.
+- The actual requested host remains in use for page fetch and A/AAAA checks.
+- robots.txt discovery parses Sitemap: entries before fallback sitemap paths.
+- Optional checks are isolated so one unavailable source does not erase the full report.
+- CORS allows https://dokitly.in and https://www.dokitly.in.
+- Traffic/value figures remain clearly labelled directional estimates rather than owner analytics.

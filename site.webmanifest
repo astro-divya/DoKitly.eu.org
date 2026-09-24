@@ -2,12 +2,21 @@
   "name": "DoKitly",
   "short_name": "DoKitly",
   "description": "Your digital toolkit, all in one place.",
-  "start_url": "./",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f7f9fc",
   "theme_color": "#0B3E82",
   "icons": [
-    {"src":"assets/icon-192.png","sizes":"192x192","type":"image/png"},
-    {"src":"assets/icon-512.png","sizes":"512x512","type":"image/png"}
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }
