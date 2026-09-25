@@ -1,3 +1,25 @@
+
+/* DoKitly Build 17 — compact vertically blended tool header */
+.dk-balanced-hero{
+ --dk-hero:none;position:relative;min-height:102px;margin:2px 0 5px;padding:13px 18px 19px;overflow:hidden;
+ display:flex;align-items:center;justify-content:space-between;gap:18px;border:0;border-radius:0;box-shadow:none;
+ background:linear-gradient(180deg,rgba(232,246,255,.92) 0%,rgba(242,251,255,.72) 42%,rgba(248,251,255,.22) 78%,rgba(248,251,255,0) 100%);
+}
+.dk-balanced-hero::before{content:"";position:absolute;inset:-28px -5px -12px 43%;background-image:var(--dk-hero);background-repeat:no-repeat;background-position:76% 44%;background-size:170px 170px;opacity:.055;filter:blur(.15px);transform:rotate(-8deg);mask-image:linear-gradient(to bottom,#000 0 62%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0 62%,transparent 100%)}
+.dk-balanced-hero::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 88% 30%,rgba(23,105,255,.13),rgba(20,184,166,.055) 34%,transparent 61%),linear-gradient(to bottom,transparent 48%,rgba(248,251,255,.92) 91%,rgba(248,251,255,1) 100%);pointer-events:none}
+.dk-hero-copy{position:relative;z-index:2;display:flex;align-items:center;gap:13px;min-width:0;max-width:74%}
+.dk-tool-badge{width:54px;height:54px;min-width:54px;display:grid;place-items:center}.dk-tool-badge img{display:block;width:54px;height:54px;filter:drop-shadow(0 7px 13px rgba(19,80,126,.13))}
+.dk-hero-text{min-width:0}.dk-hero-text h1{margin:0;color:#102d43;font-size:27px;line-height:1.08;letter-spacing:-.025em}.dk-hero-text p{margin:5px 0 0;color:#62758b;font-size:12px;line-height:1.48;max-width:650px}.dk-hero-chip{display:inline-flex;margin-top:5px;padding:4px 8px;border:1px solid #bcdcff;border-radius:999px;background:rgba(238,247,255,.82);color:#0762bd;font-size:9px;font-weight:900}
+.dk-hero-visual{position:relative;z-index:2;width:205px;height:72px;flex:0 0 205px;opacity:.98}.dk-hero-visual::before{content:"";position:absolute;right:31px;top:7px;width:98px;height:55px;border-radius:15px;background:linear-gradient(145deg,rgba(255,255,255,.88),rgba(226,246,255,.72));border:1px solid rgba(166,204,235,.55);transform:rotate(-5deg);box-shadow:0 10px 22px rgba(18,74,123,.07)}
+.dk-hero-art-card{position:absolute;right:46px;top:-4px;width:70px;height:70px;display:grid;place-items:center;transform:rotate(-5deg)}.dk-hero-art-card img{width:70px;height:70px;filter:drop-shadow(0 12px 16px rgba(18,74,123,.15))}
+.dk-hero-visual i{position:absolute;display:block;border-radius:10px;border:1px solid rgba(166,204,235,.62);background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(226,246,255,.82));box-shadow:0 7px 15px rgba(18,74,123,.07)}
+.dk-float-a{width:30px;height:30px;right:7px;top:3px;transform:rotate(9deg)}.dk-float-b{width:24px;height:24px;right:8px;bottom:4px;transform:rotate(-9deg)}.dk-float-c{width:27px;height:27px;left:31px;top:22px;transform:rotate(-7deg)}
+.dk-float-a::after,.dk-float-b::after,.dk-float-c::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:2.5px;border-radius:6px;background:linear-gradient(90deg,#1769ff,#14b8a6);transform:translate(-50%,-50%)}.dk-float-a::before{content:"";position:absolute;left:50%;top:50%;width:2.5px;height:10px;border-radius:6px;background:#14b8a6;transform:translate(-50%,-50%)}
+/* The static balanced hero is the only main tool heading. */
+#toolRoot>.it-title,#toolRoot>.tool-page-head,#toolRoot>.it-title:first-child,#toolRoot>.tool-page-head:first-child{display:none!important}
+.tool-card .ti,.tool .tool-ico{display:grid!important;place-items:center!important;overflow:visible!important}.tool-card .ti img,.tool .tool-ico img{display:block;width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 5px 8px rgba(18,74,123,.10))}.tool .tool-ico img{width:48px;height:48px}.dk-inline-icon{width:22px;height:22px;vertical-align:middle;object-fit:contain}
+@media(max-width:760px){.dk-balanced-hero{min-height:82px;padding:10px 12px 14px;margin-bottom:3px}.dk-hero-copy{max-width:100%}.dk-tool-badge,.dk-tool-badge img{width:46px;height:46px;min-width:46px}.dk-hero-text h1{font-size:22px}.dk-hero-text p{font-size:11px}.dk-hero-visual{display:none}.dk-balanced-hero::before{left:57%;background-size:120px 120px;opacity:.035}}
+
 /* DoKitly Build 7 unified navigation, footer, shortcut editor and category jump bar */
 .dk-nav-link{white-space:nowrap}
 .dk-nav-link[aria-current="page"]{background:rgba(20,184,166,.09);color:#0f766e!important}
@@ -42,22 +64,6 @@ input[type="file"]::file-selector-button{border:1px solid #d7e2ee;border-radius:
 .seo-copy details{border-top:1px solid var(--line,#e5eaf1);padding:10px 0}.seo-copy details:first-of-type{border-top:0}.seo-copy summary{cursor:pointer;color:var(--text,#0f172a);font-size:14px}.seo-copy details p{margin:8px 0 2px}
 
 
-/* DoKitly Build 16 — balanced tool headers and one premium duotone icon family */
-.dk-balanced-hero{
-  --dk-hero:none;position:relative;min-height:116px;margin:6px 0 14px;padding:18px 20px;overflow:hidden;
-  display:flex;align-items:center;justify-content:space-between;gap:22px;border:1px solid #d9e8f4;border-radius:22px;
-  background:linear-gradient(105deg,#fff 0%,#f8fcff 48%,#ecfaff 100%);box-shadow:0 12px 32px rgba(18,74,123,.065)
-}
-.dk-balanced-hero::before{content:"";position:absolute;inset:-22px -10px -28px 40%;background-image:var(--dk-hero);background-repeat:no-repeat;background-position:72% 50%;background-size:190px 190px;opacity:.055;filter:blur(.2px);transform:rotate(-8deg)}
-.dk-balanced-hero::after{content:"";position:absolute;width:330px;height:170px;right:-45px;top:-55px;border-radius:50%;background:radial-gradient(circle at 45% 55%,rgba(23,105,255,.17),rgba(20,184,166,.08) 48%,transparent 70%);pointer-events:none}
-.dk-hero-copy{position:relative;z-index:2;display:flex;align-items:center;gap:15px;min-width:0;max-width:72%}
-.dk-tool-badge{width:62px;height:62px;min-width:62px;display:grid;place-items:center}.dk-tool-badge img{display:block;width:62px;height:62px;filter:drop-shadow(0 8px 14px rgba(19,80,126,.13))}
-.dk-hero-text{min-width:0}.dk-hero-text h1{margin:0;color:#102d43;font-size:30px;line-height:1.08;letter-spacing:-.025em}.dk-hero-text p{margin:6px 0 0;color:#62758b;font-size:13px;line-height:1.55;max-width:690px}.dk-hero-chip{display:inline-flex;margin-top:7px;padding:5px 9px;border:1px solid #bcdcff;border-radius:999px;background:#eef7ff;color:#0762bd;font-size:10px;font-weight:900}
-.dk-hero-visual{position:relative;z-index:2;width:225px;height:84px;flex:0 0 225px}.dk-hero-art-card{position:absolute;right:38px;top:2px;width:82px;height:82px;display:grid;place-items:center;transform:rotate(-7deg)}.dk-hero-art-card img{width:82px;height:82px;filter:drop-shadow(0 14px 18px rgba(18,74,123,.16))}
-.dk-hero-visual i{position:absolute;display:block;border-radius:13px;border:1px solid rgba(166,204,235,.8);background:linear-gradient(145deg,rgba(255,255,255,.95),rgba(226,246,255,.9));box-shadow:0 8px 18px rgba(18,74,123,.09)}
-.dk-float-a{width:37px;height:37px;right:5px;top:3px;transform:rotate(9deg)}.dk-float-b{width:29px;height:29px;right:2px;bottom:2px;transform:rotate(-9deg)}.dk-float-c{width:32px;height:32px;left:32px;top:22px;transform:rotate(-7deg)}
-.dk-float-a::after,.dk-float-b::after,.dk-float-c::after{content:"";position:absolute;left:50%;top:50%;width:12px;height:3px;border-radius:6px;background:linear-gradient(90deg,#1769ff,#14b8a6);transform:translate(-50%,-50%)}.dk-float-a::before{content:"";position:absolute;left:50%;top:50%;width:3px;height:12px;border-radius:6px;background:#14b8a6;transform:translate(-50%,-50%)}
-/* Dynamic engines sometimes render their own heading. The balanced static header is the single page heading. */
-#toolRoot>.it-title,#toolRoot>.tool-page-head{display:none!important}
-.tool-card .ti,.tool .tool-ico{display:grid!important;place-items:center!important;overflow:visible!important}.tool-card .ti img,.tool .tool-ico img{display:block;width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 5px 8px rgba(18,74,123,.10))}.tool .tool-ico img{width:48px;height:48px}.dk-inline-icon{width:22px;height:22px;vertical-align:middle;object-fit:contain}
-@media(max-width:760px){.dk-balanced-hero{min-height:94px;padding:14px 15px}.dk-hero-copy{max-width:100%}.dk-tool-badge,.dk-tool-badge img{width:52px;height:52px;min-width:52px}.dk-hero-text h1{font-size:24px}.dk-hero-text p{font-size:12px}.dk-hero-visual{display:none}.dk-balanced-hero::before{left:55%;background-size:135px 135px;opacity:.04}}
+
+/* Build 17 contextual right-side visuals */
+.dk-hero-visual{width:230px;height:78px;flex-basis:230px}.dk-tool-visual-img{position:absolute;right:0;top:-7px;width:230px;height:88px;object-fit:contain;filter:drop-shadow(0 9px 16px rgba(18,74,123,.08))}.dk-hero-visual:has(.dk-tool-visual-img)::before{display:none}.dk-hero-visual:has(.dk-tool-visual-img) i{display:none}
