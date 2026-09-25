@@ -122,3 +122,21 @@ input[type="file"]::file-selector-button{border:1px solid #d7e2ee;border-radius:
  .dk-hero-copy{max-width:100%!important}.dk-hero-text h1{font-size:21px!important}.dk-tool-badge,.dk-tool-badge img{width:42px!important;height:42px!important;min-width:42px!important}
  .dk-related-grid{grid-template-columns:1fr}.dk-seo-section{padding:15px 14px}.dk-seo-content{margin-top:20px}
 }
+
+
+/* DoKitly Build 20 — seamless compact tool hero */
+.dk-balanced-hero{
+  min-height:78px!important;padding:7px 14px 13px!important;margin:0 0 3px!important;gap:14px!important;overflow:visible!important;
+  background:radial-gradient(ellipse at 73% 10%,rgba(73,166,255,.12),transparent 39%),radial-gradient(ellipse at 89% 18%,rgba(20,184,166,.10),transparent 32%),linear-gradient(180deg,rgba(238,248,255,.92) 0%,rgba(245,251,255,.66) 52%,rgba(248,251,255,.18) 82%,rgba(248,251,255,0) 100%)!important;
+  border:0!important;box-shadow:none!important;border-radius:0!important
+}
+.dk-balanced-hero::after{background:radial-gradient(ellipse at 79% 30%,rgba(96,165,250,.08),transparent 38%),radial-gradient(ellipse at 89% 34%,rgba(45,212,191,.06),transparent 30%)!important;pointer-events:none}
+.dk-balanced-hero::before{opacity:.035!important;mask-image:linear-gradient(to bottom,#000 0 45%,rgba(0,0,0,.35) 68%,transparent 100%)!important;-webkit-mask-image:linear-gradient(to bottom,#000 0 45%,rgba(0,0,0,.35) 68%,transparent 100%)!important}
+.dk-hero-copy{max-width:72%!important;gap:11px!important}.dk-hero-text h1{font-size:24px!important}.dk-hero-text p{margin-top:3px!important;line-height:1.38!important;max-width:720px!important}
+.dk-b20-icon-hero .dk-hero-visual{width:252px!important;height:78px!important;flex:0 0 252px!important;margin-right:5.5%!important;display:flex!important;align-items:center!important;justify-content:center!important}
+.dk-b20-icon-hero .dk-hero-visual::before,.dk-b20-icon-hero .dk-hero-visual i{display:none!important}
+.dk-b20-icon-hero .dk-tool-visual-img{position:relative!important;right:auto!important;top:auto!important;width:104px!important;height:104px!important;object-fit:contain!important;filter:drop-shadow(0 15px 24px rgba(30,79,132,.19)) saturate(1.08)!important;transform:translateX(-10px)!important}
+.dk-b20-icon-hero .dk-tool-badge,.dk-b20-icon-hero .dk-tool-badge img{width:50px!important;height:50px!important;min-width:50px!important}
+.dk-seo-intro-moved{margin-top:0!important}.dk-seo-intro-moved p{margin:0!important;color:#5e6f83!important;font-size:13px!important;line-height:1.72!important}
+@media(max-width:900px){.dk-b20-icon-hero .dk-hero-visual{width:190px!important;flex-basis:190px!important;margin-right:2%!important}.dk-b20-icon-hero .dk-tool-visual-img{width:88px!important;height:88px!important}}
+@media(max-width:760px){.dk-balanced-hero{min-height:68px!important;padding:7px 10px 10px!important}.dk-hero-copy{max-width:100%!important}.dk-b20-icon-hero .dk-hero-visual{display:none!important}.dk-hero-text h1{font-size:21px!important}.dk-hero-text p{font-size:11px!important;line-height:1.35!important}}
