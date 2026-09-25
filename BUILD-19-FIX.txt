@@ -1,0 +1,13 @@
+DoKitly Build 19
+=================
+Base: Build 18
+
+Fixed:
+1. download.html header/logo oversized because the standalone page did not have desktop header sizing rules.
+2. Download File click was intercepted by the shared Blob handoff listener and could route again instead of saving.
+3. Download page CSS/JS cache versions bumped to 19.
+
+Important:
+- Upload/replace the full build contents in the GitHub repository root.
+- Worker deployment is unchanged.
+- Existing IndexedDB download tokens use the same database name and remain compatible until expiry.

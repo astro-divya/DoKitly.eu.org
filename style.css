@@ -339,3 +339,10 @@ body{background-image:radial-gradient(circle at 12% 18%,rgba(59,130,246,.055),tr
 .cat-ico{width:54px!important;height:54px!important}.cat-ico img{width:54px!important;height:54px!important;filter:drop-shadow(0 9px 16px rgba(24,72,120,.18))!important}
 .sectionhead h2{letter-spacing:-.8px!important}
 @media(max-width:640px){.tool-ico.premium,.tool-ico.premium img{width:46px!important;height:46px!important}.cat-ico,.cat-ico img{width:49px!important;height:49px!important}}
+
+/* Build 18 homepage icon rendering — keep SVG artwork as single source of truth */
+#categoryGrid .cat-ico{background:transparent!important;box-shadow:none!important}
+#categoryGrid .cat-ico img{width:54px!important;height:54px!important;display:block!important;object-fit:contain!important}
+#popularGrid .tool-ico.premium{background:transparent!important;box-shadow:none!important}
+#popularGrid .tool-ico.premium img{width:50px!important;height:50px!important;display:block!important;object-fit:contain!important}
+.dk-inline-tool-icon img,.mini-ico img,.dk-search-tool img{width:24px;height:24px;display:inline-block;vertical-align:middle;object-fit:contain}.dk-search-tool{display:flex;align-items:center;gap:8px}.mini-ico{background:transparent!important}.mini-ico img{width:30px;height:30px}
