@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://dokitly.in/</loc></url>
   <url><loc>https://dokitly.in/about.html</loc></url>
   <url><loc>https://dokitly.in/all-tools.html</loc></url>
+  <url><loc>https://dokitly.in/blog.html</loc></url>
   <url><loc>https://dokitly.in/blog/hindi-typing-practice.html</loc></url>
   <url><loc>https://dokitly.in/blog/pdf-size-guide.html</loc></url>
   <url><loc>https://dokitly.in/blog/qr-vs-barcode.html</loc></url>
   <url><loc>https://dokitly.in/blog/seo-checklist.html</loc></url>
-  <url><loc>https://dokitly.in/blog.html</loc></url>
   <url><loc>https://dokitly.in/calculator-tools/advanced-math-solver.html</loc></url>
   <url><loc>https://dokitly.in/calculator-tools/age.html</loc></url>
   <url><loc>https://dokitly.in/calculator-tools/differentiation.html</loc></url>
@@ -73,7 +74,6 @@
   <url><loc>https://dokitly.in/image-tools/index.html</loc></url>
   <url><loc>https://dokitly.in/image-tools/multi-compress.html</loc></url>
   <url><loc>https://dokitly.in/image-tools/multi-resize.html</loc></url>
-  <url><loc>https://dokitly.in/</loc></url>
   <url><loc>https://dokitly.in/pdf-tools/blank-pdf.html</loc></url>
   <url><loc>https://dokitly.in/pdf-tools/html-to-pdf.html</loc></url>
   <url><loc>https://dokitly.in/pdf-tools/images-to-pdf.html</loc></url>

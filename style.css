@@ -346,3 +346,11 @@ body{background-image:radial-gradient(circle at 12% 18%,rgba(59,130,246,.055),tr
 #popularGrid .tool-ico.premium{background:transparent!important;box-shadow:none!important}
 #popularGrid .tool-ico.premium img{width:50px!important;height:50px!important;display:block!important;object-fit:contain!important}
 .dk-inline-tool-icon img,.mini-ico img,.dk-search-tool img{width:24px;height:24px;display:inline-block;vertical-align:middle;object-fit:contain}.dk-search-tool{display:flex;align-items:center;gap:8px}.mini-ico{background:transparent!important}.mini-ico img{width:30px;height:30px}
+
+
+/* DoKitly Build 20 — larger glossy homepage icon presentation */
+#categoryGrid .cat-ico,#categoryGrid .cat-ico img{width:64px!important;height:64px!important}
+#categoryGrid .cat-ico img{filter:drop-shadow(0 11px 20px rgba(24,72,120,.22)) saturate(1.08)!important}
+#popularGrid .tool-ico.premium,#popularGrid .tool-ico.premium img{width:58px!important;height:58px!important}
+#popularGrid .tool-ico.premium img{filter:drop-shadow(0 10px 18px rgba(24,72,120,.20)) saturate(1.08)!important}
+@media(max-width:640px){#categoryGrid .cat-ico,#categoryGrid .cat-ico img{width:55px!important;height:55px!important}#popularGrid .tool-ico.premium,#popularGrid .tool-ico.premium img{width:50px!important;height:50px!important}}

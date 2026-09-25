@@ -1,0 +1,48 @@
+DoKitly Build 20 — Final Build Report
+======================================
+
+Base build: Build 19 Full
+Production domain: https://dokitly.in/
+GA4 Measurement ID: G-80KFT4220E
+HTML pages checked: 174
+Indexable sitemap URLs: 124
+
+Implemented
+-----------
+1. GA4 loader/config added exactly once to every public HTML page.
+2. Shared assets/analytics.js added with privacy-conscious custom events:
+   tool_open, file_selected, tool_process_started, tool_process_completed, tool_process_failed, download_clicked, new_file_clicked, reset_tool, related_tool_clicked.
+3. Analytics parameters use tool/category/source/MIME/count/success where available; file names and file contents are deliberately excluded.
+4. Download page and shared Blob handoff are analytics-ready.
+5. Privacy page updated for Google Analytics 4 and Google AdSense.
+6. Branded 404.html added with Home, All Tools and popular-tool recovery links; it is noindex,follow and excluded from sitemap.
+7. Deliberate duplicate/alias pages retain noindex,follow; useful canonical tool pages remain index,follow.
+8. Root favicon.ico, favicon-48x48.png, favicon-192x192.png and apple-touch-icon.png added.
+9. Selected flagship tool headers compacted, blended into the page, and given larger icon-family right visuals positioned away from the extreme right edge.
+10. Long flagship SEO intros moved below the working tool instead of consuming above-the-fold space.
+11. Typing Test timer begins on the first printable typed character, not Start Test click.
+12. Homepage category/popular tool icons enlarged for a stronger glossy app-icon presentation.
+13. Structured data added for indexable category/tool pages using BreadcrumbList and WebApplication where applicable; existing visible FAQPage schema is preserved.
+14. Sitemap regenerated from current indexable canonical pages; noindex/404/download pages excluded.
+15. Maintenance scripts added: scripts/build-sitemap.py and scripts/check-internal-links.py.
+
+Preserved / confirmed
+---------------------
+- ads.txt exact publisher line preserved.
+- robots.txt preserved.
+- sitemap.xml present and production-domain-only.
+- CNAME = dokitly.in preserved.
+- site.webmanifest and PWA icon assets preserved.
+- AdSense publisher ID ca-pub-9623211628880604 present on every HTML page.
+- GA4 Measurement ID G-80KFT4220E present on every HTML page.
+- Existing titles, descriptions, canonical URLs, Open Graph/Twitter metadata and visible FAQ content preserved except the Privacy page wording/title intentionally updated.
+- No old GitHub Pages URL is used in public SEO metadata/sitemap/internal public URLs.
+- Website Analyzer Cloudflare Worker files/deployment logic unchanged.
+
+Repository file removed in Build 20
+-----------------------------------
+- BUILD-19-FIX.txt (obsolete build note only)
+
+Validation status
+-----------------
+PASS — no validation issues found.
