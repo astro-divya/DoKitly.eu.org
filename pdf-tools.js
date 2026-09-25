@@ -36,7 +36,7 @@ if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudfl
 let files=[],primary=null,pageCount=0,selectedPages=new Set(),fileOrder=[],imageOrder=[],lastPdfJs=null,encryptedFallback=false;
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const byId=x=>document.getElementById(x);
-const download=(bytes,name,type='application/pdf')=>{const blob=bytes instanceof Blob?bytes:new Blob([bytes],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)};
+const download=async(bytes,name,type='application/pdf')=>{const blob=bytes instanceof Blob?bytes:new Blob([bytes],{type});if(window.DoKitlyDownload?.routeBlob){await window.DoKitlyDownload.routeBlob(blob,{filename:name,mimeType:type,tool:id});return}const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)};
 function title(){return `<div class="it-title"><span class="ico">${d.icon}</span><div><h1>${d.name}</h1><p>${d.desc}</p></div></div>`}
 function fileInput(multiple=false,accept='application/pdf'){return `<div class="dropzone upload-row pdf-upload-row"><span class="upload-name" id="uploadName">${multiple?'Select files':'Select PDF'}</span><label class="file-pick-btn">Choose File<input id="pdfFile" type="file" ${multiple?'multiple':''} accept="${accept}" hidden></label><span class="pdf-upload-icon">${accept.includes('image')?'🖼️':'📄'}</span></div>`}
 function field(label,html,wide=''){return `<div class="field ${wide}"><label>${label}</label>${html}</div>`}

@@ -12,5 +12,5 @@
 .it-title .ico.dk-cat-icon{width:52px;height:52px;padding:0;background:transparent!important;border:0;overflow:visible}.it-title .ico.dk-cat-icon img{width:52px;height:52px;display:block;filter:drop-shadow(0 8px 14px rgba(24,72,120,.15))}.tool-card{box-shadow:0 8px 22px rgba(15,61,86,.045)}.tool-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(15,61,86,.09)}
 
 
-/* Build 16 premium icon normalization */
+/* Build 17 premium icon normalization */
 .tool-card .ti{width:50px!important;height:50px!important;display:grid!important;place-items:center!important;margin-bottom:8px!important;background:transparent!important;border:0!important;box-shadow:none!important;font-size:0!important}.tool-card .ti img{width:48px!important;height:48px!important;display:block!important;object-fit:contain!important}
