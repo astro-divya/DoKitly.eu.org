@@ -102,3 +102,16 @@
   setupCategoryJumps();
   setupFooter();
 })();
+
+// Build 18: prevent fresh/reload navigation from opening part-way down a tool page.
+(()=>{
+  if(location.hash) return;
+  const nav=performance.getEntriesByType?.('navigation')?.[0];
+  if(nav?.type==='back_forward') return; // preserve browser Back/Forward restoration
+  try{history.scrollRestoration='manual'}catch{}
+  let touched=false;
+  ['pointerdown','touchstart','wheel','keydown'].forEach(ev=>addEventListener(ev,()=>{touched=true},{once:true,passive:true}));
+  const top=()=>{if(!touched&&window.scrollY>1) window.scrollTo({top:0,left:0,behavior:'auto'})};
+  addEventListener('DOMContentLoaded',()=>requestAnimationFrame(top),{once:true});
+  addEventListener('load',()=>{requestAnimationFrame(()=>requestAnimationFrame(top));setTimeout(top,180);setTimeout(top,520)},{once:true});
+})();
