@@ -9,7 +9,7 @@
 <meta content="#f7f9fc" name="theme-color"/>
 <title>World Quiz &amp; Exam Practice — DoKitly</title>
 <meta content="Practice subject quizzes and Indian competitive exam mock tests with multilingual questions, no repeats within a test, and detailed review." name="description"/>
-<link href="../assets/favicon-32.png" rel="icon"/>
+
 <link href="../tool-page.css?v=dk9quiz" rel="stylesheet"/>
 <link href="https://dokitly.in/student-tools/world-quiz.html" rel="canonical"/>
 <meta content="World Quiz &amp; Exam Practice — DoKitly" property="og:title"/>
@@ -23,7 +23,24 @@
 @media(max-width:780px){.quiz-setup-grid{grid-template-columns:1fr}.quiz-layout{grid-template-columns:1fr}.quiz-side{display:none}.quiz-main{padding:18px}.quiz-topbar{align-items:flex-start}.quiz-mobile-palette{display:flex;gap:8px;overflow:auto;padding:0 18px 12px}.quiz-mobile-palette button{flex:0 0 34px;width:34px;height:34px;border:1px solid #dce5e9;background:#fff;border-radius:9px;font-size:11px;font-weight:800}.quiz-mobile-palette button.current{outline:2px solid #0b8c8c}.quiz-mobile-palette button.answered{background:#e5f6f2}.quiz-mobile-palette button.review{background:#fff4d8}.quiz-result-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.quiz-setup{padding:18px}.quiz-mode{flex-direction:column}.quiz-result{padding:18px}.quiz-qmeta{align-items:flex-start}.quiz-question{font-size:21px}.quiz-option{padding:12px}.quiz-result-stats{grid-template-columns:1fr 1fr}}
 </style>
-<link href="../assets/site-shell.css?v=dk18" rel="stylesheet"/><meta content="https://dokitly.in/assets/logo.png" property="og:image"/><meta content="summary_large_image" name="twitter:card"/><meta content="World Quiz &amp; Exam Practice — DoKitly" name="twitter:title"/><meta content="Practice subject quizzes and Indian competitive exam mock tests with multilingual questions, no repeats within a test, and detailed review." name="twitter:description"/><meta content="https://dokitly.in/assets/logo.png" name="twitter:image"/></meta></head>
+<link href="../assets/site-shell.css?v=dk20" rel="stylesheet"/><meta content="https://dokitly.in/assets/logo.png" property="og:image"/><meta content="summary_large_image" name="twitter:card"/><meta content="World Quiz &amp; Exam Practice — DoKitly" name="twitter:title"/><meta content="Practice subject quizzes and Indian competitive exam mock tests with multilingual questions, no repeats within a test, and detailed review." name="twitter:description"/><meta content="https://dokitly.in/assets/logo.png" name="twitter:image"/></meta>
+<meta name="robots" content="index,follow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<!-- DoKitly GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-80KFT4220E"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-80KFT4220E');
+</script>
+<script defer src="../assets/analytics.js?v=20"></script>
+<!-- /DoKitly GA4 -->
+<!-- DoKitly Build 20 structured data --><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"World Quiz & Exam Practice","url":"https://dokitly.in/student-tools/world-quiz.html","description":"Practice subject quizzes and Indian competitive exam mock tests with multilingual questions, no repeats within a test, and detailed review.","applicationCategory":"Student","operatingSystem":"Any","publisher":{"@type":"Organization","name":"DoKitly","url":"https://dokitly.in/"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://dokitly.in/"},{"@type":"ListItem","position":2,"name":"Student","item":"https://dokitly.in/student-tools/index.html"},{"@type":"ListItem","position":3,"name":"World Quiz & Exam Practice","item":"https://dokitly.in/student-tools/world-quiz.html"}]}]}</script></head>
 <body class="standalone-tool-page">
 <header class="it-header"><div class="it-head-inner"><a class="it-brand" href="/"><img alt="DoKitly" src="../assets/logo.png?v=2"/></a><nav class="it-nav"><a href="/">Home</a><a href="../all-tools.html">Categories</a><a href="../whats-new.html">What’s New</a></nav></div></header>
 <main class="tool-page-shell">
@@ -599,5 +616,5 @@ document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>renderReview
 $('retryWrong').onclick=()=>{const wrong=questions.filter(q=>q.user===null||q.user!==q.correct);if(wrong.length)startTest(wrong)};$('newTest').onclick=()=>{clearInterval(timerId);result.classList.remove('active');running.classList.remove('active');setup.classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})};$('qStart').onclick=()=>startTest(null);
 })();
 </script>
-<script src="../assets/site-shell.js?v=dk18"></script><script src="../assets/download-manager.js?v=18"></script></body>
+<script src="../assets/site-shell.js?v=dk20"></script><script src="../assets/download-manager.js?v=20"></script></body>
 </html>
