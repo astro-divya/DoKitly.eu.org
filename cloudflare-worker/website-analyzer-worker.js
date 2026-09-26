@@ -8,10 +8,10 @@ export default {
     const reqUrl = new URL(request.url);
     const origin = request.headers.get('Origin') || '';
     const allowed = getAllowedOrigins(env);
-    const cors = corsHeaders(origin, allowed);
+    const cors = corsHeaders(origin, allowed, env);
 
     if (request.method === 'OPTIONS') {
-      if (origin && !isAllowedOrigin(origin, allowed)) {
+      if (origin && !isAllowedOrigin(origin, allowed, env)) {
         return json({ ok: false, error: 'Origin not allowed.' }, 403, cors);
       }
       return new Response(null, { status: 204, headers: cors });
@@ -21,7 +21,7 @@ export default {
       return json({ ok: false, error: 'Method not allowed.' }, 405, cors);
     }
 
-    if (origin && !isAllowedOrigin(origin, allowed)) {
+    if (origin && !isAllowedOrigin(origin, allowed, env)) {
       return json({ ok: false, error: 'Origin not allowed.' }, 403, cors);
     }
 
@@ -87,25 +87,26 @@ function getAllowedOrigins(env) {
   return [...new Set([...DEFAULT_ALLOWED_ORIGINS, ...extra])];
 }
 
-function isAllowedOrigin(origin, allowed) {
+function isAllowedOrigin(origin, allowed, env) {
   if (!origin) return true;
   if (allowed.includes(origin)) return true;
-  try {
-    const u = new URL(origin);
-    return (u.hostname === 'localhost' || u.hostname === '127.0.0.1') && (u.protocol === 'http:' || u.protocol === 'https:');
-  } catch {
-    return false;
+  if (String(env?.ALLOW_LOCALHOST || '') === '1') {
+    try {
+      const u = new URL(origin);
+      return (u.hostname === 'localhost' || u.hostname === '127.0.0.1') && (u.protocol === 'http:' || u.protocol === 'https:');
+    } catch {}
   }
+  return false;
 }
 
-function corsHeaders(origin, allowed) {
+function corsHeaders(origin, allowed, env) {
   const h = {
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin'
   };
-  if (origin && isAllowedOrigin(origin, allowed)) h['Access-Control-Allow-Origin'] = origin;
+  if (origin && isAllowedOrigin(origin, allowed, env)) h['Access-Control-Allow-Origin'] = origin;
   return h;
 }
 
@@ -115,6 +116,9 @@ function json(data, status = 200, extraHeaders = {}) {
     headers: {
       'content-type': 'application/json; charset=utf-8',
       'cache-control': 'no-store',
+      'x-content-type-options': 'nosniff',
+      'referrer-policy': 'no-referrer',
+      'permissions-policy': 'camera=(), microphone=(), geolocation=()',
       ...extraHeaders
     }
   });

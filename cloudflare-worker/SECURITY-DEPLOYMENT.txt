@@ -1,0 +1,7 @@
+DoKitly Website Analyzer Worker — security deployment notes
+
+1. Keep ALLOWED_ORIGINS restricted to https://dokitly.in and https://www.dokitly.in.
+2. ALLOW_LOCALHOST is disabled by default. Set ALLOW_LOCALHOST=1 only for temporary development.
+3. Configure Cloudflare WAF / Rate Limiting for /analyze and /creator-context. A practical starting point is 30-60 requests/minute/IP, then tune from real traffic.
+4. Do not put OAuth client secrets, refresh tokens, SERP provider keys or private credentials in wrangler.toml committed to the public repository. Use Worker secrets/environment bindings.
+5. Keep redirect revalidation and public-DNS checks enabled.
