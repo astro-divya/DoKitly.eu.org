@@ -13,5 +13,5 @@ body.tt-focus{overflow:hidden;background:#eef7fb}body.tt-focus .it-header,body.t
 
 
 /* Build 20: compact blended hero + larger icon-family visual */
-.tt-hero{min-height:78px!important;margin-bottom:4px!important}.tt-hero-keyboard{width:252px!important;height:78px!important;flex:0 0 252px!important;margin-right:5.5%!important;background:url('../assets/tool-icons/student-typing-test.svg?v=20') no-repeat 46% 50%/104px 104px;filter:drop-shadow(0 15px 24px rgba(30,79,132,.18))}.tt-hero-keyboard svg,.tt-hero-keyboard .tt-flying-key{display:none!important}
+.tt-hero{min-height:78px!important;margin-bottom:4px!important}.tt-hero-keyboard{width:252px!important;height:78px!important;flex:0 0 252px!important;margin-right:5.5%!important;background:url('../assets/tool-icons/student-typing-test.svg?v=21') no-repeat 46% 50%/104px 104px;filter:drop-shadow(0 15px 24px rgba(30,79,132,.18))}.tt-hero-keyboard svg,.tt-hero-keyboard .tt-flying-key{display:none!important}
 @media(max-width:1050px){.tt-hero-keyboard{display:none!important}}
