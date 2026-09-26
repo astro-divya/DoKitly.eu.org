@@ -140,3 +140,60 @@ input[type="file"]::file-selector-button{border:1px solid #d7e2ee;border-radius:
 .dk-seo-intro-moved{margin-top:0!important}.dk-seo-intro-moved p{margin:0!important;color:#5e6f83!important;font-size:13px!important;line-height:1.72!important}
 @media(max-width:900px){.dk-b20-icon-hero .dk-hero-visual{width:190px!important;flex-basis:190px!important;margin-right:2%!important}.dk-b20-icon-hero .dk-tool-visual-img{width:88px!important;height:88px!important}}
 @media(max-width:760px){.dk-balanced-hero{min-height:68px!important;padding:7px 10px 10px!important}.dk-hero-copy{max-width:100%!important}.dk-b20-icon-hero .dk-hero-visual{display:none!important}.dk-hero-text h1{font-size:21px!important}.dk-hero-text p{font-size:11px!important;line-height:1.35!important}}
+
+/* Build 21 — blog/helpful guide link */
+.dk-guide-link{margin-top:14px;padding:16px 18px;border:1px solid #d9e7f0;border-radius:16px;background:linear-gradient(135deg,#f8fbff,#f3fffc)}.dk-guide-link h2{margin:0 0 6px!important;font-size:17px!important}.dk-guide-link p{margin:0!important}.dk-guide-link a{font-weight:850;color:#0f7f85;text-decoration:none}.dk-guide-link a:hover{text-decoration:underline}
+
+/* ==========================================================
+   DoKitly Build 21 — approved icon/visual hero treatment
+   ========================================================== */
+.dk-balanced-hero{
+  overflow:visible!important;
+  isolation:isolate;
+  background:
+    radial-gradient(ellipse at 90% 16%,rgba(68,207,222,.18) 0,rgba(80,167,255,.12) 28%,transparent 58%),
+    linear-gradient(180deg,#f8fcff 0%,#f6fbff 62%,rgba(248,251,255,.62) 82%,rgba(248,251,255,0) 100%)!important;
+  border-color:rgba(200,220,236,.78)!important;
+  box-shadow:0 12px 30px rgba(22,74,111,.055)!important;
+}
+.dk-balanced-hero::before{
+  inset:-38px -18px -24px 43%!important;
+  background-size:360px auto!important;
+  background-position:78% 45%!important;
+  opacity:.055!important;
+  filter:blur(.25px) saturate(1.08)!important;
+  mask-image:linear-gradient(to bottom,#000 0 46%,rgba(0,0,0,.62) 66%,transparent 100%)!important;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0 46%,rgba(0,0,0,.62) 66%,transparent 100%)!important;
+}
+.dk-balanced-hero::after{
+  background:
+    radial-gradient(ellipse at 84% 25%,rgba(56,189,248,.11),transparent 38%),
+    radial-gradient(ellipse at 94% 38%,rgba(45,212,191,.08),transparent 34%),
+    linear-gradient(to bottom,transparent 52%,rgba(248,251,255,.55) 78%,rgba(248,251,255,0) 100%)!important;
+}
+.dk-b20-icon-hero .dk-hero-visual{
+  width:330px!important;height:96px!important;flex:0 0 330px!important;
+  margin-right:2.5%!important;overflow:visible!important;
+  align-items:center!important;justify-content:center!important;
+}
+.dk-b20-icon-hero .dk-tool-visual-img{
+  position:absolute!important;right:-10px!important;top:50%!important;
+  width:360px!important;height:230px!important;max-width:none!important;
+  object-fit:contain!important;transform:translateY(-50%) translateX(-10px)!important;
+  filter:drop-shadow(0 18px 26px rgba(32,86,139,.16)) saturate(1.04)!important;
+  pointer-events:none!important;
+}
+.dk-b20-icon-hero .dk-tool-badge,.dk-b20-icon-hero .dk-tool-badge img{
+  width:56px!important;height:56px!important;min-width:56px!important;
+  object-fit:contain!important;
+}
+@media(max-width:980px){
+  .dk-b20-icon-hero .dk-hero-visual{width:250px!important;flex-basis:250px!important;margin-right:0!important}
+  .dk-b20-icon-hero .dk-tool-visual-img{width:285px!important;height:190px!important;right:-14px!important}
+}
+@media(max-width:760px){
+  .dk-balanced-hero{overflow:hidden!important}
+  .dk-balanced-hero::before{background-size:190px auto!important;left:58%!important;opacity:.035!important}
+  .dk-b20-icon-hero .dk-hero-visual{display:none!important}
+  .dk-b20-icon-hero .dk-tool-badge,.dk-b20-icon-hero .dk-tool-badge img{width:48px!important;height:48px!important;min-width:48px!important}
+}

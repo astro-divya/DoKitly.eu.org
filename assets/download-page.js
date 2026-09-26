@@ -10,3 +10,20 @@ $('downloadBtn').addEventListener('click',async()=>{window.DoKitlyAnalytics?.tra
 }
 init();
 })();
+/* Build 21 — feedback face slider; no file content or personal data is sent. */
+(()=>{
+'use strict';
+const card=document.getElementById('feedbackCard'),range=document.getElementById('feedbackRange');
+if(!card||!range)return;
+const wrap=document.getElementById('faceWrap'),faces={sad:document.getElementById('faceSad'),neutral:document.getElementById('faceNeutral'),happy:document.getElementById('faceHappy')};
+const msg=document.getElementById('feedbackMessage'),sub=document.getElementById('feedbackSub'),chips=document.getElementById('feedbackChips'),submit=document.getElementById('feedbackSubmit'),thanks=document.getElementById('feedbackThanks');
+let selected=new Set(),state='neutral';
+const data={sad:{title:'Oops, we missed the mark',sub:'Tell us what went wrong',chips:['Too slow','Formatting issue','Hard to use','Download issue']},neutral:{title:'Thanks for letting us know',sub:'We’re always improving',chips:['Could be smoother','Almost right','Easy enough']},happy:{title:'Nice! Glad it worked',sub:'Thanks for trying DoKitly',chips:['Fast','Easy to use','Great output','Worked perfectly']}};
+function renderChips(list){selected.clear();chips.replaceChildren();list.forEach(label=>{const b=document.createElement('button');b.type='button';b.className='dl-feedback-chip';b.textContent=label;b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>{const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',String(on));on?selected.add(label):selected.delete(label)});chips.appendChild(b)})}
+function render(){const v=Number(range.value);wrap.style.left=v+'%';wrap.style.transform=`translateX(-${v}%)`;const next=v<34?'sad':v<67?'neutral':'happy';if(next!==state){state=next;Object.entries(faces).forEach(([k,el])=>el?.classList.toggle('active',k===state));renderChips(data[state].chips)}msg.textContent=data[state].title;sub.textContent=data[state].sub}
+range.addEventListener('input',render);range.addEventListener('change',render);
+submit.addEventListener('click',()=>{const level=state==='sad'?'needs_work':state==='happy'?'great':'okay';window.DoKitlyAnalytics?.track?.('tool_feedback_submit',{feedback_level:level,has_feedback_reason:selected.size>0});submit.hidden=true;thanks.hidden=false;range.disabled=true;chips.querySelectorAll('button').forEach(b=>b.disabled=true)});
+window.addEventListener('dokitly:download-clicked',()=>{card.hidden=false;requestAnimationFrame(()=>card.scrollIntoView({behavior:'smooth',block:'nearest'}))},{once:true});
+renderChips(data[state].chips);render();
+})();
+(()=>{const b=document.getElementById('downloadBtn'),c=document.getElementById('feedbackCard');if(b&&c)b.addEventListener('click',()=>{setTimeout(()=>{c.hidden=false},350)})})();
