@@ -39,19 +39,19 @@ Where supported by a tool, processing is performed directly in the browser. Tool
 - Productivity Tools
 - Utility Tools
 
-## Current Build — Build 20
+## Current Build — Build 21
 
-Build 20 includes:
+Build 21 includes:
 
-- Google Analytics 4 integration across public HTML pages
-- Shared analytics event tracking for key tool actions
-- Refined flagship tool headers and SEO content placement
-- Updated glossy DoKitly icon-family artwork
-- Improved Typing Test start behavior
-- Root favicon and app icon assets
-- Branded `404.html`
-- Updated Privacy Policy for Google Analytics and Google AdSense
-- Production-domain SEO metadata and supporting files validated for `https://dokitly.in/`
+- Fresh glossy 3D category and tool icon system
+- Fresh action-scene tool visuals with improved header blending and no intentional clipping
+- Keyword Rank Checker with fully local CSV import and secure future-ready Google/Bing integration placeholders
+- DoKitly Blog / Guides hub with the requested 10 high-intent SEO guides
+- Tool ↔ guide internal linking, sitemap expansion and structured-data updates
+- Draggable download feedback using the approved glossy jelly-face states
+- QR production-link refresh for `https://dokitly.in/`
+- Security hardening and validation pass for XSS, URL handling, Worker SSRF/CORS, secrets, redirects, file parsing and third-party dependencies
+- Existing GA4, AdSense, ads.txt, production-domain SEO, favicon/PWA, robots and tool functionality preserved
 
 ## Privacy
 
@@ -90,3 +90,10 @@ If you find a bug or have an idea for a useful tool, you can open an issue in th
 ---
 
 © DoKitly
+
+
+## Build 21 SVG Asset Edition
+
+- Active category icons, tool icons, tool visuals and feedback-face assets use `.svg` files.
+- The approved glossy 3D appearance is preserved inside the SVG assets.
+- Essential favicon/PWA/logo raster files remain in their browser-compatible formats.

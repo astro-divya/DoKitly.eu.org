@@ -1,0 +1,22 @@
+PASS | 137 tool icons present | 137
+PASS | 137 tool visuals present | 137
+PASS | No active old SVG icons/visuals
+PASS | 3 approved feedback faces
+PASS | Keyword Rank Checker page
+PASS | Keyword Rank Checker JS/CSS
+PASS | 10 requested blog articles
+PASS | Blog index
+PASS | Article SEO metadata/schema + one H1
+PASS | Sitemap includes blog + 10 articles + keyword tool | []
+PASS | Internal links/assets resolve | 0
+PASS | No eval/new Function
+PASS | No committed secret patterns
+PASS | No mixed HTTP resource loads
+PASS | External library versions pinned | 0
+PASS | GA4 preserved
+PASS | AdSense publisher preserved
+PASS | ads.txt preserved
+PASS | CNAME production domain
+PASS | QR asset regenerated
+PASS | README Build 21
+PASS | Tool → Helpful Guide backlinks
