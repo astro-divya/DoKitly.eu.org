@@ -25,7 +25,7 @@
   }
 
   const footerLinks=[
-    ['About','about.html'],['Report a Bug','report-bug.html'],['Blog','blog.html'],['Suggest a Tool','suggest-tool.html'],['FAQ','faq.html'],['Disclaimer','disclaimer.html'],['Contact','contact.html'],['Privacy','privacy.html'],['Terms','terms.html']
+    ['About','about.html'],['Report a Bug','report-bug.html'],['Blog','blog/index.html'],['Suggest a Tool','suggest-tool.html'],['FAQ','faq.html'],['Disclaimer','disclaimer.html'],['Contact','contact.html'],['Privacy','privacy.html'],['Terms','terms.html']
   ];
   function setupFooter(){
     document.querySelectorAll('body>footer').forEach(f=>f.remove());
