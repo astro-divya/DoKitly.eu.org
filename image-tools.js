@@ -17,7 +17,7 @@ const IMAGE_TOOLS=[
 ['image-exif','🧹','Remove Image Metadata','Re-export an image locally to strip common metadata.'],
 ['image-color','🎨','Image Color Picker','Click an image to inspect pixel color.'],
 ['print-size','📏','DPI / Print Size Calculator','Convert pixel dimensions and DPI into physical print size.'],
-['image-bg-remove','🪄','Background Remover','Remove simple solid-color backgrounds locally.'],
+['image-bg-remove','🪄','Background Remover','Automatically remove portrait and simple outer backgrounds into a transparent PNG.'],
 ['image-grayscale','◐','Grayscale Image','Convert an image to grayscale with live preview.'],
 ['image-blur','🌫️','Blur Image','Apply blur with live preview.'],
 ['image-sharpen','🔺','Sharpen Image','Control sharpening strength with live preview.'],
@@ -72,7 +72,7 @@ function render(){let inner='';
   else if(id==='image-border') controls=`<div class="form-grid"><div class="field"><label>Border width (px)</label><input id="borderW" type="number" value="20" min="0" max="1000"></div><div class="field"><label>Border color</label><input id="borderColor" type="color" value="#2563eb"></div>${formatSelect(true)}</div><div class="btns"><button class="btn" id="processBtn">Process result</button></div><div class="status" id="status">Border preview updates live.</div>`;
   else if(id==='image-text'||id==='image-watermark') controls=`${textControls(id==='image-watermark')}<div class="form-grid">${formatSelect(true)}</div><div class="btns"><button class="btn" id="processBtn">Process result</button></div><div class="status" id="status">Text position and style update live.</div>`;
   else if(id==='image-exif') controls=`<div class="form-grid">${formatSelect(true)}</div><div class="btns"><button class="btn" id="processBtn">Process clean copy</button></div><div class="status" id="status">The re-exported image drops common EXIF metadata.</div>`;
-  else if(id==='image-bg-remove') controls=`<div class="form-grid"><div class="field"><label>Removal mode</label><select id="bgMode"><option value="person">Auto person (AI)</option><option value="color">Manual color remove</option></select></div><div class="field"><label>Background color</label><input id="bgColor" type="color" value="#ffffff"></div></div>${compactRange('tolerance','Color tolerance',0,180,55,'','◎')}<div class="btns"><button class="btn" id="processBtn">Process removal</button></div><div class="status" id="status">Auto mode is optimized for people. Manual color mode works for flat backgrounds and other objects.</div>`;
+  else if(id==='image-bg-remove') controls=`<div class="bg-auto-note"><b>Automatic transparent background</b><p>Upload a portrait or photo with a clear subject. DoKitly tries browser person segmentation and automatically detects simple outer backgrounds. The result is always a transparent PNG; detailed non-person scenes may not be removable with this browser-first engine.</p></div><div class="btns"><button class="btn" id="processBtn">Remove Background Automatically</button><button class="btn-secondary" id="bgResetBtn" type="button">Choose Another Image</button></div><div class="status" id="status">Upload an image, then choose Remove Background. The download stays disabled until a nonblank PNG passes verification.</div>`;
   inner=editorWrap(controls);
  }
  $('toolRoot').innerHTML=pageShell(inner);
@@ -121,7 +121,7 @@ function drawVisual(full=false){if(!currentImg)return null;const src=full?{w:cur
  else if(id==='image-sharpen')applySharpen(c,Number($('sharpenAmount')?.value||0));
  else if(id==='image-border'){const bwRaw=Number($('borderW')?.value||0),bw=full?bwRaw:Math.round(bwRaw*src.scale),old=c;c=document.createElement('canvas');c.width=old.width+bw*2;c.height=old.height+bw*2;ctx=c.getContext('2d');ctx.fillStyle=$('borderColor')?.value||'#2563eb';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(old,bw,bw)}
  else if(id==='image-text'||id==='image-watermark'){const txt=$('overlayText')?.value||'',sizeRaw=Number($('textSize')?.value||48),size=full?sizeRaw:Math.max(8,sizeRaw*src.scale),pos=$('position')?.value||'cc',opacity=Number($('opacity')?.value??100)/100,rot=Number($('rotation')?.value||0),ox=Number($('offsetX')?.value||0),oy=Number($('offsetY')?.value||0),style=$('fontStyle')?.value||'bold';ctx.save();ctx.globalAlpha=opacity;ctx.fillStyle=$('textColor')?.value||'#fff';ctx.font=`${style.includes('italic')?'italic ':''}${style.includes('bold')?'700':'400'} ${size}px system-ui`;ctx.textBaseline='top';const p=positionXY(ctx,txt,size,pos,c.width,c.height,ox,oy);ctx.translate(p.x+p.m.width/2,p.y+size/2);ctx.rotate(rot*Math.PI/180);ctx.fillText(txt,-p.m.width/2,-size/2);ctx.restore()}
- else if(id==='image-bg-remove'){const hex=$('bgColor')?.value||'#ffffff',[r,g,b]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)),tol=Math.max(1,Number($('tolerance')?.value||55)),im=ctx.getImageData(0,0,c.width,c.height),d=im.data;for(let i=0;i<d.length;i+=4){const dist=Math.hypot(d[i]-r,d[i+1]-g,d[i+2]-b);if(dist<tol)d[i+3]=Math.round(255*dist/tol)}ctx.putImageData(im,0,0)}
+ else if(id==='image-bg-remove'){/* Preview remains the original until automatic processing finishes. */}
  return c}
 function schedulePreview(){if(!currentImg||['image-base64','image-info','image-color','base64-image','print-size'].includes(id))return;cancelAnimationFrame(previewRAF);const seq=++previewSeq;previewRAF=requestAnimationFrame(()=>{setTimeout(()=>{if(seq!==previewSeq)return;try{const c=drawVisual(false);if(c)showCanvasPreview(c,`${c.width} × ${c.height} preview`)}catch(e){setStatus(e.message)}},0)})}
 async function handleFile(file){if(!file)return;const r=await readImage(file);showBefore(file,r.img,r.url);if(id==='image-crop')initCrop(r.img,r.url);if(id==='image-color')bindColorCanvas(r.img);if(id==='image-info')$('infoOut').innerHTML=`<strong>${esc(file.name)}</strong><br>${r.img.width} × ${r.img.height}px • ${esc(file.type||'unknown')} • ${humanSize(file.size)}`;if(!['image-base64','image-info','image-color'].includes(id))schedulePreview()}
@@ -153,23 +153,96 @@ if(id==='image-filter'){
  document.querySelectorAll('[data-preset]').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('[data-preset]').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected');apply(presets[btn.dataset.preset]||{})});
  if($('resetBtn'))$('resetBtn').onclick=()=>{document.querySelectorAll('[data-preset]').forEach(x=>x.classList.remove('selected'));apply({})};
 }
-const liveControlIds=['format','rotate','flip','width','height','lockRatio','targetKB','targetSelect','targetCustom','passportPreset','dpi','passportBg','passportZoom','passportX','passportY','borderW','borderColor','overlayText','textSize','textColor','position','fontStyle','bgMode','bgColor','batchWidth'];
+const liveControlIds=['format','rotate','flip','width','height','lockRatio','targetKB','targetSelect','targetCustom','passportPreset','dpi','passportBg','passportZoom','passportX','passportY','borderW','borderColor','overlayText','textSize','textColor','position','fontStyle','batchWidth'];
 liveControlIds.forEach(k=>{$(k)?.addEventListener('input',schedulePreview);$(k)?.addEventListener('change',schedulePreview)});
 
 async function compressToKB(targetKB,type,full=true){if(!currentImg)throw Error('Please select an image first.');const limit=targetKB*1024;if(limit<500)throw Error('Target size is too small.');let scale=1,best=null,bestCanvas=null;for(let pass=0;pass<12;pass++){const w=Math.max(1,Math.round(currentImg.width*scale)),h=Math.max(1,Math.round(currentImg.height*scale)),c=canvasDraw(currentImg,w,h,type);if(type==='image/png'){const b=await blobFromCanvas(c,type);if(b.size<=limit)return{blob:b,canvas:c};best=b;bestCanvas=c}else{let lo=.02,hi=.98,hit=null;for(let i=0;i<12;i++){const q=(lo+hi)/2,b=await blobFromCanvas(c,type,q);if(b.size<=limit){hit=b;lo=q}else hi=q}if(hit)return{blob:hit,canvas:c};const low=await blobFromCanvas(c,type,.02);best=low;bestCanvas=c}scale*=.86;if(Math.min(currentImg.width*scale,currentImg.height*scale)<40)break}return{blob:best,canvas:bestCanvas,miss:true}}
 let selfieSegmenter=null;
-async function personMaskCanvas(source){if(!window.SelfieSegmentation)throw Error('Auto person AI could not load. Use Manual color remove or refresh and try again.');if(!selfieSegmenter){selfieSegmenter=new SelfieSegmentation({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/${f}`});selfieSegmenter.setOptions({modelSelection:1});}return new Promise(async(res,rej)=>{let done=false;selfieSegmenter.onResults(r=>{if(done)return;done=true;try{const out=document.createElement('canvas');out.width=source.width||source.videoWidth;out.height=source.height||source.videoHeight;const x=out.getContext('2d');x.drawImage(r.segmentationMask,0,0,out.width,out.height);res(out)}catch(e){rej(e)}});try{await selfieSegmenter.send({image:source});setTimeout(()=>{if(!done)rej(Error('AI segmentation timed out. Try Manual color remove.'))},15000)}catch(e){rej(e)}})}
-async function removePersonBackground(source,bg=null){const mask=await personMaskCanvas(source),out=document.createElement('canvas');out.width=source.width;out.height=source.height;const x=out.getContext('2d');x.drawImage(mask,0,0,out.width,out.height);x.globalCompositeOperation='source-in';x.drawImage(source,0,0,out.width,out.height);x.globalCompositeOperation='destination-over';if(bg){x.fillStyle=bg;x.fillRect(0,0,out.width,out.height)}x.globalCompositeOperation='source-over';return out}
+async function personMaskCanvas(source){
+ if(!window.SelfieSegmentation)throw Error('Optional portrait segmenter unavailable.');
+ if(!selfieSegmenter){
+  selfieSegmenter=new SelfieSegmentation({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/${f}`});
+  selfieSegmenter.setOptions({modelSelection:1});
+ }
+ return new Promise((resolve,reject)=>{
+  let finished=false;let timer=setTimeout(()=>{if(!finished){finished=true;reject(Error('Portrait segmentation timed out.'));}},15000);
+  selfieSegmenter.onResults(r=>{
+   if(finished)return;finished=true;clearTimeout(timer);
+   try{
+    const out=document.createElement('canvas');out.width=source.width;out.height=source.height;
+    const x=out.getContext('2d',{willReadFrequently:true});x.drawImage(r.segmentationMask,0,0,out.width,out.height);
+    const d=x.getImageData(0,0,out.width,out.height),a=d.data;
+    let alphaLow=255,alphaHigh=0,colorLow=255,colorHigh=0;
+    for(let i=0;i<a.length;i+=32){alphaLow=Math.min(alphaLow,a[i+3]);alphaHigh=Math.max(alphaHigh,a[i+3]);colorLow=Math.min(colorLow,a[i]);colorHigh=Math.max(colorHigh,a[i]);}
+    const useAlpha=(alphaHigh-alphaLow)>24;
+    for(let i=0;i<a.length;i+=4){const v=useAlpha?a[i+3]:(.3*a[i]+.59*a[i+1]+.11*a[i+2]);a[i]=a[i+1]=a[i+2]=255;a[i+3]=Math.round(v);}
+    x.putImageData(d,0,0);resolve(out);
+   }catch(e){reject(e)}
+  });
+  Promise.resolve().then(()=>selfieSegmenter.send({image:source})).catch(e=>{if(!finished){finished=true;clearTimeout(timer);reject(e)}});
+ });
+}
+function canvasAlphaStats(c){
+ const t=document.createElement('canvas');t.width=60;t.height=60;
+ const x=t.getContext('2d',{willReadFrequently:true});x.drawImage(c,0,0,60,60);
+ const d=x.getImageData(0,0,60,60).data;let visible=0,clear=0;
+ for(let i=3;i<d.length;i+=4){if(d[i]>24)visible++;if(d[i]<225)clear++;}
+ return{visible:visible/3600,clear:clear/3600};
+}
+function applyAlphaMask(source,mask){
+ const out=canvasDraw(source,source.width,source.height,'image/png'),x=out.getContext('2d');
+ x.globalCompositeOperation='destination-in';x.drawImage(mask,0,0,out.width,out.height);x.globalCompositeOperation='source-over';return out;
+}
+// Automatic edge-connected background removal for plain/near-uniform photo backgrounds.
+// Never infer foreground by deleting all pixels of a color: only pixels connected to the canvas border are removed.
+function removeOuterBackground(source){
+ const max=720,sc=Math.min(1,max/Math.max(source.width,source.height));
+ const w=Math.max(1,Math.round(source.width*sc)),h=Math.max(1,Math.round(source.height*sc));
+ const small=canvasDraw(source,w,h),x=small.getContext('2d',{willReadFrequently:true}),d=x.getImageData(0,0,w,h).data;
+ const coords=[[1,1],[w-2,1],[1,h-2],[w-2,h-2]].map(([xx,yy])=>Math.max(0,Math.min(w-1,yy))*w+Math.max(0,Math.min(w-1,xx)));
+ const samples=coords.map(i=>[d[i*4],d[i*4+1],d[i*4+2]]);
+ const bg=[0,1,2].map(k=>samples.map(a=>a[k]).sort((a,b)=>a-b)[2]);
+ const dist=(i)=>{let sum=0;for(let ch=0;ch<3;ch++){const a=d[i*4+ch]-bg[ch];sum+=a*a;}return Math.sqrt(sum);};
+ const spread=Math.max(...coords.map(dist));
+ if(spread>72)throw Error('The outer background is complex or varies strongly. Try a clearer subject/portrait; no blank image was created.');
+ const tol=Math.min(78,Math.max(30,30+spread*.8));
+ const seen=new Uint8Array(w*h),queue=new Int32Array(w*h);let front=0,back=0;
+ function add(i){if(i<0||i>=seen.length||seen[i]||d[i*4+3]<25)return;if(dist(i)>tol)return;seen[i]=1;queue[back++]=i;}
+ for(let j=0;j<w;j++){add(j);add((h-1)*w+j)}
+ for(let j=0;j<h;j++){add(j*w);add(j*w+w-1)}
+ while(front<back){const i=queue[front++],xx=i%w; if(xx>0)add(i-1);if(xx<w-1)add(i+1);add(i-w);add(i+w);}
+ const removed=back/(w*h);if(removed<.015||removed>.98)throw Error('A safe foreground/background separation could not be identified. Your original image was not replaced.');
+ const m=document.createElement('canvas');m.width=w;m.height=h;const mx=m.getContext('2d'),v=mx.createImageData(w,h);
+ for(let i=0;i<seen.length;i++){v.data[i*4]=v.data[i*4+1]=v.data[i*4+2]=255;v.data[i*4+3]=seen[i]?0:255;}
+ mx.putImageData(v,0,0);return applyAlphaMask(source,m);
+}
+async function autoRemoveBackground(source){
+ let out=null,method='Auto background';
+ if(window.SelfieSegmentation){
+  try{const mask=await personMaskCanvas(source),st=canvasAlphaStats(mask);
+   if(st.visible>.018&&st.visible<.94&&st.clear>.03){out=applyAlphaMask(source,mask);method='Portrait AI';}}
+  catch(e){console.info('Portrait model unavailable; checking simple background locally:',e?.message||e);}
+ }
+ if(!out){out=removeOuterBackground(source);method='Auto outer-background';}
+ const st=canvasAlphaStats(out);
+ if(st.visible<.015||st.clear<.012)throw Error('The result would be empty or its background was not removed. No download was generated.');
+ return{canvas:out,method};
+}
+async function removePersonBackground(source,bg=null){const mask=await personMaskCanvas(source);const st=canvasAlphaStats(mask);if(st.visible<.015||st.visible>.98)throw Error('No reliable person mask found.');const out=applyAlphaMask(source,mask);if(bg){const x=out.getContext('2d');x.globalCompositeOperation='destination-over';x.fillStyle=bg;x.fillRect(0,0,out.width,out.height);x.globalCompositeOperation='source-over';}return out;}
+async function verifyTransparentBlob(blob){
+ if(!(blob instanceof Blob)||blob.size<120)throw Error('Output file is missing or empty.');
+ const bm=await createImageBitmap(blob);try{const c=document.createElement('canvas');c.width=64;c.height=64;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(bm,0,0,64,64);const st=canvasAlphaStats(c);if(st.visible<.015||st.clear<.012)throw Error('PNG verification detected blank or opaque output. Download disabled.');}finally{bm.close?.();}
+}
 async function downloadCurrent(){try{
  if(id==='print-size'){const w=Number($('printW').value),h=Number($('printH').value),dpi=Number($('printDpi').value);if(!w||!h||!dpi)throw Error('Enter valid values.');$('status').innerHTML=`<strong>${(w/dpi).toFixed(2)} × ${(h/dpi).toFixed(2)} inches</strong><br>${(w/dpi*2.54).toFixed(2)} × ${(h/dpi*2.54).toFixed(2)} cm at ${dpi} DPI`;return}
  if(id==='image-base64')return convertBase64();
  if(id==='base64-image')return decodeBase64();
  if(!currentImg)throw Error('Please select an image first.');let type=selectedType(id==='image-bg-remove'),blob,c;
- if(id==='image-bg-remove'&&$('bgMode')?.value==='person'){setStatus('Running person segmentation…');c=await removePersonBackground(currentImg);type='image/png';blob=await blobFromCanvas(c,type);preparedResultBlob=blob;preparedResultType=type;preparedResultName=outName(id,type);showCanvasPreview(c,`${c.width} × ${c.height} • ${humanSize(blob.size)}`);if($('finalImageDownload'))$('finalImageDownload').disabled=false;setStatus('Person background removed. Review transparent preview, then download.','Processed:');return}
+ if(id==='image-bg-remove'){preparedResultBlob=null;preparedResultName=null;if($('finalImageDownload'))$('finalImageDownload').disabled=true;setStatus('Removing background automatically…');const result=await autoRemoveBackground(currentImg);c=result.canvas;type='image/png';blob=await blobFromCanvas(c,type);await verifyTransparentBlob(blob);preparedResultBlob=blob;preparedResultType=type;preparedResultName=outName(id,type);showCanvasPreview(c,`${c.width} × ${c.height} • ${humanSize(blob.size)} • transparent PNG`);if($('finalImageDownload'))$('finalImageDownload').disabled=false;setStatus(`${result.method} processed. Nonblank transparent PNG verified; download is ready.`,'Processed:');return}
  if(id==='image-passport'){c=drawVisual(true);const bg=$('passportBg')?.value||'keep';if(bg!=='keep'){setStatus('Detecting subject and replacing background…');c=await removePersonBackground(c,bg)}type=selectedType(false);blob=await blobFromCanvas(c,type,quality());preparedResultBlob=blob;preparedResultType=type;preparedResultName=outName(id,type);showCanvasPreview(c,`${c.width} × ${c.height} • ${humanSize(blob.size)}`);if($('finalImageDownload'))$('finalImageDownload').disabled=false;setStatus('Passport photo processed. Review framing/background, then download.','Processed:');return}
  if(id==='image-target'){const kb=$('targetSelect').value==='custom'?Number($('targetCustom').value):Number($('targetSelect').value);if(!kb)throw Error('Enter a target size.');if($('processBtn')){$('processBtn').disabled=true;$('processBtn').textContent='Compressing…'};const r=await compressToKB(kb,type,true);if($('processBtn')){$('processBtn').disabled=false;$('processBtn').textContent='Compress Image'};if(!r.blob)throw Error('Could not create a compressed result.');targetResultBlob=r.blob;targetResultType=type;if($('targetDownloadBtn'))$('targetDownloadBtn').disabled=false;showCanvasPreview(r.canvas,`${r.canvas.width} × ${r.canvas.height} • ${humanSize(r.blob.size)}`);setStatus(r.miss?`Closest result: ${humanSize(r.blob.size)}. Target ${kb} KB could not be reached without making the image extremely small.`:`Target: ${kb} KB • Result: ${humanSize(r.blob.size)}`,'Compressed:');return}
  c=drawVisual(true);if(!c)throw Error('Could not create a result.');if(id==='image-compress'&&Number($('targetKB')?.value)>0){const r=await compressToKB(Number($('targetKB').value),type,true);blob=r.blob;c=r.canvas}else blob=await blobFromCanvas(c,type,quality());preparedResultBlob=blob;preparedResultType=type;preparedResultName=outName(id,type);showCanvasPreview(c,`${c.width} × ${c.height} • ${humanSize(blob.size)}`);if($('finalImageDownload'))$('finalImageDownload').disabled=false;setStatus(`${humanSize(currentFile.size)} → ${humanSize(blob.size)}. Review preview, then download.`,'Processed:')
- }catch(e){setStatus(e.message)}}
+ }catch(e){if(id==='image-bg-remove'){preparedResultBlob=null;preparedResultName=null;if($('finalImageDownload'))$('finalImageDownload').disabled=true;}setStatus(e.message)}}
 
 async function convertBase64(){if(!currentFile)throw Error('Please select an image first.');const bytes=new Uint8Array(await currentFile.arrayBuffer());let binary='';const CHUNK=0x8000;for(let i=0;i<bytes.length;i+=CHUNK)binary+=String.fromCharCode(...bytes.subarray(i,i+CHUNK));const b64=btoa(binary),mime=currentFile.type&&currentFile.type.startsWith('image/')?currentFile.type:'application/octet-stream',val=`data:${mime};base64,${b64}`;const decoded=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));if(decoded.length!==bytes.length)throw Error('Base64 verification failed: decoded size differs.');for(let i=0;i<bytes.length;i++){if(decoded[i]!==bytes[i])throw Error(`Base64 verification failed at byte ${i}.`)}$('base64Out').value=val;$('copyBtn').disabled=false;$('saveBase64Btn').disabled=false;$('openVerifiedBtn').disabled=false;$('base64Count').textContent=`• ${val.length.toLocaleString()} chars • ${decoded.length.toLocaleString()} bytes verified`;if(verifiedBlobURL)URL.revokeObjectURL(verifiedBlobURL);verifiedBlobURL=URL.createObjectURL(new Blob([decoded],{type:mime}));$('afterStage').innerHTML=`<img src="${verifiedBlobURL}" alt="Verified decoded image">`;$('afterMeta').textContent=`${decoded.length.toLocaleString()} bytes • exact match`;setStatus('Decoded bytes match the uploaded file exactly. Use “Open verified image” instead of pasting a huge Data URL into Chrome’s address bar.','Verified:')}
 async function decodeBase64(){let val=$('base64In').value.trim().replace(/\s+/g,'');const m=val.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);if(!m)throw Error('Paste a complete data:image/...;base64,... URL.');let bin;try{bin=atob(m[2])}catch{throw Error('Invalid Base64 data.')}const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0)),blob=new Blob([bytes],{type:m[1]});if(verifiedBlobURL)URL.revokeObjectURL(verifiedBlobURL);verifiedBlobURL=URL.createObjectURL(blob);const im=new Image();im.onload=()=>{$('afterStage').innerHTML=`<img src="${verifiedBlobURL}" alt="Decoded image">`;$('afterMeta').textContent=`${im.width} × ${im.height} • ${humanSize(blob.size)}`;setStatus('Base64 decoded successfully.','Done:')};im.onerror=()=>setStatus('The Base64 decoded, but it is not a valid image.');im.src=verifiedBlobURL}
@@ -177,6 +250,7 @@ $('copyBtn')?.addEventListener('click',async()=>{const v=$('base64Out').value;if
 $('saveBase64Btn')?.addEventListener('click',()=>{const v=$('base64Out').value;if(!v)return;const u=URL.createObjectURL(new Blob([v],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=u;a.download='DoKitly_Base64.txt';a.click();setTimeout(()=>URL.revokeObjectURL(u),1500)});
 $('openVerifiedBtn')?.addEventListener('click',()=>{if(verifiedBlobURL)window.open(verifiedBlobURL,'_blank','noopener')});
 $('autoFaceBtn')?.addEventListener('click',async()=>{if(!currentImg){setStatus('Select an image first.');return}if(!('FaceDetector' in window)){setStatus('Automatic face detection is not supported in this browser. Use Zoom and Up/Down controls manually.');return}try{setStatus('Detecting face…');const fd=new FaceDetector({fastMode:true,maxDetectedFaces:1}),faces=await fd.detect(currentImg);if(!faces.length)throw Error('No clear face detected.');const b=faces[0].boundingBox,cx=b.x+b.width/2,cy=b.y+b.height/2;$('passportX').value=Math.round(Math.max(-100,Math.min(100,(.5-cx/currentImg.width)*115)));$('passportY').value=Math.round(Math.max(-100,Math.min(100,(.34-cy/currentImg.height)*125)));$('passportZoom').value=Math.round(Math.max(90,Math.min(180,135/(b.height/currentImg.height*3.2))));['passportX','passportY','passportZoom'].forEach(k=>$(k).dispatchEvent(new Event('input',{bubbles:true})));setStatus('Face centered. Fine-tune zoom/position if needed.','Auto:')}catch(e){setStatus(e.message||'Could not detect face.')}});
+$('bgResetBtn')?.addEventListener('click',()=>{$('fileInput')?.click()});
 $('processBtn')?.addEventListener('click',()=>{if(id==='multi-resize'||id==='multi-compress')processBatch();else downloadCurrent()});
 $('targetDownloadBtn')?.addEventListener('click',()=>{if(!targetResultBlob||!targetResultType){setStatus('Compress the image first.');return}triggerDownload(targetResultBlob,outName('image-target',targetResultType));setStatus(`Downloaded ${humanSize(targetResultBlob.size)} image.`,'Downloaded:')});
 $('finalImageDownload')?.addEventListener('click',()=>{const blob=batchZipBlob||preparedResultBlob;if(!blob){setStatus('Process the result first.');return}triggerDownload(blob,preparedResultName||outName(id,preparedResultType||selectedType(id==='image-bg-remove')));setStatus(`Downloaded ${preparedResultName||'processed file'}.`,'Downloaded:')});
