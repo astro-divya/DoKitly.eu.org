@@ -21,6 +21,9 @@
   const durationRange=v=>v?`${duration(v.low)}–${duration(v.high)}`:'—';
   const tone=s=>s==null?'':s>=80?'good':s>=55?'warn':'bad';
   const cacheKey=host=>`dokitly-analyzer-v11:${host}`;
+  const quotaBox=()=>$('waQuota');
+  function showQuota(q){if(!q||!quotaBox())return;let msg=`Live analyses remaining: ${q.remaining} of ${q.limit} in rolling 24 hours.`;if(q.remaining===0&&q.resetAt)msg+=' Next slot after '+new Date(q.resetAt).toLocaleString()+'.';quotaBox().textContent=msg;}
+  async function fetchQuota(){if(!engineBase||!quotaBox())return;try{const r=await fetch(engineBase+'/quota',{headers:{accept:'application/json'}}),d=await r.json();if(r.ok&&d.ok)showQuota(d.quota);else quotaBox().textContent='Live daily allowance becomes available when the Worker quota backend is deployed.';}catch{quotaBox().textContent='Daily allowance temporarily unavailable.';}}
 
   function saveCachedReport(u,data){try{localStorage.setItem(cacheKey(u.hostname),JSON.stringify({savedAt:Date.now(),data}))}catch{}}
   function getCachedReport(u,maxAge=6*60*60*1000){try{const raw=localStorage.getItem(cacheKey(u.hostname));if(!raw)return null;const hit=JSON.parse(raw);if(!hit?.data||Date.now()-Number(hit.savedAt||0)>maxAge)return null;return hit}catch{return null}}
@@ -36,10 +39,10 @@
         const r=await fetch(`${engineBase}/analyze?url=${encodeURIComponent(u.href)}`,{headers:{accept:'application/json'},signal:controller.signal});
         clearTimeout(timeout);
         const j=await r.json().catch(()=>({}));
-        if(!r.ok||!j.ok)throw new Error(j.error||`Engine returned ${r.status}`);
-        saveCachedReport(u,j);
+        if(!r.ok||!j.ok){const err=new Error(j.error||`Engine returned ${r.status}`);if(r.status===429||j.code==='DAILY_LIMIT'){err.code='DAILY_LIMIT';err.quota=j.quota;}throw err;}
+        showQuota(j.quota);saveCachedReport(u,j);
         return j;
-      }catch(e){lastError=e}
+      }catch(e){if(e.code==='DAILY_LIMIT')throw e;lastError=e}
     }
     throw lastError||new Error('Full engine temporarily unavailable');
   }
@@ -55,6 +58,7 @@
       if(engineBase){
         try{data=await fetchEngineWithRetry(u)}
         catch(e){
+          if(e.code==='DAILY_LIMIT'){showQuota(e.quota);throw e;}
           const cached=getCachedReport(u);
           if(cached){mode='cached';data=cached.data;data._cachedReport=true;data._engineError=e.message||'Full engine temporarily unavailable'}
           else{mode='basic';data=await basicAnalyze(u);data._engineError=e.message||'Full engine temporarily unavailable'}
@@ -204,4 +208,5 @@
   function showError(msg){$('waError').textContent=msg;$('waError').classList.add('show')}
   function hideError(){$('waError').classList.remove('show');$('waError').textContent=''}
   $('waRun').addEventListener('click',run);$('waUrl').addEventListener('keydown',e=>{if(e.key==='Enter')run()});
+  fetchQuota();
 })();
