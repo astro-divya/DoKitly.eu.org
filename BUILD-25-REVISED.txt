@@ -1,0 +1,4 @@
+DoKitly Build 25 Revised
+Base: DoKitly Build 24 Full
+Production domain: https://dokitly.in/
+Backend secrets are not included in this public website package.
