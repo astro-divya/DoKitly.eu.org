@@ -72,7 +72,7 @@ function render(){let inner='';
   else if(id==='image-border') controls=`<div class="form-grid"><div class="field"><label>Border width (px)</label><input id="borderW" type="number" value="20" min="0" max="1000"></div><div class="field"><label>Border color</label><input id="borderColor" type="color" value="#2563eb"></div>${formatSelect(true)}</div><div class="btns"><button class="btn" id="processBtn">Process result</button></div><div class="status" id="status">Border preview updates live.</div>`;
   else if(id==='image-text'||id==='image-watermark') controls=`${textControls(id==='image-watermark')}<div class="form-grid">${formatSelect(true)}</div><div class="btns"><button class="btn" id="processBtn">Process result</button></div><div class="status" id="status">Text position and style update live.</div>`;
   else if(id==='image-exif') controls=`<div class="form-grid">${formatSelect(true)}</div><div class="btns"><button class="btn" id="processBtn">Process clean copy</button></div><div class="status" id="status">The re-exported image drops common EXIF metadata.</div>`;
-  else if(id==='image-bg-remove') controls=`<div class="bg-auto-note"><b>Automatic transparent background</b><p>Upload a portrait or photo with a clear subject. DoKitly tries browser person segmentation and automatically detects simple outer backgrounds. The result is always a transparent PNG; detailed non-person scenes may not be removable with this browser-first engine.</p></div><div class="btns"><button class="btn" id="processBtn">Remove Background Automatically</button><button class="btn-secondary" id="bgResetBtn" type="button">Choose Another Image</button></div><div class="status" id="status">Upload an image, then choose Remove Background. The download stays disabled until a nonblank PNG passes verification.</div>`;
+  else if(id==='image-bg-remove') controls=`<div class="bg-auto-note"><b>Automatic transparent background</b><p>Upload a portrait or image with a clear subject. DoKitly now prefers edge-aware local removal on simple backgrounds to preserve fine hair and translucent foreground details, then falls back to portrait segmentation when needed. Complex glass, smoke or very busy scenes can still need manual cleanup.</p></div><div class="btns"><button class="btn" id="processBtn">Remove Background Automatically</button><button class="btn-secondary" id="bgResetBtn" type="button">Choose Another Image</button></div><div class="status" id="status">Upload an image, then choose Remove Background. The download stays disabled until a nonblank PNG passes verification.</div>`;
   inner=editorWrap(controls);
  }
  $('toolRoot').innerHTML=pageShell(inner);
@@ -189,9 +189,25 @@ function canvasAlphaStats(c){
  for(let i=3;i<d.length;i+=4){if(d[i]>24)visible++;if(d[i]<225)clear++;}
  return{visible:visible/3600,clear:clear/3600};
 }
+function sampleBorderColor(source){
+ const w=64,h=Math.max(24,Math.round(64*source.height/source.width)),c=canvasDraw(source,w,h),x=c.getContext('2d',{willReadFrequently:true}),d=x.getImageData(0,0,w,h).data,vals=[[],[],[]];
+ const add=i=>{if(d[i+3]<16)return;vals[0].push(d[i]);vals[1].push(d[i+1]);vals[2].push(d[i+2])};
+ for(let xx=0;xx<w;xx+=2){add(xx*4);add(((h-1)*w+xx)*4)}for(let yy=1;yy<h-1;yy+=2){add((yy*w)*4);add((yy*w+w-1)*4)}
+ const med=a=>{a.sort((a,b)=>a-b);return a.length?a[Math.floor(a.length/2)]:255};
+ const bg=vals.map(med),spread=Math.max(...vals.map((a,k)=>a.length?Math.max(...a.map(v=>Math.abs(v-bg[k]))):255));return{bg,spread};
+}
+function refineAlphaMask(mask){
+ const out=document.createElement('canvas');out.width=mask.width;out.height=mask.height;const x=out.getContext('2d',{willReadFrequently:true});
+ x.filter='blur(0.75px)';x.drawImage(mask,0,0);x.filter='none';const im=x.getImageData(0,0,out.width,out.height),a=im.data;
+ for(let i=0;i<a.length;i+=4){let v=a[i+3]/255;v=Math.max(0,Math.min(1,(v-.035)/.93));v=v*v*(3-2*v);a[i]=a[i+1]=a[i+2]=255;a[i+3]=Math.round(v*255)}x.putImageData(im,0,0);return out;
+}
+function decontaminateEdges(out,source){
+ const sample=sampleBorderColor(source);if(sample.spread>62)return out;const bg=sample.bg,x=out.getContext('2d',{willReadFrequently:true}),im=x.getImageData(0,0,out.width,out.height),d=im.data;
+ for(let i=0;i<d.length;i+=4){const a=d[i+3]/255;if(a<=.06||a>=.97)continue;const strength=Math.min(.72,Math.max(0,(1-a)*.9));for(let k=0;k<3;k++){const est=(d[i+k]-bg[k]*(1-a))/Math.max(a,.08),cl=Math.max(0,Math.min(255,est));d[i+k]=Math.round(d[i+k]*(1-strength)+cl*strength)}}x.putImageData(im,0,0);return out;
+}
 function applyAlphaMask(source,mask){
- const out=canvasDraw(source,source.width,source.height,'image/png'),x=out.getContext('2d');
- x.globalCompositeOperation='destination-in';x.drawImage(mask,0,0,out.width,out.height);x.globalCompositeOperation='source-over';return out;
+ const out=canvasDraw(source,source.width,source.height,'image/png'),x=out.getContext('2d'),refined=refineAlphaMask(mask);
+ x.globalCompositeOperation='destination-in';x.drawImage(refined,0,0,out.width,out.height);x.globalCompositeOperation='source-over';return decontaminateEdges(out,source);
 }
 // Automatic edge-connected background removal for plain/near-uniform photo backgrounds.
 // Never infer foreground by deleting all pixels of a color: only pixels connected to the canvas border are removed.
@@ -217,13 +233,16 @@ function removeOuterBackground(source){
  mx.putImageData(v,0,0);return applyAlphaMask(source,m);
 }
 async function autoRemoveBackground(source){
- let out=null,method='Auto background';
- if(window.SelfieSegmentation){
+ let out=null,method='Edge-aware local background',localError=null;
+ // Prefer border-connected removal on clean/simple backgrounds because it preserves hair wisps,
+ // glass UI overlays and other non-person foreground details that portrait segmentation may erase.
+ try{out=removeOuterBackground(source)}catch(e){localError=e}
+ if(!out&&window.SelfieSegmentation){
   try{const mask=await personMaskCanvas(source),st=canvasAlphaStats(mask);
-   if(st.visible>.018&&st.visible<.94&&st.clear>.03){out=applyAlphaMask(source,mask);method='Portrait AI';}}
-  catch(e){console.info('Portrait model unavailable; checking simple background locally:',e?.message||e);}
+   if(st.visible>.018&&st.visible<.94&&st.clear>.03){out=applyAlphaMask(source,mask);method='Portrait AI + edge refinement';}}
+  catch(e){console.info('Portrait model unavailable:',e?.message||e);}
  }
- if(!out){out=removeOuterBackground(source);method='Auto outer-background';}
+ if(!out)throw(localError||Error('A reliable foreground/background separation could not be identified.'));
  const st=canvasAlphaStats(out);
  if(st.visible<.015||st.clear<.012)throw Error('The result would be empty or its background was not removed. No download was generated.');
  return{canvas:out,method};
