@@ -1,0 +1,14 @@
+DoKitly Build 28
+
+- Homepage selected Gemini hero artwork layered behind text/search.
+- Popular Tools condensed into horizontal hero launcher.
+- Decorative white-card treatment removed from homepage/category/all-tools/info layouts.
+- All Tools category jump strip made clickable with smooth navigation, active state, wheel, drag, swipe and keyboard support.
+- Category and tool lists use open adaptive layouts with larger approved artwork.
+- Individual tool pages retain only the compact translucent hero as the primary boxed surface.
+- SEO/help content uses open editorial sections; substantive copy preserved.
+- Onest headings + Manrope body with restrained cool violet/cyan/sage/amber accents.
+- Feedback backend diagnostics hidden from the download feedback UI.
+- Date/time format locked to HH:MM:SS.ffffff.
+- Mobile hover menus disabled.
+- Existing GA4, AdSense, canonical URLs, CNAME, sitemap, robots and backend integrations preserved.
