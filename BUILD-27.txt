@@ -1,0 +1,16 @@
+DoKitly Build 27 — Premium Redesign
+
+- Premium open-layout visual system across the site.
+- Homepage redesigned through a more editorial hero, compact content-fit popular tools, and tighter category tiles.
+- Global white tool/category cards now hug content instead of creating large empty slabs.
+- Individual tool pages no longer place the entire tool inside one giant white outer container.
+- Blue/teal reduced to brand accents; neutral surfaces and selective warm/violet/green accents introduced.
+- Typography hierarchy refreshed with Bricolage Grotesque headings + Manrope UI/body.
+- Mobile/touch hover menus remain disabled.
+- All Tools horizontal category strip scrolling preserved.
+- Date & Time Calculator locked HH:MM:SS.ffffff input behavior preserved.
+- Keyword Rank Checker redesigned as a ranking dashboard.
+- Country search now uses 249 bundled real flag image assets, searchable by country name/code.
+- Ranking report prioritizes verified search volume (when provider supplies it), top positions, ranking domains, SERP features, PAA and related searches.
+- Search volume is never fabricated; it shows Unavailable if the connected backend does not return an authenticated/verified monthly-volume field.
+- Existing Worker quota flow, tools, SEO, GA4, AdSense, CNAME, ads.txt, robots.txt and sitemap preserved.
