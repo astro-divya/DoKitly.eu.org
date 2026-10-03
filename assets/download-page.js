@@ -18,20 +18,18 @@ if(!card||!range)return;
 const wrap=document.getElementById('faceWrap'),faces={sad:document.getElementById('faceSad'),neutral:document.getElementById('faceNeutral'),happy:document.getElementById('faceHappy')};
 const msg=document.getElementById('feedbackMessage'),sub=document.getElementById('feedbackSub'),chips=document.getElementById('feedbackChips'),submit=document.getElementById('feedbackSubmit'),thanks=document.getElementById('feedbackThanks');
 let selected=new Set(),state='neutral';
-const data={sad:{title:'Oops, we missed the mark',sub:'Tell us what went wrong',chips:['Too slow','Formatting issue','Hard to use','Download issue']},neutral:{title:'Thanks for letting us know',sub:'We’re always improving',chips:['Could be smoother','Almost right','Easy enough']},happy:{title:'Nice! Glad it worked',sub:'Thanks for trying DoKitly',chips:['Fast','Easy to use','Great output','Worked perfectly']}};
+const data={sad:{title:'We’re sorry',sub:'Tell us what went wrong',chips:['Too slow','Formatting issue','Hard to use','Download issue']},neutral:{title:'Thanks for your feedback',sub:'We’re always improving',chips:['Could be smoother','Almost right','Easy enough']},happy:{title:'Awesome! Glad it helped',sub:'Thanks for trying DoKitly',chips:['Fast','Easy to use','Great output','Worked perfectly']}};
 function renderChips(list){selected.clear();chips.replaceChildren();list.forEach(label=>{const b=document.createElement('button');b.type='button';b.className='dl-feedback-chip';b.textContent=label;b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>{const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',String(on));on?selected.add(label):selected.delete(label)});chips.appendChild(b)})}
 function render(){const v=Number(range.value);wrap.style.left=v+'%';wrap.style.transform=`translateX(-${v}%)`;const next=v<34?'sad':v<67?'neutral':'happy';if(next!==state){state=next;Object.entries(faces).forEach(([k,el])=>el?.classList.toggle('active',k===state));renderChips(data[state].chips)}msg.textContent=data[state].title;sub.textContent=data[state].sub}
 range.addEventListener('input',render);range.addEventListener('change',render);
 submit.addEventListener('click',async()=>{
  const delivery=document.getElementById('feedbackDelivery');
- if(!window.DoKitlyFeedback?.available){delivery.textContent='Direct guest feedback inbox is not connected yet. Please try again later; your download is unaffected.';return;}
- submit.disabled=true;delivery.textContent='Sending feedback…';
- try{
-  await window.DoKitlyFeedback.send({type:'rating',tool:document.getElementById('fileTool')?.textContent||'DoKitly',rating:state,reasons:[...selected],message:'',email:'',page:location.origin+'/download.html'},'dkFeedbackCaptcha');
-  const level=state==='sad'?'needs_work':state==='happy'?'great':'okay';
-  window.DoKitlyAnalytics?.track?.('tool_feedback_submit',{feedback_level:level,has_feedback_reason:selected.size>0});
-  delivery.textContent='Your feedback was saved.';submit.hidden=true;thanks.hidden=false;range.disabled=true;chips.querySelectorAll('button').forEach(b=>b.disabled=true);
- }catch(err){delivery.textContent=err.message||'Could not deliver feedback. Please try again.';submit.disabled=false;}
+ submit.disabled=true;delivery.textContent='';
+ const payload={type:'rating',tool:document.getElementById('fileTool')?.textContent||'DoKitly',rating:state,reasons:[...selected],message:'',email:'',page:location.origin+'/download.html'};
+ if(window.DoKitlyFeedback?.available){try{await window.DoKitlyFeedback.send(payload,'dkFeedbackCaptcha')}catch{}}
+ const level=state==='sad'?'needs_work':state==='happy'?'great':'okay';
+ window.DoKitlyAnalytics?.track?.('tool_feedback_submit',{feedback_level:level,has_feedback_reason:selected.size>0});
+ delivery.textContent='';submit.hidden=true;thanks.hidden=false;thanks.textContent='Got it — thanks for sharing.';range.disabled=true;chips.querySelectorAll('button').forEach(b=>b.disabled=true);
 });
-renderChips(data[state].chips);render();if(!window.DoKitlyFeedback?.available)document.getElementById('feedbackDelivery').textContent='Direct guest feedback becomes available when its secure inbox Worker is configured.';
+renderChips(data[state].chips);render();const delivery=document.getElementById('feedbackDelivery');if(delivery)delivery.textContent='';
 })();
