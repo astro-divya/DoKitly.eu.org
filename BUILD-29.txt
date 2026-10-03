@@ -1,0 +1,15 @@
+DoKitly Build 29
+
+- Rebuilt homepage visual structure on top of the working Build 28 codebase.
+- Selected Gemini hero image is included and rendered behind headline/search; dark mode uses a transparent derivative of the same asset.
+- Popular Tools is a compact horizontal hero launcher, not a separate tall section.
+- Decorative white cards/tiles removed from homepage categories, All Tools, category pages and informational/SEO sections.
+- No fixed/equal-height decorative boxes; content determines height.
+- Only functional controls/results may use compact local surfaces; individual tool pages retain one shallow translucent hero bar.
+- All Tools category strip is clickable with smooth jumps, active state, wheel, mouse drag, touch swipe and keyboard support.
+- Onest heading + Manrope body system with restrained violet, cyan, sage and amber accents.
+- Proper deep navy/charcoal dark theme replaces gray-overlay behavior.
+- Existing tool functionality, GA4, AdSense, canonical URLs, sitemap, robots, CNAME, Worker integrations and quotas preserved.
+- Feedback acknowledgement remains “Got it — thanks for sharing.” with no backend diagnostics on the download flow.
+- Date/time HH:MM:SS.ffffff mask/normalization retained.
+- Background-remover edge refinement/decontamination logic retained.
