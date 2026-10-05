@@ -11,7 +11,7 @@ ready(()=>{
   }
 
   /* All Tools: real navigation, active state, wheel, drag, touch and keyboard. */
-  document.querySelectorAll('.category-jumps').forEach(strip=>{
+  document.querySelectorAll('.category-jumps[data-legacy-rail]:not([data-b30-rail])').forEach(strip=>{
     strip.setAttribute('tabindex','0');
     const links=[...strip.querySelectorAll('a[href^="#"]')];
     const activate=a=>{links.forEach(x=>x.classList.toggle('is-active',x===a));a?.scrollIntoView({block:'nearest',inline:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})};
