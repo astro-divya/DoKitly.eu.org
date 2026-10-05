@@ -1,0 +1,16 @@
+/* DoKitly Build 31 — verified global tool-page cleanup */
+/* Whole-tool outer shells stay open; compact functional surfaces remain local. */
+body[data-tool] main.it-shell > .it-panel,
+body[data-tool] main > .it-panel,
+body[data-tool] #toolRoot > .it-panel{
+  background:transparent!important;border:0!important;border-radius:0!important;
+  box-shadow:none!important;padding-left:0!important;padding-right:0!important;
+}
+body[data-tool] #toolRoot{background:transparent!important;border:0!important;box-shadow:none!important}
+/* Keep functional groups readable without recreating a giant card wall. */
+body[data-tool] .dropzone,body[data-tool] .preview-card,body[data-tool] .status,
+body[data-tool] .field textarea,body[data-tool] .field input,body[data-tool] .field select{
+  box-shadow:none!important;
+}
+/* Homepage phone QR: desktop/tablet only. Mobile gets no card and no reserved gap. */
+@media(max-width:760px){.desktop-phone-strip{display:none!important;height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}.phone-qr-card{display:none!important}}

@@ -1,0 +1,63 @@
+/* DoKitly Build 24: focused, global visual fixes. No modifications to functional workspaces. */
+:root { --dk24-ink:#173147; --dk24-subtle:#536e82; --dk24-accent:#087e86; }
+/* Popular tools: reduce oversized white cards without shrinking actual approved artwork. */
+#popularGrid { gap:12px!important; }
+#popularGrid .tool { min-height:151px!important; padding:11px 12px!important; gap:3px!important; border-radius:17px!important; }
+#popularGrid .tool .tool-ico.premium, #popularGrid .tool .tool-ico.premium img { width:108px!important; height:108px!important; min-width:108px!important; max-width:108px!important; flex-basis:108px!important; background:none!important; }
+#popularGrid .tool b { font-size:15px!important; line-height:1.28!important; color:var(--dk24-ink); }
+#popularGrid .tool small { font-size:12px!important; line-height:1.35!important; color:var(--dk24-subtle); }
+/* Shared tool/category cards, desktop and mobile. */
+.tools-grid {gap:11px!important;}
+.tools-grid .tool-card {min-height:166px!important;padding:10px 9px!important;gap:3px!important;border-radius:17px!important;justify-content:center!important;}
+.tools-grid .tool-card .ti,.tools-grid .tool-card .ti img {width:104px!important;height:104px!important;min-width:104px!important;max-width:104px!important;margin:0 auto 1px!important;object-fit:contain!important;background:none!important;}
+.tools-grid .tool-card b {font-size:14.5px!important;font-weight:850!important;line-height:1.28!important;color:var(--dk24-ink);letter-spacing:-.12px;}
+.tools-grid .tool-card small {color:var(--dk24-subtle)!important;font-size:11.5px!important;line-height:1.35!important;}
+#categoryGrid .cat,.cat-grid .cat {padding:14px 16px!important;}
+#categoryGrid .cat h3,.cat-grid .cat h3 {font-weight:850;color:var(--dk24-ink);letter-spacing:-.35px;}
+#categoryGrid .cat p,.cat-grid .cat p {color:var(--dk24-subtle);}
+.tool-card:hover b,#popularGrid .tool:hover b,.cat:hover h3 {color:var(--dk24-accent)!important;}
+/* QR stays scannable on its own pale square, without another nested white tile. */
+.phone-strip-inner {gap:20px!important;padding:15px 23px!important;min-height:0!important;}
+.phone-strip-copy h2 {font-size:25px!important;margin:3px 0 5px!important;}
+.phone-strip-copy p {margin-bottom:10px!important;font-size:13px;}
+.phone-qr-card {padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;backdrop-filter:none!important;min-width:0!important;gap:14px!important;}
+.phone-qr-card img {width:146px!important;height:146px!important;flex:0 0 146px!important;object-fit:contain!important;padding:5px!important;background:#fff!important;border-radius:9px;}
+.phone-qr-card small {font-size:11px!important;}
+/* Uniform, compact tool header with controlled 3D breakout near right-center. */
+.dk-balanced-hero {position:relative!important;display:flex!important;align-items:center!important;justify-content:space-between!important;min-height:97px!important;max-height:none!important;padding:13px 17px!important;margin:20px 0 29px!important;overflow:visible!important;isolation:isolate!important;border-radius:19px!important;border:1px solid rgba(129,190,212,.28)!important;background:linear-gradient(108deg,#f6fbff 0%,#eaf8fe 50%,#def9f4 100%)!important;box-shadow:0 12px 28px rgba(24,85,126,.055)!important;gap:14px!important;}
+.dk-balanced-hero::before {display:block!important;z-index:-1!important;inset:-14px 15% -12px 52%!important;background-image:var(--dk-hero)!important;background-size:155px 155px!important;background-position:center!important;opacity:.055!important;transform:none!important;mask-image:linear-gradient(90deg,transparent,#000 48%,transparent)!important;-webkit-mask-image:linear-gradient(90deg,transparent,#000 48%,transparent)!important;pointer-events:none!important;}
+.dk-balanced-hero::after {z-index:-1!important;opacity:.38!important;border-radius:inherit!important;}
+.dk-balanced-hero .dk-hero-copy {max-width:calc(100% - 230px)!important;flex:1 1 auto!important;min-width:0!important;}
+.dk-balanced-hero .dk-hero-text h1 {font-size:clamp(20px,2.2vw,27px)!important;line-height:1.1!important;}
+.dk-balanced-hero .dk-hero-text p {font-size:12px!important;line-height:1.38!important;}
+.dk-balanced-hero .dk-tool-badge,.dk-balanced-hero .dk-tool-badge img {width:57px!important;height:57px!important;min-width:57px!important;object-fit:contain!important;}
+.dk-balanced-hero .dk-hero-visual,.dk-b20-icon-hero .dk-hero-visual {display:block!important;position:relative!important;width:215px!important;height:90px!important;flex:0 0 215px!important;overflow:visible!important;margin-right:4.5%!important;opacity:1!important;}
+.dk-balanced-hero .dk-hero-visual::before,.dk-balanced-hero .dk-hero-visual i{display:none!important;}
+.dk-balanced-hero .dk-tool-visual-img,.dk-b20-icon-hero .dk-tool-visual-img {position:absolute!important;display:block!important;left:50%!important;right:auto!important;top:50%!important;width:220px!important;height:140px!important;max-width:220px!important;max-height:none!important;object-fit:contain!important;object-position:center!important;transform:translate(-50%,-53%)!important;filter:drop-shadow(0 12px 16px rgba(19,90,140,.14)) saturate(1.07)!important;mask-image:none!important;-webkit-mask-image:none!important;opacity:1!important;}
+@media(max-width:900px){.dk-balanced-hero .dk-hero-copy{max-width:calc(100% - 155px)!important}.dk-balanced-hero .dk-hero-visual,.dk-b20-icon-hero .dk-hero-visual{width:145px!important;flex-basis:145px!important;margin-right:1%!important}.dk-balanced-hero .dk-tool-visual-img,.dk-b20-icon-hero .dk-tool-visual-img{width:165px!important;height:120px!important;max-width:165px!important}}
+@media(max-width:620px){
+ #popularGrid .tool {min-height:138px!important;padding:9px!important;}
+ #popularGrid .tool .tool-ico.premium,#popularGrid .tool .tool-ico.premium img {width:83px!important;height:83px!important;min-width:83px!important;max-width:83px!important;flex-basis:83px!important;}
+ .tools-grid .tool-card {min-height:141px!important;padding:9px 7px!important;}
+ .tools-grid .tool-card .ti,.tools-grid .tool-card .ti img {width:82px!important;height:82px!important;min-width:82px!important;max-width:82px!important;}
+ .tools-grid .tool-card b {font-size:13px!important;}
+ .phone-strip-inner {padding:14px!important;gap:9px!important;align-items:center!important;}
+ .phone-qr-card{min-width:0!important;justify-content:center!important;}
+ .phone-qr-card img {width:134px!important;height:134px!important;flex-basis:134px!important;}
+ .phone-strip-copy h2{font-size:22px!important;}
+ .dk-balanced-hero{min-height:78px!important;padding:10px 12px!important;margin:8px 0 14px!important;overflow:visible!important;}
+ .dk-balanced-hero .dk-hero-copy{max-width:100%!important;}
+ .dk-balanced-hero .dk-hero-visual,.dk-b20-icon-hero .dk-hero-visual{display:none!important;}
+ .dk-balanced-hero .dk-tool-badge,.dk-balanced-hero .dk-tool-badge img{width:46px!important;height:46px!important;min-width:46px!important;}
+ .dk-balanced-hero .dk-hero-text h1{font-size:21px!important;}
+}
+@media(prefers-reduced-motion:reduce){.tool-card:hover,.cat:hover,#popularGrid .tool:hover{transform:none!important}}
+
+/* Status and guest form controls, without shrinking functional tool workspaces. */
+.dk24-quota,.dk-form-status,#feedbackDelivery{font-size:12px;line-height:1.5;color:#27736e;margin:8px 0;}
+.dk-feedback-captcha{min-height:0;margin:9px 0;}
+/* Dark homepage uses the original theme colors, not light-only card ink. */
+body.dark{--dk24-ink:#edf7ff;--dk24-subtle:#a9c2d3;--dk24-accent:#66d6c4;}
+body.dark #popularGrid .tool,body.dark #categoryGrid .cat{background:var(--card)!important;color:var(--text)!important;}
+body.dark .phone-strip-copy{color:#eefaff;}
+@media(max-width:390px){.phone-strip-inner{flex-direction:column!important;text-align:center}.phone-qr-card img{width:132px!important;height:132px!important}.phone-strip-copy h2{font-size:20px!important}}
