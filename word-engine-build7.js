@@ -113,6 +113,19 @@ function styles(){return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?
 function settings(){return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="12"/></w:compat></w:settings>`}
 function core(){const now=new Date().toISOString();return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>Converted PDF</dc:title><dc:creator>DoKitly</dc:creator><cp:lastModifiedBy>DoKitly</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`}
 function app(){return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>DoKitly</Application><AppVersion>12.0000</AppVersion></Properties>`}
+
+async function ocrScan(data){
+ if(!window.Tesseract?.recognize)return null;
+ try{
+  const blob=new Blob([data],{type:'image/jpeg'});
+  const r=await Tesseract.recognize(blob,'eng+hin',{logger:m=>{if(m?.status&&Number.isFinite(m.progress))window.dispatchEvent(new CustomEvent('dokitly-ocr-progress',{detail:{status:m.status,progress:m.progress}}))}});
+  const text=clean(r?.data?.text||'').replace(/\r/g,'').trim();
+  return text||null;
+ }catch(e){console.warn('Scanned-page OCR unavailable; preserving page image.',e);return null}
+}
+function ocrParas(text){
+ return String(text||'').split(/\n{2,}|\n/).map(x=>x.trim()).filter(Boolean).map(line=>`<w:p><w:pPr><w:spacing w:before="80" w:after="80"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xml(line)}</w:t></w:r></w:p>`).join('');
+}
 async function convert(file){
  if(!window.pdfjsLib)throw Error('PDF text engine did not load.');if(!window.JSZip)throw Error('DOCX package engine did not load.');
  const bytes=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:bytes}).promise,counts=new Map(),pages=[],media=[];
@@ -125,7 +138,7 @@ async function convert(file){
  let body='',firstW=12240,firstH=15840,blocks=0,tables=0,bandsFound=0,scannedPages=0;
  for(let pi=0;pi<pages.length;pi++){
   const {vp,bands,scan}=pages[pi],pw=clamp(Math.round(vp.width*20),7200,31680),ph=clamp(Math.round(vp.height*20),7200,31680);bandsFound+=bands.length;if(pi===0){firstW=pw;firstH=ph}else body+=pageBreak();
-  if(scan){body+=scanImagePara(scan.relId,vp,pi+1);scannedPages++;blocks++;continue}
+  if(scan){const ocr=await ocrScan(scan.data);body+=scanImagePara(scan.relId,vp,pi+1);if(ocr){body+=`<w:p><w:pPr><w:spacing w:before="120" w:after="80"/></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="18"/></w:rPr><w:t>Editable OCR text (English / Hindi)</w:t></w:r></w:p>`+ocrParas(ocr)}scannedPages++;blocks++;continue}
   const filtered=pages[pi].items.filter(i=>{const t=clean(i.str).trim();return !(pdf.numPages>2&&counts.get(t)>=Math.ceil(pdf.numPages*.7)&&t.length>14)}),rs=rows(filtered);let prev=vp.height;
   for(let i=0;i<rs.length;){const tb=trueTableAt(rs,i);if(tb){body+=tableXml(rs.slice(i,tb.end+1),tb.cols,pw);tables++;prev=rs[tb.end].y;i=tb.end+1}else{body+=rowParaXml(rs[i],prev,vp.width,vp.height,bands);prev=rs[i].y;i++}blocks++}
  }
@@ -138,5 +151,5 @@ async function convert(file){
  for(const n of ['word/document.xml','word/styles.xml','word/settings.xml']){const vx=await verify.file(n).async('string'),vp2=new DOMParser().parseFromString(vx,'application/xml');if(vp2.querySelector('parsererror'))throw Error(`DOCX validation failed: ${n} is invalid XML.`)}
  return {blob,pages:pdf.numPages,tables,blocks,bands:bandsFound,scannedPages};
 }
-window.DMOWordEngine={convert,version:'dokitly-1-word-layout-scan-fallback'};
+window.DMOWordEngine={convert,version:'dokitly-2-word-layout-ocr-eng-hin'};
 })();

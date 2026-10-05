@@ -13,7 +13,7 @@ const toolDefs = [
  {id:'image-filter',name:'Image Adjustments',icon:'✨',cat:'Image',desc:'Adjust brightness, contrast, saturation, grayscale and blur.'},
  {id:'image-border',name:'Add Image Border',icon:'🖼',cat:'Image',desc:'Add a customizable border around an image.'},
  {id:'image-text',name:'Add Text to Image',icon:'T',cat:'Image',desc:'Place custom text on an image and download the result.'},
- {id:'image-watermark',name:'Watermark Image',icon:'💧',cat:'Image',desc:'Add a transparent text watermark to an image.'},
+ {id:'image-watermark',name:'Watermark Studio',icon:'💧',cat:'Image',desc:'Add a transparent text watermark to an image.'},
  {id:'image-exif',name:'Remove Image Metadata',icon:'🧹',cat:'Image',desc:'Re-export an image in-browser to strip common embedded metadata.'},
  {id:'image-color',name:'Image Color Picker',icon:'🎨',cat:'Image',desc:'Click an uploaded image to inspect the pixel color.'},
  {id:'print-size',name:'DPI / Print Size Calculator',icon:'📏',cat:'Image',desc:'Convert pixel dimensions and DPI into inches and centimeters.'},
