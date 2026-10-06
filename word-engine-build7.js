@@ -5,6 +5,7 @@
 */
 (function(){
 'use strict';
+
 const MIME='application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const clean=s=>String(s??'').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\uFFFE\uFFFF]/g,'').replace(/\uFFFD/g,'');
@@ -114,7 +115,7 @@ function settings(){return `<?xml version="1.0" encoding="UTF-8" standalone="yes
 function core(){const now=new Date().toISOString();return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>Converted PDF</dc:title><dc:creator>DoKitly</dc:creator><cp:lastModifiedBy>DoKitly</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`}
 function app(){return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>DoKitly</Application><AppVersion>12.0000</AppVersion></Properties>`}
 async function convert(file){
- await window.DoKitlyPDFJS.ready();if(!window.JSZip)throw Error('DOCX package engine did not load.');
+ const pdfjsLib=await window.DoKitlyGetPDFJS();if(!pdfjsLib)throw Error('PDF text engine did not load.');if(!window.JSZip)throw Error('DOCX package engine did not load.');
  const bytes=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:bytes}).promise,counts=new Map(),pages=[],media=[];
  for(let p=1;p<=pdf.numPages;p++){
   const pg=await pdf.getPage(p),vp=pg.getViewport({scale:1}),tc=await pg.getTextContent({disableCombineTextItems:false}),items=enrichItems(pg,tc).filter(i=>clean(i.str).trim()),textChars=items.reduce((n,i)=>n+clean(i.str).trim().length,0),bands=items.length?await detectDarkBands(pg,vp):[];
