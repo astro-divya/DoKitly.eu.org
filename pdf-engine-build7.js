@@ -32,7 +32,6 @@ const defs={
 };
 const id=document.body.dataset.tool,d=defs[id],root=document.getElementById('toolRoot');
 if(!d||!root)return;
-if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const $=x=>document.getElementById(x), esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 let files=[],primary=null,lastPdfJs=null,selectedPages=new Set(),reorderOrder=[],pageRotations={},fileOrder=[],imageOrder=[],artifact=null,previewToken=0,unlockState='unknown',liveTimer=null;
 const A4=[595.28,841.89], sizes={a3:[841.89,1190.55],a4:A4,a5:[419.53,595.28],letter:[612,792],legal:[612,1008]};
@@ -94,13 +93,13 @@ function markCustomPosition(which){const pos=$(which+'Pos');if(pos)pos.value='cu
 function parsePages(s,n,allIfBlank=false){s=String(s||'').trim().toLowerCase();if((!s&&allIfBlank)||s==='all')return [...Array(n)].map((_,i)=>i);const out=new Set();for(const part of s.split(',').map(x=>x.trim()).filter(Boolean)){if(part.includes('-')){let[a,b]=part.split('-').map(Number);if(!a||!b)continue;if(a>b)[a,b]=[b,a];for(let i=a;i<=b;i++)if(i>=1&&i<=n)out.add(i-1)}else{const x=Number(part);if(x>=1&&x<=n)out.add(x-1)}}return [...out].sort((a,b)=>a-b)}
 function hexRgb(hex){hex=(hex||'#111827').replace('#','');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');const n=parseInt(hex,16);return PDFLib.rgb(((n>>16)&255)/255,((n>>8)&255)/255,(n&255)/255)}
 async function loadLib(file=primary,opts={}){if(!file)throw Error('Choose a PDF first.');const data=file._dmoBuffer?file._dmoBuffer.slice(0):await file.arrayBuffer();return PDFLib.PDFDocument.load(data,opts)}
-async function loadPdfJs(file=primary,password){if(!file)throw Error('Choose a PDF first.');const data=file._dmoBuffer?file._dmoBuffer.slice(0):await file.arrayBuffer();return pdfjsLib.getDocument(password?{data,password}:{data}).promise}
-async function validatePdf(bytes){try{const data=bytes instanceof Uint8Array?bytes.slice():new Uint8Array(bytes);const p=await pdfjsLib.getDocument({data}).promise;await p.getPage(1);return true}catch(e){console.warn('Output validation failed',e);throw Error('The processed PDF could not be validated. No download was created. Please try another setting or file.') }}
+async function loadPdfJs(file=primary,password){await window.DoKitlyPDFJS.ready();if(!file)throw Error('Choose a PDF first.');const data=file._dmoBuffer?file._dmoBuffer.slice(0):await file.arrayBuffer();return pdfjsLib.getDocument(password?{data,password}:{data}).promise}
+async function validatePdf(bytes){await window.DoKitlyPDFJS.ready();try{const data=bytes instanceof Uint8Array?bytes.slice():new Uint8Array(bytes);const p=await pdfjsLib.getDocument({data}).promise;await p.getPage(1);return true}catch(e){console.warn('Output validation failed',e);throw Error('The processed PDF could not be validated. No download was created. Please try another setting or file.') }}
 async function renderPage(pdf,n,scale=.35){const p=await pdf.getPage(n),vp=p.getViewport({scale}),c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(vp.width));c.height=Math.max(1,Math.ceil(vp.height));await p.render({canvasContext:c.getContext('2d',{alpha:false}),viewport:vp}).promise;return c}
 function clearPreview(msg='Process the tool to preview the result here.'){const box=$('processedPreview');if(box)box.innerHTML=`<div class="empty">${esc(msg)}</div>`;if($('previewNav'))$('previewNav').hidden=true;if($('resultPreview'))$('resultPreview').hidden=true}
 async function previewPdfBlob(blob){
  const token=++previewToken,box=$('processedPreview'),oldScroll=box?.scrollTop||0;
- let pdf;try{pdf=await pdfjsLib.getDocument({data:await blob.arrayBuffer()}).promise}catch(e){if(box)box.innerHTML='<div class="empty">Preview unavailable for this protected/encrypted output. Download and reopen it to verify.</div>';return}
+ await window.DoKitlyPDFJS.ready();let pdf;try{pdf=await pdfjsLib.getDocument({data:await blob.arrayBuffer()}).promise}catch(e){if(box)box.innerHTML='<div class="empty">Preview unavailable for this protected/encrypted output. Download and reopen it to verify.</div>';return}
  if(token!==previewToken||!box)return;
  const next=document.createElement('div');next.className='processed-preview-inner';
  const frag=document.createDocumentFragment();
