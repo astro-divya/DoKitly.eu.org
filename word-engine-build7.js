@@ -1,4 +1,4 @@
-/* DoKitly Build 7 — layout-faithful PDF→DOCX engine v3
+/* DoKitly Build 7 — layout-faithful PDF→DOCX engine v4
    Browser-only. PDF.js extracts text/layout; JSZip writes conservative Word 2007-safe OOXML.
    Improvements: source font identity, mixed bold/regular runs, tighter baseline spacing,
    dark section-band reconstruction, black table rules, and item-level table column alignment.
@@ -15,7 +15,7 @@ const py=i=>Number.isFinite(i?.transform?.[5])?i.transform[5]:0;
 const fs=i=>clamp(Math.hypot(Number(i?.transform?.[0])||0,Number(i?.transform?.[1])||0)||Number(i?.height)||9,6,48);
 const tw=i=>Math.max(1,Number(i?.width)||clean(i?.str).length*fs(i)*.5);
 function fontIdentity(i){return `${i?._fontFamily||''} ${i?._fontNameResolved||''} ${i?.fontName||''}`.trim()}
-function fontName(i){const n=fontIdentity(i);return /courier|mono|consolas/i.test(n)?'Courier New':/times|serif|georgia/i.test(n)?'Times New Roman':/helvetica|arial|sans/i.test(n)?'Arial':'Arial'}
+function fontName(i){let n=fontIdentity(i).replace(/^[A-Z]{6}\+/,'').replace(/[,;].*$/,'').trim();if(/courier|mono|consolas/i.test(n))return 'Courier New';if(/times|serif|georgia/i.test(n))return 'Times New Roman';if(/helvetica/i.test(n))return 'Arial';if(/calibri/i.test(n))return 'Calibri';if(/cambria/i.test(n))return 'Cambria';if(/nirmala/i.test(n))return 'Nirmala UI';n=n.replace(/[-_](bold|italic|regular|medium|semibold|light|roman).*$/i,'').trim();return n&&n.length<64?n:'Arial'}
 function isBold(i){return /bold|black|semibold|demi|heavy/i.test(fontIdentity(i))}
 function isItalic(i){return /italic|oblique/i.test(fontIdentity(i))}
 function enrichItems(page,tc){
@@ -58,12 +58,12 @@ function rowParaXml(r,prevY,pageWidthPt,pageHeightPt,bands){
  const before=clamp(Math.round(Math.max(0,gap-linePt)*20),0,1600);
  let leftPt=segs[0].x,rightPt=0,shade='';
  if(band){leftPt=Math.min(leftPt,band.x0);rightPt=Math.max(0,pageWidthPt-band.x1);shade=`<w:shd w:val="clear" w:color="auto" w:fill="${band.fill}"/>`}
- const left=clamp(Math.round(leftPt*20),0,30000),right=clamp(Math.round(rightPt*20),0,30000);
+ const left=clamp(Math.round(leftPt*20),0,30000),right=clamp(Math.round(rightPt*20),0,30000);const rowRight=Math.max(...r.items.map(it=>px(it)+tw(it))),rowWidth=Math.max(1,rowRight-segs[0].x),center=(segs[0].x+rowRight)/2,centerDelta=Math.abs(center-pageWidthPt/2),leftGap=segs[0].x,rightGap=Math.max(0,pageWidthPt-rowRight);let jc='';if(rowWidth<pageWidthPt*.82&&centerDelta<Math.max(8,pageWidthPt*.035))jc='<w:jc w:val="center"/>';else if(rowWidth<pageWidthPt*.72&&rightGap<leftGap*.38)jc='<w:jc w:val="right"/>';
  const tabStops=segs.slice(1).map(s=>`<w:tab w:val="left" w:pos="${clamp(Math.round(s.x*20),left+20,30000)}"/>`).join('');
  let body='';segs.forEach((s,idx)=>{if(idx)body+='<w:r><w:tab/></w:r>';body+=itemTextXml(s.items)});
  // Exact line spacing keeps PDF baselines far closer than Word's default font-leading spacing.
  const line=clamp(Math.round(linePt*20),160,1920);
- const ppr=`<w:pPr>${shade}${tabStops?`<w:tabs>${tabStops}</w:tabs>`:''}<w:spacing w:before="${before}" w:after="0" w:line="${line}" w:lineRule="exact"/><w:ind w:left="${left}"${right?` w:right="${right}"`:''}/></w:pPr>`;
+ const ppr=`<w:pPr>${shade}${jc}${tabStops?`<w:tabs>${tabStops}</w:tabs>`:''}<w:spacing w:before="${before}" w:after="0" w:line="${line}" w:lineRule="exact"/><w:ind w:left="${left}"${right?` w:right="${right}"`:''}/></w:pPr>`;
  return `<w:p>${ppr}${body}</w:p>`
 }
 function headerColumns(r){
@@ -139,5 +139,5 @@ async function convert(file){
  for(const n of ['word/document.xml','word/styles.xml','word/settings.xml']){const vx=await verify.file(n).async('string'),vp2=new DOMParser().parseFromString(vx,'application/xml');if(vp2.querySelector('parsererror'))throw Error(`DOCX validation failed: ${n} is invalid XML.`)}
  return {blob,pages:pdf.numPages,tables,blocks,bands:bandsFound,scannedPages};
 }
-window.DMOWordEngine={convert,version:'dokitly-1-word-layout-scan-fallback'};
+window.DMOWordEngine={convert,version:'dokitly-2-high-fidelity-layout-ocr-fallback'};
 })();
