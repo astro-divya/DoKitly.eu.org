@@ -5,6 +5,7 @@
 */
 (function(){
 'use strict';
+if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
 const MIME='application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const clean=s=>String(s??'').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\uFFFE\uFFFF]/g,'').replace(/\uFFFD/g,'');
@@ -105,10 +106,6 @@ function scanImagePara(relId,vp,docPrId){
  const cx=Math.round(vp.width*12700),cy=Math.round(vp.height*12700);
  return `<w:p><w:pPr><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${docPrId}" name="Scanned PDF page ${docPrId}"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="scan-${docPrId}.jpg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${relId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`
 }
-
-function ocrTextXml(text){return String(text||'').split(/\n+/).map(s=>s.trim()).filter(Boolean).map(s=>`<w:p><w:pPr><w:spacing w:after="80"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Nirmala UI"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${esc(s)}</w:t></w:r></w:p>`).join('')}
-async function ocrScannedPage(page,vp){if(!window.DoKitlyOCRCore)return null;const scale=Math.min(2,2200/Math.max(vp.width,vp.height)),rv=page.getViewport({scale}),c=document.createElement('canvas');c.width=Math.ceil(rv.width);c.height=Math.ceil(rv.height);await page.render({canvasContext:c.getContext('2d',{alpha:false}),viewport:rv}).promise;const blob=await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(Error('OCR page render failed.')),'image/png'));try{return await DoKitlyOCRCore.recognizeMixed(blob)}catch(e){console.info('Build32 scanned-page OCR fallback:',e?.message||e);return null}finally{c.width=c.height=1}}
-
 const pageBreak=()=>'<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
 function contentTypes(){return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`}
 function rootRels(){return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`}
@@ -123,13 +120,13 @@ async function convert(file){
  for(let p=1;p<=pdf.numPages;p++){
   const pg=await pdf.getPage(p),vp=pg.getViewport({scale:1}),tc=await pg.getTextContent({disableCombineTextItems:false}),items=enrichItems(pg,tc).filter(i=>clean(i.str).trim()),textChars=items.reduce((n,i)=>n+clean(i.str).trim().length,0),bands=items.length?await detectDarkBands(pg,vp):[];
   let scan=null;
-  if(textChars<4){const name=`scan-page-${p}.jpg`,relId=`rId${media.length+3}`,data=await renderScanImage(pg,vp);scan={name,relId,data};media.push(scan)}
-  pages.push({vp,items,bands,scan,page:pg});for(const i of items){const t=clean(i.str).trim();if(t.length>10)counts.set(t,(counts.get(t)||0)+1)}
+  if(textChars<4){const name=`scan-page-${p}.jpg`,relId=`rId${media.length+3}`,data=await renderScanImage(pg,vp);let ocr='';if(window.Tesseract){try{const rr=await Tesseract.recognize(new Blob([data],{type:'image/jpeg'}),'eng+hin');ocr=clean(rr?.data?.text||'').trim()}catch(e){console.info('Scanned-page OCR fallback:',e?.message||e)}}scan={name,relId,data,ocr};media.push(scan)}
+  pages.push({vp,items,bands,scan});for(const i of items){const t=clean(i.str).trim();if(t.length>10)counts.set(t,(counts.get(t)||0)+1)}
  }
  let body='',firstW=12240,firstH=15840,blocks=0,tables=0,bandsFound=0,scannedPages=0;
  for(let pi=0;pi<pages.length;pi++){
-  const {vp,bands,scan,page}=pages[pi],pw=clamp(Math.round(vp.width*20),7200,31680),ph=clamp(Math.round(vp.height*20),7200,31680);bandsFound+=bands.length;if(pi===0){firstW=pw;firstH=ph}else body+=pageBreak();
-  if(scan){let ocr=null;try{ocr=await ocrScannedPage(page,vp)}catch(_){}if(ocr?.text?.trim()){body+=ocrTextXml(ocr.text);scannedPages++;blocks++;continue}body+=scanImagePara(scan.relId,vp,pi+1);scannedPages++;blocks++;continue}
+  const {vp,bands,scan}=pages[pi],pw=clamp(Math.round(vp.width*20),7200,31680),ph=clamp(Math.round(vp.height*20),7200,31680);bandsFound+=bands.length;if(pi===0){firstW=pw;firstH=ph}else body+=pageBreak();
+  if(scan){if(scan.ocr){for(const line of scan.ocr.split(/\n+/).map(x=>x.trim()).filter(Boolean)){body+=`<w:p><w:pPr><w:spacing w:after=\"80\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Nirmala UI\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t xml:space=\"preserve\">${xml(line)}</w:t></w:r></w:p>`;blocks++}}else{body+=scanImagePara(scan.relId,vp,pi+1);blocks++}scannedPages++;continue}
   const filtered=pages[pi].items.filter(i=>{const t=clean(i.str).trim();return !(pdf.numPages>2&&counts.get(t)>=Math.ceil(pdf.numPages*.7)&&t.length>14)}),rs=rows(filtered);let prev=vp.height;
   for(let i=0;i<rs.length;){const tb=trueTableAt(rs,i);if(tb){body+=tableXml(rs.slice(i,tb.end+1),tb.cols,pw);tables++;prev=rs[tb.end].y;i=tb.end+1}else{body+=rowParaXml(rs[i],prev,vp.width,vp.height,bands);prev=rs[i].y;i++}blocks++}
  }
@@ -142,5 +139,5 @@ async function convert(file){
  for(const n of ['word/document.xml','word/styles.xml','word/settings.xml']){const vx=await verify.file(n).async('string'),vp2=new DOMParser().parseFromString(vx,'application/xml');if(vp2.querySelector('parsererror'))throw Error(`DOCX validation failed: ${n} is invalid XML.`)}
  return {blob,pages:pdf.numPages,tables,blocks,bands:bandsFound,scannedPages};
 }
-window.DMOWordEngine={convert,version:'dokitly-32-layout-ppocr-fallback'};
+window.DMOWordEngine={convert,version:'dokitly-1-word-layout-scan-fallback'};
 })();
