@@ -273,19 +273,13 @@ function removeOuterBackground(source){
  mx.putImageData(v,0,0);return applyAlphaMask(source,m);
 }
 async function autoRemoveBackground(source){
- let out=null,method='Edge-aware local removal',localError=null;
- // Build 33: do not ship an unverified third-party model path. Prefer foreground-safe
- // border-connected removal, then the established portrait segmenter when available.
- try{out=removeOuterBackground(source)}catch(e){localError=e}
- if(!out&&window.SelfieSegmentation){
-  try{const mask=await personMaskCanvas(source),st=canvasAlphaStats(mask);
-   if(st.visible>.018&&st.visible<.94&&st.clear>.03){out=applyAlphaMask(source,mask);method='Portrait segmentation + edge refinement';}}
-  catch(e){console.info('Portrait segmenter unavailable:',e?.message||e);}
- }
- if(!out)throw(localError||Error('A reliable foreground/background separation could not be identified.'));
+ if(!window.DoKitlyBackgroundAI?.remove)throw Error('BiRefNet background engine did not load. Refresh once and try again.');
+ let out;
+ try{out=await window.DoKitlyBackgroundAI.remove(source,msg=>setStatus(msg));}
+ catch(e){throw Error(`BiRefNet could not process this image: ${e?.message||e}`)}
  const st=canvasAlphaStats(out);
- if(st.visible<.015||st.clear<.012)throw Error('The result would be empty or its background was not removed. No download was generated.');
- return{canvas:decontaminateEdges(out,source),method};
+ if(st.visible<.015||st.clear<.012||st.visible>.985)throw Error('BiRefNet could not identify a reliable foreground/background separation for this image.');
+ return{canvas:decontaminateEdges(out,source),method:'BiRefNet Lite AI'};
 }
 async function removePersonBackground(source,bg=null){const mask=await personMaskCanvas(source);const st=canvasAlphaStats(mask);if(st.visible<.015||st.visible>.98)throw Error('No reliable person mask found.');const out=applyAlphaMask(source,mask);if(bg){const x=out.getContext('2d');x.globalCompositeOperation='destination-over';x.fillStyle=bg;x.fillRect(0,0,out.width,out.height);x.globalCompositeOperation='source-over';}return out;}
 function bindBgEditor(c){
