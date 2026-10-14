@@ -75,7 +75,7 @@ function render(){let inner='';
   else if(id==='image-watermark') controls=`<div class="wm-mode-tabs" role="tablist"><button type="button" id="wmAddTab">Add Watermark</button><button type="button" class="active" id="wmRemoveTab">Remove Watermark</button></div><div id="wmAddPanel" hidden>${textControls(true)}</div><div id="wmRemovePanel" class="wm-auto-panel"><div class="wm-authorized-note"><b>Automatic watermark removal for images you own or are authorized to edit.</b></div><div class="wm-auto-actions"><button class="btn" type="button" id="wmAutoDetect">Auto Detect</button><button class="btn-secondary" type="button" id="wmSelectArea">Select Area</button></div><p class="wm-select-help">Normally use Auto Detect. If it misses the watermark, select one rectangular area around it.</p><div hidden><input id="wmExpand" type="range" min="0" max="24" value="5"><input id="wmFeather" type="range" min="0" max="24" value="4"><select id="wmPreviewMode"><option value="result">Cleaned result</option></select><input id="wmCompare" type="range" min="0" max="100" value="100"></div></div><div class="form-grid">${formatSelect(true)}</div><div class="btns"><button class="btn" id="processBtn">Remove Watermark</button></div><div class="status" id="status">Upload an image, then remove the watermark automatically.</div>`;
   else if(id==='image-text') controls=`${textControls(false)}<div class="form-grid">${formatSelect(true)}</div><div class="btns"><button class="btn" id="processBtn">Process result</button></div><div class="status" id="status">Text position and style update live. Drag directly on the processed preview for custom placement.</div>`;
   else if(id==='image-exif') controls=`<div class="form-grid">${formatSelect(true)}</div><div class="btns"><button class="btn" id="processBtn">Process clean copy</button></div><div class="status" id="status">The re-exported image drops common EXIF metadata.</div>`;
-  else if(id==='image-bg-remove') controls=`<div class="bg-auto-note"><b>Automatic transparent background</b><p>Remove the background, compare Before/After, then use Refine only when an edge needs correction.</p></div><div class="btns"><button class="btn" id="processBtn">Remove Background Automatically</button><button class="btn-secondary" id="bgResetBtn" type="button">Choose Another Image</button></div><div class="bg-refine" id="bgRefine" hidden><div class="form-grid"><div class="field"><label>Preview background</label><select id="bgPreviewMode"><option value="checker">Checker</option><option value="white">White</option><option value="dark">Dark</option></select></div><div class="field"><label>Brush</label><select id="bgBrushMode"><option value="erase">Erase</option><option value="restore">Restore</option></select></div><div class="field"><label>Brush size</label><input id="bgBrushSize" type="range" min="4" max="160" value="36"></div><div class="field"><label>Edge softness</label><input id="bgBrushSoft" type="range" min="0" max="100" value="35"></div></div><p class="note">Paint directly on the processed preview. Erase removes leftover background; Restore paints original pixels back. Full-resolution alpha is exported.</p></div><div class="status" id="status">Upload an image, then choose Remove Background. The download stays disabled until a nonblank PNG passes verification.</div>`;
+  else if(id==='image-bg-remove') controls=`<div class="bg-auto-note"><b>Automatic transparent background</b><p>Remove the background, compare Before/After, then use Refine only when an edge needs correction.</p></div><div class="btns"><button class="btn" id="processBtn">Remove Background</button><button class="btn-secondary" id="bgResetBtn" type="button">Choose Another Image</button></div><div class="bg-refine" id="bgRefine" hidden><div class="form-grid"><div class="field"><label>Preview background</label><select id="bgPreviewMode"><option value="checker">Checker</option><option value="white">White</option><option value="dark">Dark</option></select></div><div class="field"><label>Brush</label><select id="bgBrushMode"><option value="erase">Erase</option><option value="restore">Restore</option></select></div><div class="field"><label>Brush size</label><input id="bgBrushSize" type="range" min="4" max="160" value="36"></div><div class="field"><label>Edge softness</label><input id="bgBrushSoft" type="range" min="0" max="100" value="35"></div></div><p class="note">Paint directly on the processed preview. Erase removes leftover background; Restore paints original pixels back. Full-resolution alpha is exported.</p></div><div class="status" id="status">Upload an image, then choose Remove Background. The download stays disabled until a nonblank PNG passes verification.</div>`;
   inner=editorWrap(controls);
  }
  $('toolRoot').innerHTML=pageShell(inner);
@@ -272,20 +272,50 @@ function removeOuterBackground(source){
  for(let i=0;i<seen.length;i++){v.data[i*4]=v.data[i*4+1]=v.data[i*4+2]=255;v.data[i*4+3]=seen[i]?0:255;}
  mx.putImageData(v,0,0);return applyAlphaMask(source,m);
 }
-async function autoRemoveBackground(source){
- let out=null,method='Edge-aware local removal',localError=null;
- // Build 33: do not ship an unverified third-party model path. Prefer foreground-safe
- // border-connected removal, then the established portrait segmenter when available.
- try{out=removeOuterBackground(source)}catch(e){localError=e}
- if(!out&&window.SelfieSegmentation){
-  try{const mask=await personMaskCanvas(source),st=canvasAlphaStats(mask);
-   if(st.visible>.018&&st.visible<.94&&st.clear>.03){out=applyAlphaMask(source,mask);method='Portrait segmentation + edge refinement';}}
-  catch(e){console.info('Portrait segmenter unavailable:',e?.message||e);}
+function cleanSegmentationFringe(out,source){
+ // Correct edge spill using nearby transparent-background pixels, not a single
+ // global background color (which fails on trees, grass and patterned scenes).
+ const w=out.width,h=out.height,lim=1250,ratio=Math.min(1,lim/Math.max(w,h));
+ const sw=Math.max(1,Math.round(w*ratio)),sh=Math.max(1,Math.round(h*ratio));
+ const m=document.createElement('canvas');m.width=sw;m.height=sh;
+ const mx=m.getContext('2d',{willReadFrequently:true});mx.drawImage(out,0,0,sw,sh);
+ const src=document.createElement('canvas');src.width=sw;src.height=sh;
+ const sx=src.getContext('2d',{willReadFrequently:true});sx.drawImage(source,0,0,sw,sh);
+ const md=mx.getImageData(0,0,sw,sh),sd=sx.getImageData(0,0,sw,sh).data,d=md.data;
+ const radius=3,alpha=new Uint8Array(sw*sh);for(let i=0;i<alpha.length;i++)alpha[i]=d[i*4+3];
+ for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){
+  const i=y*sw+x,a=alpha[i]/255;if(a<.035||a>.97)continue;
+  let bg=[0,0,0],count=0;
+  for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){
+   const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=sw||yy>=sh)continue;
+   const j=yy*sw+xx;if(alpha[j]>18)continue;
+   for(let k=0;k<3;k++)bg[k]+=sd[j*4+k];count++;
+  }
+  if(count<2)continue;
+  for(let k=0;k<3;k++){
+   const background=bg[k]/count,observed=sd[i*4+k];
+   const unmixed=Math.max(0,Math.min(255,(observed-(1-a)*background)/Math.max(.18,a)));
+   d[i*4+k]=Math.round(observed*(1-Math.min(.85,(1-a)*1.15))+unmixed*Math.min(.85,(1-a)*1.15));
+  }
+  d[i*4+3]=Math.max(0,Math.round(alpha[i]-Math.min(20,(1-a)*18)));
  }
- if(!out)throw(localError||Error('A reliable foreground/background separation could not be identified.'));
+ mx.putImageData(md,0,0);
+ // Keep full-resolution output, transfer only refined matte/color around edges.
+ const oc=out.getContext('2d',{willReadFrequently:true});
+ if(ratio===1){oc.clearRect(0,0,w,h);oc.drawImage(m,0,0);return out}
+ oc.clearRect(0,0,w,h);oc.drawImage(source,0,0,w,h);
+ oc.globalCompositeOperation='destination-in';oc.drawImage(m,0,0,w,h);oc.globalCompositeOperation='source-over';
+ m.width=m.height=src.width=src.height=1;
+ return out;
+}
+async function autoRemoveBackground(source){
+ if(!window.DoKitlyBackgroundAI?.remove)throw Error('Background engine did not load. Refresh once and try again.');
+ let out;
+ try{out=await window.DoKitlyBackgroundAI.remove(source,msg=>setStatus(msg));}
+ catch(e){throw Error(`Background engine could not process this image: ${e?.message||e}`)}
  const st=canvasAlphaStats(out);
- if(st.visible<.015||st.clear<.012)throw Error('The result would be empty or its background was not removed. No download was generated.');
- return{canvas:decontaminateEdges(out,source),method};
+ if(st.visible<.015||st.clear<.012||st.visible>.985)throw Error('BiRefNet could not identify a reliable foreground/background separation for this image.');
+ return{canvas:cleanSegmentationFringe(out,source),method:'Browser background segmentation'};
 }
 async function removePersonBackground(source,bg=null){const mask=await personMaskCanvas(source);const st=canvasAlphaStats(mask);if(st.visible<.015||st.visible>.98)throw Error('No reliable person mask found.');const out=applyAlphaMask(source,mask);if(bg){const x=out.getContext('2d');x.globalCompositeOperation='destination-over';x.fillStyle=bg;x.fillRect(0,0,out.width,out.height);x.globalCompositeOperation='source-over';}return out;}
 function bindBgEditor(c){
@@ -308,7 +338,7 @@ async function downloadCurrent(){try{
  if(id==='base64-image')return decodeBase64();
  if(!currentImg)throw Error('Please select an image first.');if(id==='image-convert'&&/image\/(gif|webp)/i.test(currentFile?.type||'')&&!$('allowFirstFrame')?.checked)throw Error('GIF/WebP may be animated. DoKitly will not silently flatten animation. Check “extract only the first frame” to continue intentionally.');let type=selectedType(id==='image-bg-remove'),blob,c;
  if(id==='image-watermark'&&wmMode==='remove'){if(!wmMaskHasPixels())wmAutoDetect();if(!wmMaskHasPixels())throw Error('Watermark was not detected. Use Select Area and draw one box around it.');setStatus('Reconstructing the watermark area at full resolution…');c=wmBuildResult(true);type=selectedType(false);blob=await blobFromCanvas(c,type,quality());preparedResultBlob=blob;preparedResultType=type;preparedResultName='DoKitly_Watermark_Studio_Removed.'+extForType(type);showCanvasPreview(c,`${c.width} × ${c.height} • ${humanSize(blob.size)}`);showCompareSlider(c);if($('finalImageDownload'))$('finalImageDownload').disabled=false;setStatus('Full-resolution cleaned result prepared. Inspect details before downloading.','Processed:');return}
- if(id==='image-bg-remove'){preparedResultBlob=null;preparedResultName=null;if($('finalImageDownload'))$('finalImageDownload').disabled=true;setStatus('Removing background automatically…');const result=await autoRemoveBackground(currentImg);c=result.canvas;type='image/png';blob=await blobFromCanvas(c,type);await verifyTransparentBlob(blob);preparedResultBlob=blob;preparedResultType=type;preparedResultName=outName(id,type);bindBgEditor(c);if($('finalImageDownload'))$('finalImageDownload').disabled=false;setStatus(`${result.method} processed. Use Erase/Restore for edge cleanup, then download the full-resolution PNG.`,'Processed:');return}
+ if(id==='image-bg-remove'){preparedResultBlob=null;preparedResultName=null;if($('finalImageDownload'))$('finalImageDownload').disabled=true;setStatus('Removing background automatically…');const result=await autoRemoveBackground(currentImg);c=result.canvas;type='image/png';blob=await blobFromCanvas(c,type);await verifyTransparentBlob(blob);preparedResultBlob=blob;preparedResultType=type;preparedResultName=outName(id,type);bindBgEditor(c);if($('finalImageDownload')){$('finalImageDownload').disabled=false;$('finalImageDownload').scrollIntoView?.({behavior:'smooth',block:'nearest'})}setStatus(`${result.method} processed. Review the result, then download the transparent PNG.`,'Processed:');return}
  if(id==='image-passport'){c=drawVisual(true);const bg=$('passportBg')?.value||'keep';if(bg!=='keep'){setStatus('Detecting subject and replacing background…');c=await removePersonBackground(c,bg)}type=selectedType(false);const target=Number($('passportTargetKB')?.value||0);if(target>0&&type!=='image/png'){const limit=target*1024;let lo=.02,hi=.98,hit=null;for(let i=0;i<12;i++){const q=(lo+hi)/2,b=await blobFromCanvas(c,type,q);if(b.size<=limit){hit=b;lo=q}else hi=q}blob=hit||await blobFromCanvas(c,type,.02)}else blob=await blobFromCanvas(c,type,quality());preparedResultBlob=blob;preparedResultType=type;preparedResultName=outName(id,type);showCanvasPreview(c,`${c.width} × ${c.height} • ${humanSize(blob.size)}`);if($('finalImageDownload'))$('finalImageDownload').disabled=false;setStatus('Passport photo processed. Review framing/background, then download.','Processed:');return}
  if(id==='image-target'){const kb=$('targetSelect').value==='custom'?Number($('targetCustom').value):Number($('targetSelect').value);if(!kb)throw Error('Enter a target size.');if($('processBtn')){$('processBtn').disabled=true;$('processBtn').textContent='Compressing…'};const r=await compressToKB(kb,type,true);if($('processBtn')){$('processBtn').disabled=false;$('processBtn').textContent='Compress Image'};if(!r.blob)throw Error('Could not create a compressed result.');targetResultBlob=r.blob;targetResultType=type;if($('targetDownloadBtn'))$('targetDownloadBtn').disabled=false;showCanvasPreview(r.canvas,`${r.canvas.width} × ${r.canvas.height} • ${humanSize(r.blob.size)}`);setStatus(r.miss?`Closest result: ${humanSize(r.blob.size)}. Target ${kb} KB could not be reached without making the image extremely small.`:`Target: ${kb} KB • Result: ${humanSize(r.blob.size)}`,'Compressed:');return}
  c=drawVisual(true);if(!c)throw Error('Could not create a result.');if(id==='image-compress'&&Number($('targetKB')?.value)>0){const r=await compressToKB(Number($('targetKB').value),type,true);blob=r.blob;c=r.canvas}else blob=await blobFromCanvas(c,type,quality());if(id==='image-exif'){const remain=await metadataSignals(blob);if(remain.length)throw Error(`Metadata verification found remaining container(s): ${remain.join(', ')}. Download blocked.`)}preparedResultBlob=blob;preparedResultType=type;preparedResultName=outName(id,type);showCanvasPreview(c,`${c.width} × ${c.height} • ${humanSize(blob.size)}`);if($('finalImageDownload'))$('finalImageDownload').disabled=false;setStatus(`${humanSize(currentFile.size)} → ${humanSize(blob.size)}. Review preview, then download.`,'Processed:')
@@ -323,7 +353,7 @@ $('autoFaceBtn')?.addEventListener('click',async()=>{if(!currentImg){setStatus('
 $('bgResetBtn')?.addEventListener('click',()=>{$('fileInput')?.click()});
 $('processBtn')?.addEventListener('click',()=>{if(id==='multi-resize'||id==='multi-compress')processBatch();else downloadCurrent()});$('cancelBatchBtn')?.addEventListener('click',()=>{batchCancelled=true});$('retryBatchBtn')?.addEventListener('click',()=>processBatch(true));
 $('targetDownloadBtn')?.addEventListener('click',()=>{if(!targetResultBlob||!targetResultType){setStatus('Compress the image first.');return}triggerDownload(targetResultBlob,outName('image-target',targetResultType));setStatus(`Downloaded ${humanSize(targetResultBlob.size)} image.`,'Downloaded:')});
-$('finalImageDownload')?.addEventListener('click',()=>{const blob=batchZipBlob||preparedResultBlob;if(!blob){setStatus('Process the result first.');return}triggerDownload(blob,preparedResultName||outName(id,preparedResultType||selectedType(id==='image-bg-remove')));setStatus(`Downloaded ${preparedResultName||'processed file'}.`,'Downloaded:')});
+$('finalImageDownload')?.addEventListener('click',()=>{const blob=batchZipBlob||preparedResultBlob;if(!blob){setStatus('Process the result first.');return}setStatus('Opening your download page…');triggerDownload(blob,preparedResultName||outName(id,preparedResultType||selectedType(id==='image-bg-remove'))).catch(e=>setStatus(e.message||'Download could not start.'))});
 if(id==='image-target'){['targetSelect','targetCustom','format'].forEach(k=>$(k)?.addEventListener('change',()=>{targetResultBlob=null;targetResultType=null;if($('targetDownloadBtn'))$('targetDownloadBtn').disabled=true}));}
 
 function bindColorCanvas(img){const stage=$('beforeStage');if(!stage)return;const c=document.createElement('canvas'),max=260,sc=Math.min(1,max/Math.max(img.width,img.height));c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);const x=c.getContext('2d');x.drawImage(img,0,0,c.width,c.height);stage.innerHTML='';stage.appendChild(c);c.style.cursor='crosshair';c.onclick=e=>{const r=c.getBoundingClientRect(),px=Math.floor((e.clientX-r.left)*c.width/r.width),py=Math.floor((e.clientY-r.top)*c.height/r.height),d=x.getImageData(px,py,1,1).data,hex='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();$('swatch').style.background=hex;$('hexOut').textContent=hex;$('rgbOut').textContent=`RGB ${d[0]}, ${d[1]}, ${d[2]}`}}
