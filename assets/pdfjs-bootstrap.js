@@ -1,43 +1,15 @@
-/* DoKitly Build 36 — local Mozilla PDF.js runtime bridge */
-(() => {
-  'use strict';
-
-  const currentScript = document.currentScript;
-  const scriptUrl = currentScript?.src ||
-    new URL('/assets/pdfjs-bootstrap.js', location.origin).href;
-
-  const baseUrl = new URL('./pdfjs/', scriptUrl).href;
-  const moduleUrl = new URL('pdf.mjs', baseUrl).href;
-  const workerUrl = new URL('pdf.worker.mjs', baseUrl).href;
-
-  let runtimePromise = null;
-
-  async function loadPDFJS() {
-    if (!runtimePromise) {
-      runtimePromise = import(moduleUrl)
-        .then((pdfjs) => {
-          if (!pdfjs || typeof pdfjs.getDocument !== 'function') {
-            throw new Error('Mozilla PDF.js did not load correctly.');
-          }
-
-          pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-
-          /* Use the real PDF.js module directly.
-             Do not clone/redefine module properties. */
-          window.pdfjsLib = pdfjs;
-
-          return pdfjs;
-        })
-        .catch((error) => {
-          runtimePromise = null;
-          console.error('[DoKitly PDF.js] Runtime load failed:', error);
-          throw error;
-        });
-    }
-
-    return runtimePromise;
-  }
-
-  window.DoKitlyGetPDFJS = loadPDFJS;
-  window.DoKitlyPDFJS = loadPDFJS();
+(function(){
+'use strict';
+if(window.DoKitlyPDFReady)return;
+if(typeof Promise.try!=='function')Promise.try=function(fn){var args=[].slice.call(arguments,1);return Promise.resolve().then(function(){return fn.apply(null,args);});};
+var base=(document.currentScript&&document.currentScript.src)||new URL('assets/pdfjs-bootstrap.js',document.baseURI).href;
+var moduleUrl=new URL('./pdfjs/pdf.mjs',base).href;
+var workerUrl=new URL('./pdfjs/pdf.worker.mjs',base).href;
+window.DoKitlyPDFReady=import(moduleUrl).then(function(pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc=workerUrl;
+  window.pdfjsLib=pdfjsLib;
+  window.dispatchEvent(new CustomEvent('dokitly:pdfjs-ready',{detail:{version:pdfjsLib.version}}));
+  return pdfjsLib;
+});
+window.DoKitlyGetPDFJS=function(){return window.DoKitlyPDFReady;};
 })();
