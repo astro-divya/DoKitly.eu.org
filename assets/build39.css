@@ -1,0 +1,142 @@
+/* DoKitly Build 39 — readable editorial tool guides. No tool engine changes. */
+:root{
+  --dk39-heading:#132033;
+  --dk39-body:#465569;
+  --dk39-muted:#607086;
+  --dk39-line:rgba(71,85,105,.18);
+  --dk39-accent:#2563eb;
+  --dk39-soft:rgba(37,99,235,.055);
+}
+
+/* Stronger, calmer reading contrast on tool pages. */
+.dk-balanced-hero .dk-hero-text>p,
+.tool-page-head>div>p,
+.tool-tip{color:var(--dk39-muted)!important}
+.dk-seo-content,.dk-seo-value{color:var(--dk39-body)!important}
+.dk-seo-content h2,.dk-seo-value h2{color:var(--dk39-heading)!important}
+.dk-seo-content p,.dk-seo-content li,.dk-seo-value p,.dk-seo-value li{
+  color:var(--dk39-body)!important;
+  font-size:15.5px!important;
+  line-height:1.78!important;
+  letter-spacing:-.005em;
+}
+
+/* Existing hand-written guides: turn the old two-column/table-like treatment into editorial reading flow. */
+.dk-seo-content{
+  width:min(100% - 36px,1040px)!important;
+  max-width:1040px!important;
+  margin:42px auto 0!important;
+  padding:0!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+.dk-seo-reading{display:block!important}
+.dk-seo-section{
+  position:relative!important;
+  margin:0!important;
+  padding:28px 0!important;
+  background:transparent!important;
+  border:0!important;
+  border-top:1px solid var(--dk39-line)!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+.dk-seo-section:first-child{border-top:0!important;padding-top:0!important}
+.dk-seo-section h2,.dk-seo-value h2{
+  margin:0 0 10px!important;
+  font-size:clamp(20px,2vw,26px)!important;
+  line-height:1.2!important;
+  letter-spacing:-.025em!important;
+  font-weight:800!important;
+}
+.dk-seo-section p{max-width:82ch!important;margin:0!important}
+.dk-seo-section p+p{margin-top:12px!important}
+
+/* FAQ: clean disclosure rows, not boxes/cards. */
+.dk-faq-list{background:transparent!important;border:0!important}
+.dk-faq-item,.dk-seo-value details{
+  max-width:900px!important;
+  margin:0!important;
+  padding:0!important;
+  background:transparent!important;
+  border:0!important;
+  border-bottom:1px solid var(--dk39-line)!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+.dk-faq-item:first-of-type,.dk-seo-value details:first-of-type{border-top:1px solid var(--dk39-line)!important}
+.dk-faq-item summary,.dk-seo-value summary{
+  position:relative;
+  cursor:pointer!important;
+  list-style:none!important;
+  padding:16px 38px 16px 0!important;
+  color:var(--dk39-heading)!important;
+  font-size:15px!important;
+  line-height:1.45!important;
+  font-weight:750!important;
+}
+.dk-faq-item summary::-webkit-details-marker,.dk-seo-value summary::-webkit-details-marker{display:none}
+.dk-faq-item summary::after,.dk-seo-value summary::after{
+  content:'+';position:absolute;right:4px;top:50%;transform:translateY(-50%);
+  font-size:22px;font-weight:400;color:var(--dk39-muted);transition:transform .18s ease;
+}
+.dk-faq-item[open] summary::after,.dk-seo-value details[open] summary::after{transform:translateY(-50%) rotate(45deg)}
+.dk-faq-item p,.dk-seo-value details p{padding:0 38px 16px 0!important;margin:0!important}
+
+/* Build 38 value sections that remain: open editorial rhythm instead of a generated table/card feel. */
+.dk-seo-value{
+  width:min(100% - 36px,1040px)!important;
+  max-width:1040px!important;
+  margin:42px auto 16px!important;
+  padding:0!important;
+  line-height:1.78!important;
+}
+.dk-seo-value>h2{
+  position:relative;
+  margin:30px 0 10px!important;
+  padding-top:28px!important;
+  border-top:1px solid var(--dk39-line);
+}
+.dk-seo-value>h2:first-child{margin-top:0!important;padding-top:0!important;border-top:0}
+.dk-seo-value>p,.dk-seo-value>ol,.dk-seo-value>ul{max-width:82ch!important}
+.dk-seo-value>ol,.dk-seo-value>ul{margin:10px 0 4px!important;padding-left:1.3rem!important}
+.dk-seo-value>li,.dk-seo-value li{margin:7px 0!important}
+
+/* Related tools: quiet text navigation with arrows, no white tiles. */
+.dk-related-tools{display:flex!important;flex-wrap:wrap!important;gap:8px 22px!important;margin-top:12px!important}
+.dk-related-tools a{
+  display:inline-flex!important;align-items:center!important;gap:6px!important;
+  padding:5px 0!important;background:transparent!important;border:0!important;box-shadow:none!important;
+  color:var(--dk39-accent)!important;font-size:14px!important;font-weight:750!important;text-decoration:none!important;
+}
+.dk-related-tools a::after{content:'→';font-weight:500;transition:transform .16s ease}
+.dk-related-tools a:hover{text-decoration:underline!important;text-underline-offset:3px}
+.dk-related-tools a:hover::after{transform:translateX(3px)}
+
+/* Helpful guide remains a small editorial link, never a large card. */
+.dk-b21-guide{
+  width:min(100% - 36px,1040px)!important;max-width:1040px!important;margin:24px auto 0!important;
+  padding:16px 0!important;background:transparent!important;border:0!important;border-top:1px solid var(--dk39-line)!important;
+  border-radius:0!important;box-shadow:none!important;
+}
+.dk-b21-guide b{color:var(--dk39-heading)!important;margin-right:12px!important}
+.dk-b21-guide a{color:var(--dk39-accent)!important;font-weight:750!important;text-underline-offset:3px}
+
+@media(max-width:700px){
+  .dk-seo-content,.dk-seo-value,.dk-b21-guide{width:min(100% - 28px,1040px)!important;margin-left:auto!important;margin-right:auto!important}
+  .dk-seo-content,.dk-seo-value{margin-top:30px!important}
+  .dk-seo-section{padding:23px 0!important}
+  .dk-seo-content p,.dk-seo-content li,.dk-seo-value p,.dk-seo-value li{font-size:15px!important;line-height:1.72!important}
+  .dk-seo-section h2,.dk-seo-value h2{font-size:20px!important}
+  .dk-related-tools{display:grid!important;grid-template-columns:1fr!important;gap:4px!important}
+}
+
+/* Explicit dark theme + OS fallback. */
+html[data-theme="dark"],body.dark,[data-theme="dark"]{
+  --dk39-heading:#f1f5f9;--dk39-body:#cbd5e1;--dk39-muted:#a8b4c5;
+  --dk39-line:rgba(203,213,225,.16);--dk39-accent:#8ab4ff;--dk39-soft:rgba(138,180,255,.06);
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--dk39-heading:#f1f5f9;--dk39-body:#cbd5e1;--dk39-muted:#a8b4c5;--dk39-line:rgba(203,213,225,.16);--dk39-accent:#8ab4ff;--dk39-soft:rgba(138,180,255,.06)}
+}
