@@ -1,0 +1,26 @@
+DoKitly Build 42 — GitHub-ready consolidated release
+17 October 2026
+
+SOURCE BASELINE
+DoKitly-Build41-Steps1-4-Consolidated-GitHub-Ready.zip, 1,046 files.
+
+BUILD 42 RELEASE CHANGES
+- Corrected repetitive <title> wording on PDF Editor, Website Analyzer, QR Studio and Typing Test.
+- Updated What’s New to describe actual self-hosted vendors, Step 1–4 outcomes and testing limits accurately (replacing obsolete warm-cache-only copy).
+- Preserved all processing engine files, approved C3.3 PDF-to-Word guide, image assets, canonical URLs and working paths.
+
+CARRIED FORWARD FROM STEPS 1–4
+- 101 canonical C3.3 guides and 48 tool alias redirects.
+- 101 guide FAQPage schemas (two embedded within @graph).
+- Real self-hosted pdf-lib 1.17.1, jsPDF 2.5.1, docx 8.5.0 and nerdamer 1.1.13, with local-first loading and optional fallback.
+
+QA SCOPE
+- ZIP integrity and static site paths, SEO, scripts, aliases and vendor hashes.
+- 18 isolated desktop/mobile/dark visual checks on six representative pages, with no horizontal overflow.
+- 5 isolated real-source alias interactions and four real-vendor browser output tests passed.
+- Full URL navigation in Chromium blocked by environment; no full deployed-site E2E QA claimed.
+- PDF.js/OCR/image/document end-to-end conversions and Google AdSense review not certified.
+
+DEPLOYMENT
+- ZIP contents are the site root; upload preserving relative paths to GitHub Pages.
+- No GitHub push or live deployment performed.
