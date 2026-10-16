@@ -1,0 +1,27 @@
+/* Build 42 · C3.3 Signature precision pass. Editorial scope only; no upload/processing control styling. */
+.dk40-guide.dk41-signature{--dk42-navy:#153a67;--dk42-ink:#364d67;--dk42-teal:#0c8191;--dk42-blue:#2464ac;--dk42-tint:#e3effb;--dk42-rule:#d9e3ec}
+.dk40-guide.dk41-signature .dk41-comparison>h2{font-size:clamp(29px,3.5vw,43px)!important;line-height:1.13!important;letter-spacing:-.034em!important;max-width:970px}
+.dk40-guide.dk41-signature .dk41-compare-panel{position:relative;overflow:hidden;border-radius:17px!important;background:var(--dk41-surface)!important;box-shadow:0 6px 18px rgba(27,55,86,.045)}
+.dk40-guide.dk41-signature .dk41-compare-panel:before{content:'';height:3px;position:absolute;left:0;top:0;right:0;background:var(--dk42-teal);opacity:.8}
+.dk40-guide.dk41-signature .dk41-compare-panel[data-dk42-stage=review]:before{background:var(--dk42-blue)}
+.dk40-guide.dk41-signature .dk41-panel-head{min-height:0;max-width:38ch}
+.dk40-guide.dk41-signature .dk42-example-preview{display:flex;flex-direction:column;min-height:124px;justify-content:center;align-items:flex-start;gap:6px;margin:15px 0 8px;border-radius:13px;background:linear-gradient(140deg,var(--dk41-tint),transparent 85%);padding:17px 20px;color:var(--dk41-navy);position:relative}
+.dk40-guide.dk41-signature .dk42-preview-mark{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:35px;line-height:1;font-weight:800;color:var(--dk41-blue)}
+.dk40-guide.dk41-signature .dk42-preview-label{font-size:10px;letter-spacing:.13em;font-weight:900;color:var(--dk41-teal)}
+.dk40-guide.dk41-signature .dk42-preview-lines{display:flex;flex-direction:column;gap:7px;width:72%;max-width:250px;margin:8px 0 0}
+.dk40-guide.dk41-signature .dk42-preview-lines i{display:block;width:var(--w);height:7px;border-radius:7px;background:color-mix(in srgb,var(--dk41-blue) 21%,var(--dk41-surface))}
+.dk40-guide.dk41-signature .dk42-example-preview code{display:block;max-width:100%;font-size:13px!important;line-height:1.6;overflow-wrap:anywhere;color:var(--dk41-navy);font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.dk40-guide.dk41-signature .dk41-comparison[data-dk42-type=image] .dk42-example-preview{background:linear-gradient(135deg,rgba(38,128,163,.17),rgba(132,195,195,.09) 58%,transparent);min-height:126px}
+.dk40-guide.dk41-signature .dk41-comparison[data-dk42-type=image] .dk42-preview-mark{font-size:47px;font-family:inherit}
+.dk40-guide.dk41-signature .dk41-comparison[data-dk42-type=document] .dk42-example-preview{background:linear-gradient(145deg,#f4f8fd,rgba(154,194,230,.08));border:1px solid var(--dk41-line)}
+.dk40-guide.dk41-signature .dk41-comparison[data-dk42-type=math] .dk42-example-preview{border-left:3px solid var(--dk41-teal)}
+.dk40-guide.dk41-signature .dk41-comparison[data-dk42-type=code] .dk42-example-preview{border:1px dashed var(--dk41-line);background:color-mix(in srgb,var(--dk41-tint) 57%,var(--dk41-surface))}
+.dk40-guide.dk41-signature .dk40-story>div>h2,.dk40-guide.dk41-signature .dk40-faq>h2{max-width:880px}
+.dk40-guide.dk41-signature .dk40-story .dk40-example,.dk40-guide.dk41-signature .dk40-story .dk40-pullquote{border-color:var(--dk41-teal)!important}
+.dk40-guide.dk41-signature .dk40-faq{scroll-margin-top:80px}
+/* Keep presentation open and readable in both manually toggled and OS dark modes. */
+html[data-theme=dark] .dk40-guide.dk41-signature,html.dark .dk40-guide.dk41-signature,body.dark .dk40-guide.dk41-signature,body.dark-mode .dk40-guide.dk41-signature,[data-theme=dark] .dk40-guide.dk41-signature{--dk42-navy:#e3f0ff;--dk42-ink:#c6d6e8;--dk42-teal:#88e0e1;--dk42-blue:#93c9ff;--dk42-tint:#203e54;--dk42-rule:#34485e}
+html[data-theme=dark] .dk40-guide.dk41-signature .dk41-comparison[data-dk42-type=document] .dk42-example-preview,[data-theme=dark] .dk40-guide.dk41-signature .dk41-comparison[data-dk42-type=document] .dk42-example-preview{background:#203e54}
+@media(prefers-color-scheme:dark){html:not([data-theme=light]):not(.light) .dk40-guide.dk41-signature{--dk42-navy:#e3f0ff;--dk42-ink:#c6d6e8;--dk42-teal:#88e0e1;--dk42-blue:#93c9ff;--dk42-tint:#203e54;--dk42-rule:#34485e}}
+@media(max-width:760px){.dk40-guide.dk41-signature .dk41-comparison>h2{font-size:clamp(26px,6.6vw,33px)!important}.dk40-guide.dk41-signature .dk41-compare-panel{padding:18px!important}.dk40-guide.dk41-signature .dk42-example-preview{min-height:94px;padding:14px}}
+@media(prefers-reduced-motion:reduce){.dk40-guide.dk41-signature *{animation:none!important;transition:none!important}}
