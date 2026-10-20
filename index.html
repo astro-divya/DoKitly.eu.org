@@ -1408,8 +1408,10 @@ window.DOKITLY_WEBSITE_ANALYZER = {
 };
 
 </script><script id="dk-home-engine-loader">
-/* Build 43 cold-start: render the header/hero before parsing the embedded tool engine.
-   Keep full tool code intact in one local asset; initialize once and preserve search input. */
+/* Build 43 final: the ordinary homepage tool engine is not needed for its
+   hero, SEO-visible category links or popular links. Do not start its 186 KB
+   download/execution ahead of the hero's load event. Real search and workspace
+   interactions, including direct ?tool/embed routes, start it immediately. */
 (()=>{'use strict';
   let started=false;
   const load=()=>{
@@ -1426,7 +1428,6 @@ window.DOKITLY_WEBSITE_ANALYZER = {
       document.documentElement.dataset.dkEngine='error';
       const results=document.getElementById('results');
       if(results)results.textContent='Tool search is temporarily unavailable. Browse All Tools instead.';
-      /* Actionable message only for embedded tools, never a fake success state. */
       if(new URLSearchParams(location.search).get('embed')==='1'){
         const host=document.getElementById('workspace');
         if(host){const n=document.createElement('p');n.setAttribute('role','alert');
@@ -1438,7 +1439,10 @@ window.DOKITLY_WEBSITE_ANALYZER = {
     document.body.appendChild(s);
   };
   const search=document.getElementById('search');
+  search?.addEventListener('focus',load,{once:true});
   search?.addEventListener('input',()=>{
+    if(document.documentElement.dataset.dkEngine!=='ready' &&
+       document.documentElement.dataset.dkEngine!=='error')load();
     if(document.documentElement.dataset.dkEngine==='ready')return;
     const results=document.getElementById('results');
     if(results)results.textContent=document.documentElement.dataset.dkEngine==='error'
@@ -1447,10 +1451,28 @@ window.DOKITLY_WEBSITE_ANALYZER = {
   });
   const params=new URLSearchParams(location.search);
   const embeddedOrDirectTool=params.get('embed')==='1'||params.has('tool');
-  const afterFirstPaint=()=>requestAnimationFrame(()=>setTimeout(load,0));
-  const start=embeddedOrDirectTool?load:afterFirstPaint;
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
-  else start();
+  if(embeddedOrDirectTool){
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});
+    else load();
+    return;
+  }
+  /* Tool tabs are below the fold. Preload their real engine on approach,
+     even when a third-party resource keeps the window load event pending. */
+  const workspace=document.getElementById('workspace');
+  workspace?.addEventListener('pointerdown',load,{once:true});
+  workspace?.addEventListener('focusin',load,{once:true});
+  if(workspace && 'IntersectionObserver' in window){
+    const near=new IntersectionObserver((entries)=>{
+      if(entries.some(e=>e.isIntersecting)){near.disconnect();load();}
+    },{rootMargin:'300px 0px',threshold:0});
+    near.observe(workspace);
+  }
+  const afterLoad=()=>{
+    if('requestIdleCallback' in window)requestIdleCallback(load,{timeout:1200});
+    else setTimeout(load,0);
+  };
+  if(document.readyState==='complete')afterLoad();
+  else window.addEventListener('load',afterLoad,{once:true});
 })();
 </script>
 <script data-b43-source="assets/site-shell.js" data-sha256-prefix="934fbc60c20c">
