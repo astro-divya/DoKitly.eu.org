@@ -36,3 +36,11 @@
 #popularGrid .tool .tool-ico.premium,#popularGrid .tool .tool-ico.premium img {width:112px!important;height:112px!important;min-width:112px!important;max-width:112px!important;object-fit:contain!important;}
 #popularGrid .tool>span:last-child {display:flex;flex-direction:column;align-items:center;}
 @media(max-width:720px){.tools-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}.tool-card{min-height:170px!important;padding:13px 7px!important;}.tool-card .ti,.tool-card .ti img{width:82px!important;height:82px!important;min-width:82px!important;max-width:82px!important;}#categoryGrid .cat-ico,#categoryGrid .cat-ico img,.cat-grid .cat-ico,.cat-grid .cat-ico img{width:86px!important;height:86px!important;}#popularGrid .tool .tool-ico.premium,#popularGrid .tool .tool-ico.premium img{width:86px!important;height:86px!important;min-width:86px!important;max-width:86px!important;}}
+
+/* Build 43: helpful, crawlable category guidance without decorative card wrappers. */
+.dk-category-guide{margin:36px 0 48px;padding:22px 0 0;border-top:1px solid var(--dk-line,#dfe3e4);max-width:900px;color:var(--dk-copy,#526072);font-size:14px;line-height:1.7}
+.dk-category-guide h2{font-size:clamp(18px,2vw,22px);line-height:1.25;margin:0 0 12px;color:var(--dk-ink,#172033);letter-spacing:-.02em}
+.dk-category-guide p{margin:0 0 12px;max-width:82ch}.dk-category-guide strong{color:var(--dk-ink,#172033)}
+.dk-category-guide a{text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+.dk-category-guide a:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media(max-width:600px){.dk-category-guide{margin:24px 0 36px;padding-top:18px;font-size:13px}}

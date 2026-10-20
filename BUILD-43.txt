@@ -1,0 +1,118 @@
+DoKitly Build 43 — release review / AdSense preparation candidate
+20 October 2026
+
+SITE
+https://dokitly.in/ is still Build 42 until the owner explicitly authorizes deployment.
+This ZIP is a review candidate, not live deployment, Google AdSense approval, or an E2E certification.
+
+CHANGES CARRIED FORWARD
+PDF/OCR resilience, World Quiz question/marking corrections, homepage hero/layout and controlled font-load fixes, background-removal Fast/Detail/Balanced comparisons (Fast default).
+Experimental cutout quality does not meet the owner's locked ErasePro reference benchmark.
+Cold Windows homepage load remains unverified / previously timed out.
+
+THIS CONSOLIDATION
+Verified pre-existing ad placement: no AdSense loader on 404, noindex redirects/aliases, download-result or legal/contact screens. No ad-loader removal was necessary.
+Added new, visible and distinct how-to guidance with working tool links below listings on 14 category index pages; updated shared category CSS.
+ads.txt, Analytics, canonical domain and original media assets preserved.
+
+AD SENSE REVIEW DEPENDENCIES
+Google dashboard's exact rejection/Policy center reason is not available.
+Before requesting review: verify live /ads.txt returns 200, check live pages after deployment, configure Google-certified CMP/TCF messaging for eligible regions, inspect mobile/performance, review content quality and policy center.
+Approval cannot be guaranteed or claimed from static QA.
+
+DEPLOYMENT
+GitHub Pages root-ready. No live or GitHub changes made. Written owner approval required to deploy.
+
+FINAL REVIEW PASS — 20 October 2026 (after Windows QA evidence)
+Based on Windows one-tab crawler: all 193 HTML endpoints HTTP 200; 190 of 193
+reached DOM ready inside the short crawler timeout. Three short-timeout targets
+(csv-data-studio, encoder-decoder, pdf-to-word) had no captured JavaScript
+exceptions; their loading paths were optimized in this release. Fresh Windows
+retest of those 3 patched pages remains outstanding.
+Confirmed Watermark Studio ReferenceError was fixed in shared image-tools.js;
+PNG upload, live mask preview, export and file-switch focused tests passed.
+CSV & Data Studio: bundles its unchanged tool scripts and CSS in original order.
+Encoder / Decoder: initializes embedded tool after parent DOMContentLoaded.
+PDF to Word: OCR script now loads on demand for scanned pages; digital PDF text
+conversion does not wait for third-party OCR CDN during page initialization.
+Missing language attribute on the Base64 Image redirect alias corrected.
+No existing PDF.js libraries, document/image/quiz processing engines, icons,
+brand visuals, analytics, AdSense settings, or canonical domain were removed.
+
+ACCEPTANCE LIMITS
+Background Remover automatic matting remains below the locked ErasePro/Gemini
+reference and must not be promoted as a solved flagship quality upgrade.
+First-ever Windows cold start has previously measured about 20 seconds. Later
+warm run about 1 second; new 3-page loading fixes do not prove first-start speed.
+Full 144-tool processing tests, real production Core Web Vitals, Google AdSense
+review decision / CMP compliance have NOT been certified by these source checks.
+Do not equate passing ZIP/HTML/JS checks with 100% production acceptance.
+
+DEPLOYMENT
+Production site/GitHub untouched by this archive. Owner must authorize any
+future deployment and independently verify live /ads.txt and AdSense policy.
+
+POST-AUDIT CODE FIXES — 20 October 2026
+- Added GA4 + existing privacy-filtering analytics.js helper to six flagship tool pages that lacked analytics. No user inputs or filenames are passed by the new initialization code.
+- Moved optional Barcode, QR, Passport segmentation and HTML-to-PDF CDN requests off page initialization. Optional engines are loaded on first relevant user action with bounded timeout, alternative CDN, and explicit failure messages. Existing processing engines have not been replaced.
+- QR engine fallback retained with request timeout; Barcode Generate/Export now awaits engine readiness; Barcode downloads use DoKitly_Barcode_Studio names.
+- Removed 72 invalid closing </meta> tags across HTML; did not alter visible page text.
+- Added one local shared loader asset. No working website files deleted.
+- Local tests: 193 HTML, 198/198 HTTP responses, 141 sitemap URLs, 53 JS files, 441 inline scripts, 221 JSON-LD valid; 7,570 local HTML references checked and no missing local files.
+- Isolated Chromium tests used stubbed third-party engines for Barcode/QR interaction and optional loader fallback; no real CDN/content-production success is asserted from mocks.
+STILL NOT VERIFIED OR ACCEPTED
+- Fresh Windows cold-start speed and updated 3-page browser E2E, full tool functional coverage.
+- Background Remover output quality versus owner's locked reference.
+- Scanned English/Hindi PDF-to-Word OCR accuracy; Tesseract/model downloads can still depend on internet.
+- AdSense dashboard decision, Policy Center, eligible-region certified CMP/consent and live website state.
+- Not all indexable pages intentionally carry an AdSense loader; indiscriminate ad insertion is not a policy fix.
+Deployment remains owner-controlled; no GitHub or live Build 42 changes.
+
+HOMEPAGE COLD-START CRITICAL-PATH CHANGE — 20 October 2026
+- Main homepage tool engine (previously ~184 KB inline) moved to local
+  assets/home-tools-engine-b43.js without deleting any functional tool code.
+- Homepage HTML now loads the engine after DOMContentLoaded and first frame;
+  embedded/direct ?tool routes initialize promptly at DOM readiness.
+- Existing hero WebP image itself is unchanged. Added high-priority preload
+  to discover it before the large inline stylesheet.
+- Initial homepage HTML gzip payload reduced from ~99.7 KB to ~53 KB.
+- Search displays a pending state if typed before engine finishes; queued
+  search is replayed when engine completes. Actual error fallback included.
+- Isolated Chromium baseline-vs-new comparisons: desktop/tablet/mobile,
+  light/dark 6/6; search, theme, workspace, failure fallback passed.
+- Simulated 5-second delayed tool-engine response: homepage DOM ready and
+  hero/category markup available before engine completed; queued search recovered.
+- IMPORTANT: No Windows first-ever cold-start trace for this exact archive.
+  The historical Windows ~20.34-second cold load cannot yet be claimed resolved.
+  GitHub/live Build 42 unchanged; no deployment was performed.
+
+HOMEPAGE CATEGORY-IMAGE NETWORK OPTIMIZATION — 21 October 2026
+- Previous homepage contained 13 static category images (?v=24) then the delayed
+  homepage engine discarded those nodes and recreated the same cards with new
+  image URLs (?v=23category), triggering duplicate category-image fetches.
+- Home engine now reuses existing static cards, updates only the counts, and
+  keeps the original image DOM nodes, links, hover behavior and order intact.
+  Its fallback renderer remains for legacy markup without matching cards.
+- All 13 original glossy category WebP artworks retained (resampled to 360px,
+  WebP quality 90, transparent alpha preserved). Original 1,638,164 bytes,
+  optimized 603,790 bytes: 63.1% smaller across 13 original files.
+- Homepage icon URLs now share version ?v=43-iconopt1 with the fallback engine
+  and bust old caches once. No new external requests or dependencies.
+- Isolated Chromium category node-identity/search/theme/tool-tab checks passed
+  at 390/768/1366px. Full source/archive checks described in external QA report.
+- IMPORTANT: 1.45s DOM ready / 7.93s Load / 11.65s Finish was measured on
+  the PREVIOUS ZIP during a Windows cache-disabled reload. This optimized ZIP
+  has no measured Windows performance timings yet; those are NOT claims.
+- Other known BG matting, OCR accuracy, Windows cold-start and AdSense account
+  dependencies remain open. GitHub/live site unchanged.
+
+B43 Homepage viewport-gated category image performance patch (2026-10-21):
+- Preserve 13 server-rendered category cards and optimized WebP icons; load icons via IntersectionObserver only when within 140px below viewport, with old-browser fallback. All category names/links remain immediately available.
+- Use one 340px same-logo WebP file on homepage only; original logo.png remains for the rest of the site.
+- Keep hero imagery, Google Analytics, AdSense, tool engines and all existing site pages intact. Real Windows Load/LCP timings require retesting.
+
+
+BUILD 43 FINAL PERFORMANCE PASS (candidate, not deployed)
+Homepage only: high-fidelity recompressed derivatives of the SAME approved hero source (original two WebP sources retained byte-for-byte; SSIM >0.993, identical dimensions and alpha), hero resource requests updated.
+Homepage injected footer corrected to use previously approved small DoKitly icon asset instead of redundant 175 KB icon.png; underlying site-shell and other tool pages untouched.
+Performance and mobile regression tests documented separately. Real Windows fresh-browser speed and Google AdSense approval are not certified.

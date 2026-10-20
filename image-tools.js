@@ -75,7 +75,7 @@ function render(){let inner='';
   else if(id==='image-watermark') controls=`<div class="wm-mode-tabs" role="tablist"><button type="button" id="wmAddTab">Add Watermark</button><button type="button" class="active" id="wmRemoveTab">Remove Watermark</button></div><div id="wmAddPanel" hidden>${textControls(true)}</div><div id="wmRemovePanel" class="wm-auto-panel"><div class="wm-authorized-note"><b>Automatic watermark removal for images you own or are authorized to edit.</b></div><div class="wm-auto-actions"><button class="btn" type="button" id="wmAutoDetect">Auto Detect</button><button class="btn-secondary" type="button" id="wmSelectArea">Select Area</button></div><p class="wm-select-help">Normally use Auto Detect. If it misses the watermark, select one rectangular area around it.</p><div hidden><input id="wmExpand" type="range" min="0" max="24" value="5"><input id="wmFeather" type="range" min="0" max="24" value="4"><select id="wmPreviewMode"><option value="result">Cleaned result</option></select><input id="wmCompare" type="range" min="0" max="100" value="100"></div></div><div class="form-grid">${formatSelect(true)}</div><div class="btns"><button class="btn" id="processBtn">Remove Watermark</button></div><div class="status" id="status">Upload an image, then remove the watermark automatically.</div>`;
   else if(id==='image-text') controls=`${textControls(false)}<div class="form-grid">${formatSelect(true)}</div><div class="btns"><button class="btn" id="processBtn">Process result</button></div><div class="status" id="status">Text position and style update live. Drag directly on the processed preview for custom placement.</div>`;
   else if(id==='image-exif') controls=`<div class="form-grid">${formatSelect(true)}</div><div class="btns"><button class="btn" id="processBtn">Process clean copy</button></div><div class="status" id="status">The re-exported image drops common EXIF metadata.</div>`;
-  else if(id==='image-bg-remove') controls=`<div class="bg-auto-note"><b>Automatic transparent background</b><p>Remove the background, compare Before/After, then use Refine only when an edge needs correction.</p></div><div class="btns"><button class="btn" id="processBtn">Remove Background</button><button class="btn-secondary" id="bgResetBtn" type="button">Choose Another Image</button></div><div class="bg-refine" id="bgRefine" hidden><div class="form-grid"><div class="field"><label>Preview background</label><select id="bgPreviewMode"><option value="checker">Checker</option><option value="white">White</option><option value="dark">Dark</option></select></div><div class="field"><label>Brush</label><select id="bgBrushMode"><option value="erase">Erase</option><option value="restore">Restore</option></select></div><div class="field"><label>Brush size</label><input id="bgBrushSize" type="range" min="4" max="160" value="36"></div><div class="field"><label>Edge softness</label><input id="bgBrushSoft" type="range" min="0" max="100" value="35"></div></div><p class="note">Paint directly on the processed preview. Erase removes leftover background; Restore paints original pixels back. Full-resolution alpha is exported.</p></div><div class="status" id="status">Upload an image, then choose Remove Background. The download stays disabled until a nonblank PNG passes verification.</div>`;
+  else if(id==='image-bg-remove') controls=`<div class="bg-auto-note"><b>Automatic transparent background</b><p>Fast uses the compact model. Detail uses a larger alternative; it may help on some photos and worsen others. Try each model and review the output. Both run on your device after model download.</p></div><div class="form-grid"><div class="field wide"><label for="bgModel">AI model</label><select id="bgModel"><option value="fast">Fast — U2NetP (~4.4 MB, default)</option><option value="detail">Detail — Silueta (~44 MB, slower / more memory)</option></select><small>Detail is optional. First use needs internet; model quality varies by photo. No image is uploaded.</small></div></div><div class="btns"><button class="btn" id="processBtn">Remove Background</button><button class="btn-secondary" id="bgCompareBtn" type="button">Compare Fast vs Detail</button><button class="btn-secondary" id="bgCancelCompareBtn" type="button" hidden>Cancel comparison</button><button class="btn-secondary" id="bgResetBtn" type="button">Choose Another Image</button></div><section id="bgComparePanel" class="dk-bg-compare" hidden aria-label="Fast versus Detail results"><h3>Compare both AI models</h3><p>Compare actual cutouts, then select Fast, Detail or experimental Balanced to refine and download. Balanced combines both masks near uncertain edges: it may help on some images and harm others. Comparing runs both engines and may take several minutes.</p><div class="dk-bg-compare-grid" id="bgCompareGrid"></div><button id="bgCompareDownloadBoth" class="btn-secondary" type="button" disabled>Download comparison PNGs (ZIP)</button></section><div class="bg-refine" id="bgRefine" hidden><div class="form-grid"><div class="field"><label>Preview background</label><select id="bgPreviewMode"><option value="checker">Checker</option><option value="white">White</option><option value="dark">Dark</option></select></div><div class="field"><label>Brush</label><select id="bgBrushMode"><option value="erase">Erase</option><option value="restore">Restore</option></select></div><div class="field"><label>Brush size</label><input id="bgBrushSize" type="range" min="4" max="160" value="36"></div><div class="field"><label>Edge softness</label><input id="bgBrushSoft" type="range" min="0" max="100" value="35"></div></div><p class="note">Paint directly on the processed preview. Erase removes leftover background; Restore paints original pixels back. Full-resolution alpha is exported.</p></div><div class="status" id="status">Upload an image, then choose Remove Background. The download stays disabled until a nonblank PNG passes verification.</div>`;
   inner=editorWrap(controls);
  }
  $('toolRoot').innerHTML=pageShell(inner);
@@ -87,12 +87,17 @@ if(id==='image-convert'&&$('fileInput'))$('fileInput').accept='image/*,.tif,.tif
 const needsSeparateDownload=!['image-info','image-color','print-size','image-base64','base64-image','image-target'].includes(id);
 if(needsSeparateDownload&&$('processBtn')){const b=document.createElement('button');b.type='button';b.id='finalImageDownload';b.className='btn-secondary';b.disabled=true;b.textContent=id==='multi-resize'||id==='multi-compress'?'Download ZIP':'Download processed file';$('processBtn').parentElement.appendChild(b)}
 
+let bgSelectionRun=0,bgProcessRun=0,bgCompareActiveRun=0,bgCompareResults=Object.create(null),bgCompareURLs=[];
+// A comparison may show Fast while Detail is still running. Stop that run when
+// the user chooses an output, switches images/models or starts another job.
+function resetBgCompareControls(){bgCompareActiveRun=0;const cancel=$('bgCancelCompareBtn');if(cancel)cancel.hidden=true;const compare=$('bgCompareBtn'),process=$('processBtn');if(compare)compare.disabled=false;if(process)process.disabled=false;}
+function clearBgComparison(){for(const url of bgCompareURLs)URL.revokeObjectURL(url);bgCompareURLs=[];bgCompareResults=Object.create(null);const panel=$('bgComparePanel');if(panel)panel.hidden=true;const grid=$('bgCompareGrid');if(grid)grid.textContent='';const both=$('bgCompareDownloadBoth');if(both)both.disabled=true;}
 let batchCancelled=false,batchFailed=[];let currentFile=null,currentImg=null,beforeURL=null,afterURL=null,lastPreviewCanvas=null,verifiedBlobURL=null,bgEditCanvas=null,bgPointer=null,cropState=null,cropRatio=null,previewRAF=0,previewSeq=0,targetResultBlob=null,targetResultType=null,preparedResultBlob=null,preparedResultType=null,preparedResultName=null,batchZipBlob=null;
 let wmMode='add',wmMask=null,wmHistory=[],wmRedoStack=[],wmRectStart=null,wmPaint=false,wmLiveTimer=0;
 function setStatus(msg,strong=''){if($('status'))$('status').innerHTML=strong?`<strong>${esc(strong)}</strong> ${esc(msg)}`:esc(msg)}
 function selectedType(forceTransparent=false){return typeFor(currentFile,$('format')?.value||'same',forceTransparent)}
 function quality(){return Number($('quality')?.value||92)/100}
-function showBefore(file,img,url){currentFile=file;currentImg=img;preparedResultBlob=null;batchZipBlob=null;if($('finalImageDownload'))$('finalImageDownload').disabled=true;if(id==='image-target'){targetResultBlob=null;targetResultType=null;if($('targetDownloadBtn'))$('targetDownloadBtn').disabled=true;}if(beforeURL&&beforeURL!==url)URL.revokeObjectURL(beforeURL);beforeURL=url;const name=$('uploadName');if(name){name.textContent=file.name;name.title=file.name}const stage=$('beforeStage');if(stage){stage.innerHTML=`<img id="beforeImg" src="${url}" alt="${esc(file.name)}">`;stage.title=file.name}if($('beforeMeta'))$('beforeMeta').textContent=`${img.width} × ${img.height} • ${humanSize(file.size)}`;document.querySelector('[data-zoom="before"]')?.removeAttribute('hidden')}
+function showBefore(file,img,url){if(id==='image-watermark'){clearTimeout(wmLiveTimer);wmLiveTimer=0;wmMask=null;wmHistory=[];wmRedoStack=[];}if(id==='image-bg-remove'){clearBgComparison();bgEditCanvas=null;bgPointer=null;++bgBlobRun;clearTimeout(bgBlobTimer);$('bgRefine')?.setAttribute('hidden','');}currentFile=file;currentImg=img;preparedResultBlob=null;batchZipBlob=null;if($('finalImageDownload'))$('finalImageDownload').disabled=true;if(id==='image-target'){targetResultBlob=null;targetResultType=null;if($('targetDownloadBtn'))$('targetDownloadBtn').disabled=true;}if(beforeURL&&beforeURL!==url)URL.revokeObjectURL(beforeURL);beforeURL=url;const name=$('uploadName');if(name){name.textContent=file.name;name.title=file.name}const stage=$('beforeStage');if(stage){stage.innerHTML=`<img id="beforeImg" src="${url}" alt="${esc(file.name)}">`;stage.title=file.name}if($('beforeMeta'))$('beforeMeta').textContent=`${img.width} × ${img.height} • ${humanSize(file.size)}`;document.querySelector('[data-zoom="before"]')?.removeAttribute('hidden')}
 function previewSource(maxSide=900){if(!currentImg)return null;const scale=Math.min(1,maxSide/Math.max(currentImg.width,currentImg.height));return {img:currentImg,w:Math.max(1,Math.round(currentImg.width*scale)),h:Math.max(1,Math.round(currentImg.height*scale)),scale}}
 function fitPreviewMedia(stage=$('afterStage')){
  if(!stage)return;
@@ -131,7 +136,25 @@ function drawVisual(full=false){if(!currentImg)return null;const src=full?{w:cur
  else if(id==='image-bg-remove'){/* Preview remains the original until automatic processing finishes. */}
  return c}
 function schedulePreview(){if(!currentImg||['image-base64','image-info','image-color','base64-image','print-size'].includes(id))return;cancelAnimationFrame(previewRAF);const seq=++previewSeq;previewRAF=requestAnimationFrame(()=>{setTimeout(()=>{if(seq!==previewSeq)return;try{const c=drawVisual(false);if(c)showCanvasPreview(c,`${c.width} × ${c.height} preview`)}catch(e){setStatus(e.message)}},0)})}
-async function handleFile(file){if(!file)return;const r=await readImage(file);showBefore(file,r.img,r.url);if(id==='image-crop')initCrop(r.img,r.url);if(id==='image-color')bindColorCanvas(r.img);if(id==='image-info')$('infoOut').innerHTML=`<strong>${esc(file.name)}</strong><br>${r.img.width} × ${r.img.height}px • ${esc(file.type||'unknown')} • ${humanSize(file.size)}`;if(id==='image-exif'){metadataSignals(file).then(a=>setStatus(a.length?`Detected metadata containers: ${a.join(', ')}. Process a clean copy to remove and verify them.`:'No common EXIF/XMP/IPTC metadata container detected; re-export can still normalize the image.','Metadata:')).catch(()=>{})}if(!['image-base64','image-info','image-color'].includes(id))schedulePreview()}
+async function handleFile(file){if(!file)return;
+ const bgChoice=id==='image-bg-remove'?++bgSelectionRun:0;
+ if(bgChoice){
+  clearBgComparison();
+  ++bgProcessRun;window.DoKitlyBackgroundAI?.cancel?.();resetBgCompareControls();
+  bgEditCanvas=null;bgPointer=null;++bgBlobRun;clearTimeout(bgBlobTimer);
+  preparedResultBlob=null;preparedResultName=null;
+  if($('finalImageDownload'))$('finalImageDownload').disabled=true;
+  $('bgRefine')?.setAttribute('hidden','');setStatus('Loading new image…');
+ }
+ let r;
+ try{r=await readImage(file)}catch(err){
+  // A previous, now-abandoned selection must not overwrite the status of the
+  // latest image (especially after a slow decoder or failed network resource).
+  if(bgChoice&&bgChoice!==bgSelectionRun)return;
+  throw err;
+ }
+ if(bgChoice&&bgChoice!==bgSelectionRun){URL.revokeObjectURL(r.url);return}
+ showBefore(file,r.img,r.url);if(bgChoice)setStatus('Image ready. Choose Remove Background.');if(id==='image-crop')initCrop(r.img,r.url);if(id==='image-color')bindColorCanvas(r.img);if(id==='image-info')$('infoOut').innerHTML=`<strong>${esc(file.name)}</strong><br>${r.img.width} × ${r.img.height}px • ${esc(file.type||'unknown')} • ${humanSize(file.size)}`;if(id==='image-exif'){metadataSignals(file).then(a=>setStatus(a.length?`Detected metadata containers: ${a.join(', ')}. Process a clean copy to remove and verify them.`:'No common EXIF/XMP/IPTC metadata container detected; re-export can still normalize the image.','Metadata:')).catch(()=>{})}if(!['image-base64','image-info','image-color'].includes(id))schedulePreview()}
 $('fileInput')?.addEventListener('change',e=>{const files=[...(e.target.files||[])];if(!files.length)return;const name=$('uploadName');if(name&&files.length>1){name.textContent=`${files.length} images selected`;name.title=files.map(f=>f.name).join(' • ')}if(id==='multi-resize'||id==='multi-compress'){handleFile(files[0]).then(()=>{if(name){name.textContent=`${files.length} images selected`;name.title=files.map(f=>f.name).join(' • ')}}).catch(err=>setStatus(err.message));return}handleFile(files[0]).catch(err=>setStatus(err.message))});
 
 document.addEventListener('click',e=>{const z=e.target.closest('[data-zoom]');if(!z)return;const src=z.dataset.zoom==='before'?beforeURL:null;const m=document.createElement('div');m.className='preview-modal';m.innerHTML='<button class="preview-close" aria-label="Close">×</button>';if(src){const im=document.createElement('img');im.src=src;m.appendChild(im)}else if(lastPreviewCanvas){m.appendChild(lastPreviewCanvas.cloneNode(true));const c=m.querySelector('canvas');c.width=lastPreviewCanvas.width;c.height=lastPreviewCanvas.height;c.getContext('2d').drawImage(lastPreviewCanvas,0,0)}else return;document.body.appendChild(m);m.querySelector('button').onclick=()=>m.remove();m.onclick=ev=>{if(ev.target===m)m.remove()}});
@@ -170,6 +193,23 @@ if(id==='image-text'||id==='image-watermark'){let drag=false;const stage=$('afte
 
 function wmEnsureMask(){if(!currentImg)return null;const src=previewSource(900);if(!wmMask||wmMask.width!==src.w||wmMask.height!==src.h){wmMask=document.createElement('canvas');wmMask.width=src.w;wmMask.height=src.h;wmHistory=[];wmRedoStack=[]}return wmMask}
 function wmSnapshot(){if(!wmMask)return;const x=wmMask.getContext('2d'),d=x.getImageData(0,0,wmMask.width,wmMask.height);wmHistory.push(d);if(wmHistory.length>30)wmHistory.shift();wmRedoStack=[]}
+function wmScheduleLive(){
+ if(id!=='image-watermark'||!currentImg||wmMode!=='remove')return;
+ clearTimeout(wmLiveTimer);
+ const source=currentImg;
+ // A changed mask must not leave a previously exported file downloadable.
+ preparedResultBlob=null;preparedResultType=null;preparedResultName=null;
+ if($('finalImageDownload'))$('finalImageDownload').disabled=true;
+ wmLiveTimer=setTimeout(()=>{
+  wmLiveTimer=0;
+  if(currentImg!==source||wmMode!=='remove')return;
+  try{
+   const masked=wmMaskHasPixels();
+   const result=masked?wmBuildResult(false):drawVisual(false);
+   if(result)showCanvasPreview(result,`${result.width} × ${result.height} • ${masked?'cleaned preview':'original preview'}`);
+  }catch(err){setStatus(`Live preview unavailable: ${err.message}`)}
+ },100);
+}
 function wmRestore(d){if(!d||!wmMask)return;wmMask.getContext('2d').putImageData(d,0,0);wmScheduleLive()}
 function wmExpandedMask(targetW,targetH){const m=wmEnsureMask(),out=document.createElement('canvas');out.width=targetW;out.height=targetH;const x=out.getContext('2d');x.drawImage(m,0,0,targetW,targetH);const expand=Number($('wmExpand')?.value||0)*targetW/m.width,feather=Number($('wmFeather')?.value||0)*targetW/m.width;if(expand>0){const base=document.createElement('canvas');base.width=targetW;base.height=targetH;base.getContext('2d').drawImage(out,0,0);x.globalCompositeOperation='source-over';for(let a=0;a<Math.PI*2;a+=Math.PI/8)x.drawImage(base,Math.cos(a)*expand,Math.sin(a)*expand)}if(feather>0){const base=document.createElement('canvas');base.width=targetW;base.height=targetH;base.getContext('2d').drawImage(out,0,0);x.clearRect(0,0,targetW,targetH);x.filter=`blur(${Math.min(30,feather)}px)`;x.drawImage(base,0,0);x.filter='none'}return out}
 function wmBuildResult(full=false){
@@ -199,6 +239,7 @@ function updateUpscaleNote(){if(id!=='image-resize'||!currentImg)return;const w=
 async function compressToKB(targetKB,type,full=true){if(!currentImg)throw Error('Please select an image first.');const limit=targetKB*1024;if(limit<500)throw Error('Target size is too small.');let scale=1,best=null,bestCanvas=null;for(let pass=0;pass<12;pass++){const w=Math.max(1,Math.round(currentImg.width*scale)),h=Math.max(1,Math.round(currentImg.height*scale)),c=canvasDraw(currentImg,w,h,type);if(type==='image/png'){const b=await blobFromCanvas(c,type);if(b.size<=limit)return{blob:b,canvas:c};best=b;bestCanvas=c}else{let lo=.02,hi=.98,hit=null;for(let i=0;i<12;i++){const q=(lo+hi)/2,b=await blobFromCanvas(c,type,q);if(b.size<=limit){hit=b;lo=q}else hi=q}if(hit)return{blob:hit,canvas:c};const low=await blobFromCanvas(c,type,.02);best=low;bestCanvas=c}scale*=.86;if(Math.min(currentImg.width*scale,currentImg.height*scale)<40)break}return{blob:best,canvas:bestCanvas,miss:true}}
 let selfieSegmenter=null;
 async function personMaskCanvas(source){
+ if(!window.SelfieSegmentation && typeof window.DoKitlyEnsureOptionalEngine==='function')await window.DoKitlyEnsureOptionalEngine('portrait',()=>typeof window.SelfieSegmentation==='function',['https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/selfie_segmentation.js','https://unpkg.com/@mediapipe/selfie_segmentation@0.1.1675465747/selfie_segmentation.js']);
  if(!window.SelfieSegmentation)throw Error('Optional portrait segmenter unavailable.');
  if(!selfieSegmenter){
   selfieSegmenter=new SelfieSegmentation({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/${f}`});
@@ -282,7 +323,10 @@ function cleanSegmentationFringe(out,source){
  const src=document.createElement('canvas');src.width=sw;src.height=sh;
  const sx=src.getContext('2d',{willReadFrequently:true});sx.drawImage(source,0,0,sw,sh);
  const md=mx.getImageData(0,0,sw,sh),sd=sx.getImageData(0,0,sw,sh).data,d=md.data;
- const radius=3,alpha=new Uint8Array(sw*sh);for(let i=0;i<alpha.length;i++)alpha[i]=d[i*4+3];
+ const radius=3,alpha=new Uint8Array(sw*sh);
+ // On large photos keep edge color corrections as signed deltas instead of
+ // discarding them when the refined matte is upscaled to the source size.
+ const edgeDelta=ratio===1?null:new Int16Array(sw*sh*3);for(let i=0;i<alpha.length;i++)alpha[i]=d[i*4+3];
  for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){
   const i=y*sw+x,a=alpha[i]/255;if(a<.035||a>.97)continue;
   let bg=[0,0,0],count=0;
@@ -296,6 +340,7 @@ function cleanSegmentationFringe(out,source){
    const background=bg[k]/count,observed=sd[i*4+k];
    const unmixed=Math.max(0,Math.min(255,(observed-(1-a)*background)/Math.max(.18,a)));
    d[i*4+k]=Math.round(observed*(1-Math.min(.85,(1-a)*1.15))+unmixed*Math.min(.85,(1-a)*1.15));
+   if(edgeDelta)edgeDelta[i*3+k]=d[i*4+k]-observed;
   }
   d[i*4+3]=Math.max(0,Math.round(alpha[i]-Math.min(20,(1-a)*18)));
  }
@@ -305,44 +350,141 @@ function cleanSegmentationFringe(out,source){
  if(ratio===1){oc.clearRect(0,0,w,h);oc.drawImage(m,0,0);return out}
  oc.clearRect(0,0,w,h);oc.drawImage(source,0,0,w,h);
  oc.globalCompositeOperation='destination-in';oc.drawImage(m,0,0,w,h);oc.globalCompositeOperation='source-over';
+ // The matte was refined at up to 1250px for memory/CPU safety. The legacy
+ // upscale applied only alpha, losing its computed RGB spill correction. Apply
+ // smoothly interpolated RGB *deltas* to partially transparent edge pixels;
+ // retain original full-resolution pixels everywhere else.
+ const stripeRows=128;
+ for(let top=0;top<h;top+=stripeRows){
+  const rows=Math.min(stripeRows,h-top),full=oc.getImageData(0,top,w,rows),pixels=full.data;
+  for(let row=0;row<rows;row++){
+   const y=top+row;
+   const sy=Math.max(0,Math.min(sh-1,(y+.5)*sh/h-.5)),y0=Math.floor(sy),y1=Math.min(sh-1,y0+1),ty=sy-y0;
+  for(let xx=0;xx<w;xx++){
+   const i=(row*w+xx)*4,a=pixels[i+3];if(a<=8||a>=247)continue;
+   const sxp=Math.max(0,Math.min(sw-1,(xx+.5)*sw/w-.5)),x0=Math.floor(sxp),x1=Math.min(sw-1,x0+1),tx=sxp-x0;
+   const q00=(y0*sw+x0)*3,q01=(y0*sw+x1)*3,q10=(y1*sw+x0)*3,q11=(y1*sw+x1)*3;
+   for(let k=0;k<3;k++){
+    const top=edgeDelta[q00+k]*(1-tx)+edgeDelta[q01+k]*tx;
+    const bottom=edgeDelta[q10+k]*(1-tx)+edgeDelta[q11+k]*tx;
+    pixels[i+k]=Math.max(0,Math.min(255,Math.round(pixels[i+k]+top*(1-ty)+bottom*ty)));
+   }
+  }
+ }
+  oc.putImageData(full,0,top);
+ }
  m.width=m.height=src.width=src.height=1;
  return out;
 }
-async function autoRemoveBackground(source){
+async function autoRemoveBackground(source,run=bgProcessRun,modelOverride=null){
  if(!window.DoKitlyBackgroundAI?.remove)throw Error('Background engine did not load. Refresh once and try again.');
+ const chosenModel=modelOverride||($('bgModel')?.value==='detail'?'detail':'fast');
  let out;
- try{out=await window.DoKitlyBackgroundAI.remove(source,msg=>setStatus(msg));}
- catch(e){throw Error(`Background engine could not process this image: ${e?.message||e}`)}
+ try{out=await window.DoKitlyBackgroundAI.remove(source,msg=>{if(run===bgProcessRun)setStatus(msg)}, {model:chosenModel});}
+ catch(e){throw Error(`Background engine could not process this image: ${e?.message||e}. If Detail is unavailable, choose Fast and retry.`)}
  const st=canvasAlphaStats(out);
- if(st.visible<.015||st.clear<.012||st.visible>.985)throw Error('BiRefNet could not identify a reliable foreground/background separation for this image.');
- return{canvas:cleanSegmentationFringe(out,source),method:'Browser background segmentation'};
+ if(st.visible<.015||st.clear<.012||st.visible>.985)throw Error('Background AI could not identify a reliable foreground/background separation for this image.');
+ return{canvas:cleanSegmentationFringe(out,source),method:(chosenModel==='detail'?'Silueta Detail':'U2NetP Fast')+' browser background segmentation'};
 }
 async function removePersonBackground(source,bg=null){const mask=await personMaskCanvas(source);const st=canvasAlphaStats(mask);if(st.visible<.015||st.visible>.98)throw Error('No reliable person mask found.');const out=applyAlphaMask(source,mask);if(bg){const x=out.getContext('2d');x.globalCompositeOperation='destination-over';x.fillStyle=bg;x.fillRect(0,0,out.width,out.height);x.globalCompositeOperation='source-over';}return out;}
 function bindBgEditor(c){
  bgEditCanvas=c;$('bgRefine')?.removeAttribute('hidden');showCanvasPreview(c,`${c.width} × ${c.height} • manual refine ready`);
  const stage=$('afterStage');if(!stage)return;c.style.touchAction='none';c.style.cursor='crosshair';
- const paint=e=>{if(!bgPointer)return;const r=c.getBoundingClientRect(),px=(e.clientX-r.left)*c.width/r.width,py=(e.clientY-r.top)*c.height/r.height,size=Number($('bgBrushSize')?.value||36)*c.width/Math.max(1,r.width),soft=Number($('bgBrushSoft')?.value||35)/100,mode=$('bgBrushMode')?.value||'erase',x=c.getContext('2d');x.save();x.globalCompositeOperation=mode==='erase'?'destination-out':'source-over';const g=x.createRadialGradient(px,py,size*soft*.5,px,py,size/2);g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(1,'rgba(0,0,0,0)');if(mode==='erase'){x.fillStyle=g;x.beginPath();x.arc(px,py,size/2,0,Math.PI*2);x.fill()}else if(currentImg){x.globalCompositeOperation='source-over';x.beginPath();x.arc(px,py,size/2,0,Math.PI*2);x.clip();x.globalAlpha=Math.max(.2,1-soft*.55);x.drawImage(currentImg,0,0,c.width,c.height)}x.restore();preparedResultBlob=null;updateBgBlob()};
- c.onpointerdown=e=>{bgPointer=e.pointerId;c.setPointerCapture?.(e.pointerId);paint(e)};c.onpointermove=paint;c.onpointerup=c.onpointercancel=()=>bgPointer=null;applyBgPreviewMode();
+ // Reuse a bounded brush tile rather than allocating another full-resolution image per stroke.
+ const brushTile=document.createElement('canvas');let previousPoint=null;
+ function brushStamp(px,py,radius,soft,mode){
+  const x=c.getContext('2d');
+  if(mode==='erase'){
+   x.save();x.globalCompositeOperation='destination-out';
+   const g=x.createRadialGradient(px,py,Math.min(radius-.01,Math.max(.75,radius*(1-soft))),px,py,radius);
+   g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(1,'rgba(0,0,0,0)');
+   x.fillStyle=g;x.beginPath();x.arc(px,py,radius,0,Math.PI*2);x.fill();x.restore();
+  }else if(mode==='restore'&&currentImg){
+   // A clipped draw with globalAlpha < 1 never fully restores deleted pixels,
+   // and drawing the original directly ignores the requested feathered boundary.
+   const left=Math.max(0,Math.floor(px-radius-1)),top=Math.max(0,Math.floor(py-radius-1));
+   const right=Math.min(c.width,Math.ceil(px+radius+1)),bottom=Math.min(c.height,Math.ceil(py+radius+1));
+   const width=right-left,height=bottom-top;if(width<1||height<1)return;
+   brushTile.width=width;brushTile.height=height;
+   const tx=brushTile.getContext('2d');tx.drawImage(currentImg,left,top,width,height,0,0,width,height);
+   tx.globalCompositeOperation='destination-in';
+   const g=tx.createRadialGradient(px-left,py-top,Math.min(radius-.01,Math.max(.75,radius*(1-soft))),px-left,py-top,radius);
+   g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(1,'rgba(255,255,255,0)');
+   tx.fillStyle=g;tx.fillRect(0,0,width,height);tx.globalCompositeOperation='source-over';
+   x.drawImage(brushTile,left,top);
+  }
+ }
+ const paint=e=>{
+  if(bgPointer!==e.pointerId)return;
+  const r=c.getBoundingClientRect();if(!r.width||!r.height)return;
+  const px=(e.clientX-r.left)*c.width/r.width,py=(e.clientY-r.top)*c.height/r.height;
+  const radius=Math.max(1,Number($('bgBrushSize')?.value||36)*c.width/Math.max(1,r.width)/2);
+  const soft=Math.max(0,Math.min(1,Number($('bgBrushSoft')?.value||35)/100));
+  const mode=$('bgBrushMode')?.value||'erase';
+  const from=previousPoint||{x:px,y:py};const distance=Math.hypot(px-from.x,py-from.y);
+  const steps=Math.max(1,Math.min(48,Math.ceil(distance/Math.max(1,radius*.45))));
+  for(let i=1;i<=steps;i++)brushStamp(from.x+(px-from.x)*i/steps,from.y+(py-from.y)*i/steps,radius,soft,mode);
+  previousPoint={x:px,y:py};preparedResultBlob=null;updateBgBlob();
+ };
+ c.onpointerdown=e=>{bgPointer=e.pointerId;previousPoint=null;c.setPointerCapture?.(e.pointerId);paint(e)};
+ c.onpointermove=paint;c.onpointerup=c.onpointercancel=()=>{bgPointer=null;previousPoint=null;brushTile.width=brushTile.height=1};applyBgPreviewMode();
 }
 function applyBgPreviewMode(){const stage=$('afterStage');if(!stage)return;stage.dataset.bgPreview=$('bgPreviewMode')?.value||'checker'}
-let bgBlobTimer=0;function updateBgBlob(){clearTimeout(bgBlobTimer);bgBlobTimer=setTimeout(async()=>{if(!bgEditCanvas)return;const b=await blobFromCanvas(bgEditCanvas,'image/png');preparedResultBlob=b;preparedResultType='image/png';preparedResultName=outName('image-bg-remove','image/png');if($('afterMeta'))$('afterMeta').textContent=`${bgEditCanvas.width} × ${bgEditCanvas.height} • ${humanSize(b.size)} • refined PNG`},120)}
+let bgBlobTimer=0,bgBlobRun=0;
+function updateBgBlob(){
+ const run=++bgBlobRun;clearTimeout(bgBlobTimer);preparedResultBlob=null;
+ const button=$('finalImageDownload');if(button)button.disabled=true;
+ bgBlobTimer=setTimeout(async()=>{
+  if(!bgEditCanvas||run!==bgBlobRun)return;
+  try{
+   const canvas=bgEditCanvas,blob=await blobFromCanvas(canvas,'image/png');
+   if(run!==bgBlobRun||bgEditCanvas!==canvas)return;
+   if(!blob||blob.size<120)throw Error('Refined PNG is empty.');
+   await verifyTransparentBlob(blob);
+   if(run!==bgBlobRun||bgEditCanvas!==canvas)return;
+   preparedResultBlob=blob;preparedResultType='image/png';preparedResultName=outName('image-bg-remove','image/png');
+   if($('afterMeta'))$('afterMeta').textContent=`${canvas.width} × ${canvas.height} • ${humanSize(blob.size)} • refined PNG`;
+   if(button)button.disabled=false;
+  }catch(e){if(run===bgBlobRun)setStatus('Could not prepare refined PNG: '+(e?.message||e))}
+ },120);
+}
 $('bgPreviewMode')?.addEventListener('change',applyBgPreviewMode);
 async function verifyTransparentBlob(blob){
  if(!(blob instanceof Blob)||blob.size<120)throw Error('Output file is missing or empty.');
  const bm=await createImageBitmap(blob);try{const c=document.createElement('canvas');c.width=64;c.height=64;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(bm,0,0,64,64);const st=canvasAlphaStats(c);if(st.visible<.015||st.clear<.012)throw Error('PNG verification detected blank or opaque output. Download disabled.');}finally{bm.close?.();}
 }
 async function metadataSignals(fileOrBlob){const b=new Uint8Array(await fileOrBlob.arrayBuffer()),sig=[];if(b[0]===0xff&&b[1]===0xd8){let i=2;while(i+4<b.length&&b[i]===0xff){const m=b[i+1],len=(b[i+2]<<8)|b[i+3];if(m===0xe1)sig.push('EXIF/XMP (APP1)');if(m===0xed)sig.push('IPTC (APP13)');if(!len||m===0xda)break;i+=2+len}}else if(b[0]===0x89&&b[1]===0x50&&b[2]===0x4e&&b[3]===0x47){let i=8;while(i+12<=b.length){const len=(b[i]<<24)|(b[i+1]<<16)|(b[i+2]<<8)|b[i+3],t=String.fromCharCode(...b.slice(i+4,i+8));if(['eXIf','tEXt','zTXt','iTXt'].includes(t))sig.push(t);i+=12+Math.max(0,len);if(t==='IEND')break}}return[...new Set(sig)]}
-async function downloadCurrent(){try{
+async function downloadCurrent(){let bgRequest=0;try{
  if(id==='print-size'){const w=Number($('printW').value),h=Number($('printH').value),dpi=Number($('printDpi').value);if(!w||!h||!dpi)throw Error('Enter valid values.');$('status').innerHTML=`<strong>${(w/dpi).toFixed(2)} × ${(h/dpi).toFixed(2)} inches</strong><br>${(w/dpi*2.54).toFixed(2)} × ${(h/dpi*2.54).toFixed(2)} cm at ${dpi} DPI`;return}
  if(id==='image-base64')return convertBase64();
  if(id==='base64-image')return decodeBase64();
  if(!currentImg)throw Error('Please select an image first.');if(id==='image-convert'&&/image\/(gif|webp)/i.test(currentFile?.type||'')&&!$('allowFirstFrame')?.checked)throw Error('GIF/WebP may be animated. DoKitly will not silently flatten animation. Check “extract only the first frame” to continue intentionally.');let type=selectedType(id==='image-bg-remove'),blob,c;
- if(id==='image-watermark'&&wmMode==='remove'){if(!wmMaskHasPixels())wmAutoDetect();if(!wmMaskHasPixels())throw Error('Watermark was not detected. Use Select Area and draw one box around it.');setStatus('Reconstructing the watermark area at full resolution…');c=wmBuildResult(true);type=selectedType(false);blob=await blobFromCanvas(c,type,quality());preparedResultBlob=blob;preparedResultType=type;preparedResultName='DoKitly_Watermark_Studio_Removed.'+extForType(type);showCanvasPreview(c,`${c.width} × ${c.height} • ${humanSize(blob.size)}`);showCompareSlider(c);if($('finalImageDownload'))$('finalImageDownload').disabled=false;setStatus('Full-resolution cleaned result prepared. Inspect details before downloading.','Processed:');return}
- if(id==='image-bg-remove'){preparedResultBlob=null;preparedResultName=null;if($('finalImageDownload'))$('finalImageDownload').disabled=true;setStatus('Removing background automatically…');const result=await autoRemoveBackground(currentImg);c=result.canvas;type='image/png';blob=await blobFromCanvas(c,type);await verifyTransparentBlob(blob);preparedResultBlob=blob;preparedResultType=type;preparedResultName=outName(id,type);bindBgEditor(c);if($('finalImageDownload')){$('finalImageDownload').disabled=false;$('finalImageDownload').scrollIntoView?.({behavior:'smooth',block:'nearest'})}setStatus(`${result.method} processed. Review the result, then download the transparent PNG.`,'Processed:');return}
+ if(id==='image-watermark'&&wmMode==='remove'){if(!wmMaskHasPixels())wmAutoDetect();clearTimeout(wmLiveTimer);wmLiveTimer=0;if(!wmMaskHasPixels())throw Error('Watermark was not detected. Use Select Area and draw one box around it.');setStatus('Reconstructing the watermark area at full resolution…');c=wmBuildResult(true);type=selectedType(false);blob=await blobFromCanvas(c,type,quality());preparedResultBlob=blob;preparedResultType=type;preparedResultName='DoKitly_Watermark_Studio_Removed.'+extForType(type);showCanvasPreview(c,`${c.width} × ${c.height} • ${humanSize(blob.size)}`);showCompareSlider(c);if($('finalImageDownload'))$('finalImageDownload').disabled=false;setStatus('Full-resolution cleaned result prepared. Inspect details before downloading.','Processed:');return}
+ if(id==='image-bg-remove'){
+  clearBgComparison();
+  bgRequest=++bgProcessRun;
+  window.DoKitlyBackgroundAI?.cancel?.();resetBgCompareControls();
+  const source=currentImg;
+  preparedResultBlob=null;preparedResultName=null;bgEditCanvas=null;
+  $('bgRefine')?.setAttribute('hidden','');
+  if($('finalImageDownload'))$('finalImageDownload').disabled=true;
+  setStatus('Removing background automatically…');
+  const result=await autoRemoveBackground(source,bgRequest);
+  if(bgRequest!==bgProcessRun||currentImg!==source)return;
+  c=result.canvas;type='image/png';blob=await blobFromCanvas(c,type);
+  if(bgRequest!==bgProcessRun||currentImg!==source)return;
+  await verifyTransparentBlob(blob);
+  if(bgRequest!==bgProcessRun||currentImg!==source)return;
+  preparedResultBlob=blob;preparedResultType=type;preparedResultName=outName(id,type);
+  bindBgEditor(c);
+  if($('finalImageDownload')){$('finalImageDownload').disabled=false;$('finalImageDownload').scrollIntoView?.({behavior:'smooth',block:'nearest'})}
+  setStatus(`${result.method} processed. Review the result, then download the transparent PNG.`,'Processed:');return
+ }
+
  if(id==='image-passport'){c=drawVisual(true);const bg=$('passportBg')?.value||'keep';if(bg!=='keep'){setStatus('Detecting subject and replacing background…');c=await removePersonBackground(c,bg)}type=selectedType(false);const target=Number($('passportTargetKB')?.value||0);if(target>0&&type!=='image/png'){const limit=target*1024;let lo=.02,hi=.98,hit=null;for(let i=0;i<12;i++){const q=(lo+hi)/2,b=await blobFromCanvas(c,type,q);if(b.size<=limit){hit=b;lo=q}else hi=q}blob=hit||await blobFromCanvas(c,type,.02)}else blob=await blobFromCanvas(c,type,quality());preparedResultBlob=blob;preparedResultType=type;preparedResultName=outName(id,type);showCanvasPreview(c,`${c.width} × ${c.height} • ${humanSize(blob.size)}`);if($('finalImageDownload'))$('finalImageDownload').disabled=false;setStatus('Passport photo processed. Review framing/background, then download.','Processed:');return}
  if(id==='image-target'){const kb=$('targetSelect').value==='custom'?Number($('targetCustom').value):Number($('targetSelect').value);if(!kb)throw Error('Enter a target size.');if($('processBtn')){$('processBtn').disabled=true;$('processBtn').textContent='Compressing…'};const r=await compressToKB(kb,type,true);if($('processBtn')){$('processBtn').disabled=false;$('processBtn').textContent='Compress Image'};if(!r.blob)throw Error('Could not create a compressed result.');targetResultBlob=r.blob;targetResultType=type;if($('targetDownloadBtn'))$('targetDownloadBtn').disabled=false;showCanvasPreview(r.canvas,`${r.canvas.width} × ${r.canvas.height} • ${humanSize(r.blob.size)}`);setStatus(r.miss?`Closest result: ${humanSize(r.blob.size)}. Target ${kb} KB could not be reached without making the image extremely small.`:`Target: ${kb} KB • Result: ${humanSize(r.blob.size)}`,'Compressed:');return}
- c=drawVisual(true);if(!c)throw Error('Could not create a result.');if(id==='image-compress'&&Number($('targetKB')?.value)>0){const r=await compressToKB(Number($('targetKB').value),type,true);blob=r.blob;c=r.canvas}else blob=await blobFromCanvas(c,type,quality());if(id==='image-exif'){const remain=await metadataSignals(blob);if(remain.length)throw Error(`Metadata verification found remaining container(s): ${remain.join(', ')}. Download blocked.`)}preparedResultBlob=blob;preparedResultType=type;preparedResultName=outName(id,type);showCanvasPreview(c,`${c.width} × ${c.height} • ${humanSize(blob.size)}`);if($('finalImageDownload'))$('finalImageDownload').disabled=false;setStatus(`${humanSize(currentFile.size)} → ${humanSize(blob.size)}. Review preview, then download.`,'Processed:')
- }catch(e){if(id==='image-bg-remove'){preparedResultBlob=null;preparedResultName=null;if($('finalImageDownload'))$('finalImageDownload').disabled=true;}setStatus(e.message)}}
+ c=drawVisual(true);if(!c)throw Error('Could not create a result.');if(id==='image-compress'&&Number($('targetKB')?.value)>0){const r=await compressToKB(Number($('targetKB').value),type,true);blob=r.blob;c=r.canvas}else blob=await blobFromCanvas(c,type,quality());const keptOriginal=id==='image-compress'&&currentFile&&currentFile.type===type&&blob.size>=currentFile.size;if(keptOriginal)blob=currentFile;if(id==='image-exif'){const remain=await metadataSignals(blob);if(remain.length)throw Error(`Metadata verification found remaining container(s): ${remain.join(', ')}. Download blocked.`)}preparedResultBlob=blob;preparedResultType=type;preparedResultName=outName(id,type);showCanvasPreview(c,`${c.width} × ${c.height} • ${humanSize(blob.size)}`);if($('finalImageDownload'))$('finalImageDownload').disabled=false;setStatus(keptOriginal?'Already optimized: re-encoding would make this file larger, so the original bytes were preserved (0% saved).':`${humanSize(currentFile.size)} → ${humanSize(blob.size)}. Review preview, then download.`,'Processed:')
+ }catch(e){if(id==='image-bg-remove'){if(bgRequest&&bgRequest!==bgProcessRun)return;preparedResultBlob=null;preparedResultName=null;if($('finalImageDownload'))$('finalImageDownload').disabled=true;}setStatus(e.message)}}
 
 async function convertBase64(){if(!currentFile)throw Error('Please select an image first.');const bytes=new Uint8Array(await currentFile.arrayBuffer());let binary='';const CHUNK=0x8000;for(let i=0;i<bytes.length;i+=CHUNK)binary+=String.fromCharCode(...bytes.subarray(i,i+CHUNK));const b64=btoa(binary),mime=currentFile.type&&currentFile.type.startsWith('image/')?currentFile.type:'application/octet-stream',val=`data:${mime};base64,${b64}`;const decoded=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));if(decoded.length!==bytes.length)throw Error('Base64 verification failed: decoded size differs.');for(let i=0;i<bytes.length;i++){if(decoded[i]!==bytes[i])throw Error(`Base64 verification failed at byte ${i}.`)}$('base64Out').value=val;$('copyBtn').disabled=false;$('saveBase64Btn').disabled=false;$('openVerifiedBtn').disabled=false;$('base64Count').textContent=`• ${val.length.toLocaleString()} chars • ${decoded.length.toLocaleString()} bytes verified`;if(verifiedBlobURL)URL.revokeObjectURL(verifiedBlobURL);verifiedBlobURL=URL.createObjectURL(new Blob([decoded],{type:mime}));$('afterStage').innerHTML=`<img src="${verifiedBlobURL}" alt="Verified decoded image">`;$('afterMeta').textContent=`${decoded.length.toLocaleString()} bytes • exact match`;setStatus('Decoded bytes match the uploaded file exactly. Use “Open verified image” instead of pasting a huge Data URL into Chrome’s address bar.','Verified:')}
 async function decodeBase64(){let val=$('base64In').value.trim().replace(/\s+/g,'');const m=val.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);if(!m)throw Error('Paste a complete data:image/...;base64,... URL.');let bin;try{bin=atob(m[2])}catch{throw Error('Invalid Base64 data.')}const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0)),blob=new Blob([bytes],{type:m[1]});if(verifiedBlobURL)URL.revokeObjectURL(verifiedBlobURL);verifiedBlobURL=URL.createObjectURL(blob);const im=new Image();im.onload=()=>{$('afterStage').innerHTML=`<img src="${verifiedBlobURL}" alt="Decoded image">`;$('afterMeta').textContent=`${im.width} × ${im.height} • ${humanSize(blob.size)}`;setStatus('Base64 decoded successfully.','Done:')};im.onerror=()=>setStatus('The Base64 decoded, but it is not a valid image.');im.src=verifiedBlobURL}
@@ -350,6 +492,215 @@ $('copyBtn')?.addEventListener('click',async()=>{const v=$('base64Out').value;if
 $('saveBase64Btn')?.addEventListener('click',()=>{const v=$('base64Out').value;if(!v)return;const u=URL.createObjectURL(new Blob([v],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=u;a.download='DoKitly_Base64.txt';a.click();setTimeout(()=>URL.revokeObjectURL(u),1500)});
 $('openVerifiedBtn')?.addEventListener('click',()=>{if(verifiedBlobURL)window.open(verifiedBlobURL,'_blank','noopener')});
 $('autoFaceBtn')?.addEventListener('click',async()=>{if(!currentImg){setStatus('Select an image first.');return}if(!('FaceDetector' in window)){setStatus('Automatic face detection is not supported in this browser. Use Zoom and Up/Down controls manually.');return}try{setStatus('Detecting face…');const fd=new FaceDetector({fastMode:true,maxDetectedFaces:1}),faces=await fd.detect(currentImg);if(!faces.length)throw Error('No clear face detected.');const b=faces[0].boundingBox,cx=b.x+b.width/2,cy=b.y+b.height/2;$('passportX').value=Math.round(Math.max(-100,Math.min(100,(.5-cx/currentImg.width)*115)));$('passportY').value=Math.round(Math.max(-100,Math.min(100,(.34-cy/currentImg.height)*125)));$('passportZoom').value=Math.round(Math.max(90,Math.min(180,135/(b.height/currentImg.height*3.2))));['passportX','passportY','passportZoom'].forEach(k=>$(k).dispatchEvent(new Event('input',{bubbles:true})));setStatus('Face centered. Fine-tune zoom/position if needed.','Auto:')}catch(e){setStatus(e.message||'Could not detect face.')}});
+
+ // Experimental dual-mask fusion. Only operates on actual Fast+Detail results
+ // already generated for Compare. No additional network/model invocation.
+ // Preserve high-confidence Fast interiors, use conservative alpha near edges.
+ function bgFuseAlpha(fast,detail,w,h,protect=7){
+  const n=w*h;if(fast.length!==n||detail.length!==n)throw Error('Incompatible AI masks');
+  const dist=new Float32Array(n),huge=w+h,diag=Math.SQRT2;
+  for(let i=0;i<n;i++)dist[i]=fast[i]>245?huge:0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+   const i=y*w+x; if(x)dist[i]=Math.min(dist[i],dist[i-1]+1);
+   if(y){dist[i]=Math.min(dist[i],dist[i-w]+1);
+    if(x)dist[i]=Math.min(dist[i],dist[i-w-1]+diag);
+    if(x+1<w)dist[i]=Math.min(dist[i],dist[i-w+1]+diag);}
+  }
+  for(let y=h-1;y>=0;y--)for(let x=w-1;x>=0;x--){
+   const i=y*w+x;if(x+1<w)dist[i]=Math.min(dist[i],dist[i+1]+1);
+   if(y+1<h){dist[i]=Math.min(dist[i],dist[i+w]+1);
+    if(x)dist[i]=Math.min(dist[i],dist[i+w-1]+diag);
+    if(x+1<w)dist[i]=Math.min(dist[i],dist[i+w+1]+diag);}
+  }
+  const fused=new Uint8Array(n);
+  for(let i=0;i<n;i++)fused[i]=dist[i]>protect?fast[i]:Math.min(fast[i],detail[i]);
+  return fused;
+ }
+ async function bgBalancedCanvas(fastBlob,detailBlob){
+  let fb=null,db=null,fc=null,dc=null,matte=null,out=null;
+  try{
+   [fb,db]=await Promise.all([createImageBitmap(fastBlob),createImageBitmap(detailBlob)]);
+   if(fb.width!==db.width||fb.height!==db.height)throw Error('Compare images have different dimensions');
+   const w=fb.width,h=fb.height,scale=Math.min(1,1024/Math.max(w,h));
+   const mw=Math.max(1,Math.round(w*scale)),mh=Math.max(1,Math.round(h*scale)),n=mw*mh;
+   fc=document.createElement('canvas');fc.width=mw;fc.height=mh;
+   dc=document.createElement('canvas');dc.width=mw;dc.height=mh;
+   const fx=fc.getContext('2d',{willReadFrequently:true}),dx=dc.getContext('2d',{willReadFrequently:true});
+   fx.drawImage(fb,0,0,mw,mh);dx.drawImage(db,0,0,mw,mh);
+   const fd=fx.getImageData(0,0,mw,mh).data,dd=dx.getImageData(0,0,mw,mh).data;
+   const fa=new Uint8Array(n),da=new Uint8Array(n);
+   for(let i=0,j=3;i<n;i++,j+=4){fa[i]=fd[j];da[i]=dd[j];}
+   const fused=bgFuseAlpha(fa,da,mw,mh);
+   matte=document.createElement('canvas');matte.width=mw;matte.height=mh;
+   const mx=matte.getContext('2d',{willReadFrequently:true}),md=mx.createImageData(mw,mh);
+   for(let i=0,j=0;i<n;i++,j+=4){md.data[j]=md.data[j+1]=md.data[j+2]=255;md.data[j+3]=fused[i];}
+   mx.putImageData(md,0,0);
+   out=document.createElement('canvas');out.width=w;out.height=h;
+   const ox=out.getContext('2d',{willReadFrequently:true});ox.drawImage(fb,0,0);
+   // Large photographs use bounded 128-row scratch buffers instead of
+   // allocating additional original-resolution RGBA arrays.
+   const strip=document.createElement('canvas');strip.width=w;
+   try{
+    for(let top=0;top<h;top+=128){
+     const rows=Math.min(128,h-top);strip.height=rows;
+     const sx=strip.getContext('2d',{willReadFrequently:true});
+     sx.imageSmoothingEnabled=true;sx.imageSmoothingQuality='high';
+     sx.drawImage(matte,0,-top,w,h);
+     const a=sx.getImageData(0,0,w,rows).data,base=ox.getImageData(0,top,w,rows);
+     for(let j=3;j<a.length;j+=4)base.data[j]=Math.min(base.data[j],a[j]);
+     ox.putImageData(base,0,top);
+    }
+   }finally{strip.width=strip.height=1;}
+   return out;
+  }catch(e){if(out)out.width=out.height=1;throw e;}
+  finally{fb?.close?.();db?.close?.();for(const c of [fc,dc,matte])if(c)c.width=c.height=1;}
+ }
+ // Optional model comparison: both results use the same source image, stay
+ // local, and remain separate until the user explicitly chooses one.
+ function renderBgComparison(){
+  const panel=$('bgComparePanel'),grid=$('bgCompareGrid');if(!panel||!grid)return;
+  grid.textContent='';
+  for(const model of ['fast','detail','balanced']){
+   const item=bgCompareResults[model];if(!item)continue;
+   const section=document.createElement('section');section.className='dk-bg-compare-option';section.dataset.model=model;
+   const title=document.createElement('strong');title.textContent=model==='fast'?'Fast · U2NetP':model==='detail'?'Detail · Silueta':'Balanced · experimental (both masks)';
+   const preview=document.createElement('img');preview.src=item.url;preview.alt=title.textContent+' transparent PNG preview';preview.loading='eager';
+   const choose=document.createElement('button');choose.type='button';choose.className='btn-secondary';choose.textContent='Use '+(model==='fast'?'Fast':model==='detail'?'Detail':'Balanced')+' result';
+   choose.addEventListener('click',()=>selectBgComparison(model));
+   section.append(title,preview,choose);grid.append(section);
+  }
+  panel.hidden=!grid.childElementCount;
+  const both=$('bgCompareDownloadBoth');if(both)both.disabled=!(bgCompareResults.fast&&bgCompareResults.detail);
+ }
+ // A comparison card is only ~180px high. Decode a modest preview in that
+ // card, not a second full-resolution PNG; keep the original blob unchanged
+ // for Refine, full-size export, and reproducible Fast-vs-Detail comparisons.
+ async function bgComparisonPreview(canvas){
+  const longest=Math.max(canvas.width,canvas.height);if(longest<=960)return null;
+  const scale=960/longest,small=document.createElement('canvas');
+  small.width=Math.max(1,Math.round(canvas.width*scale));
+  small.height=Math.max(1,Math.round(canvas.height*scale));
+  try{const ctx=small.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(canvas,0,0,small.width,small.height);return await blobFromCanvas(small,'image/png');}
+  finally{small.width=small.height=1;}
+ }
+ async function selectBgComparison(model){
+  const item=bgCompareResults[model],source=currentImg;if(!item||!source)return;
+  const run=++bgProcessRun;
+  // Fast can be selected while the heavier Detail model is still running.
+  // Stop its worker immediately instead of burning CPU/download resources.
+  if(bgCompareActiveRun){window.DoKitlyBackgroundAI?.cancel?.();resetBgCompareControls();}
+  preparedResultBlob=null;preparedResultName=null;preparedResultType=null;
+  if($('finalImageDownload'))$('finalImageDownload').disabled=true;
+  let bitmap=null,c=null;
+  try{
+   bitmap=await createImageBitmap(item.blob);
+   if(run!==bgProcessRun||currentImg!==source)return;
+   c=document.createElement('canvas');c.width=bitmap.width;c.height=bitmap.height;
+   c.getContext('2d').drawImage(bitmap,0,0);
+   bitmap.close?.();bitmap=null;
+   if(run!==bgProcessRun||currentImg!==source){c.width=c.height=1;return;}
+   $('bgModel').value=model==='balanced'?'fast':model;
+   bgEditCanvas=null;++bgBlobRun;clearTimeout(bgBlobTimer);
+   preparedResultBlob=item.blob;preparedResultType='image/png';preparedResultName=model==='balanced'?'DoKitly_Background_Remover_Balanced_Experimental.png':outName('image-bg-remove','image/png');
+   bindBgEditor(c);
+   for(const option of $('bgCompareGrid').children)option.classList.toggle('dk-bg-chosen',option.dataset.model===model);
+   if($('finalImageDownload'))$('finalImageDownload').disabled=false;
+   setStatus((model==='fast'?'Fast':model==='detail'?'Detail':'Experimental Balanced')+' result selected. Refine edges if needed, then download.','Selected:');
+  }catch(e){if(run===bgProcessRun)setStatus('Could not open comparison result: '+(e?.message||e));if(c&&bgEditCanvas!==c)c.width=c.height=1}
+  finally{bitmap?.close?.();}
+ }
+ async function compareBgModels(){
+  const source=currentImg;if(!source){setStatus('Select an image to compare first.');return;}
+  const run=++bgProcessRun;
+  window.DoKitlyBackgroundAI?.cancel?.();resetBgCompareControls();clearBgComparison();
+  bgCompareActiveRun=run;
+  bgEditCanvas=null;++bgBlobRun;clearTimeout(bgBlobTimer);
+  preparedResultBlob=null;preparedResultName=null;preparedResultType=null;
+  $('bgRefine')?.setAttribute('hidden','');
+  if($('finalImageDownload'))$('finalImageDownload').disabled=true;
+  const compareBtn=$('bgCompareBtn'),processBtn=$('processBtn'),cancelBtn=$('bgCancelCompareBtn');
+  if(cancelBtn)cancelBtn.hidden=false;
+  if(compareBtn)compareBtn.disabled=true;if(processBtn)processBtn.disabled=true;
+  const problems=[];
+  try{
+   for(const model of ['fast','detail']){
+    if(run!==bgProcessRun||currentImg!==source)return;
+    setStatus('Comparing '+(model==='fast'?'Fast':'Detail')+' engine…');
+    let result=null;
+    try{
+     result=await autoRemoveBackground(source,run,model);
+     if(run!==bgProcessRun||currentImg!==source)return;
+     const blob=await blobFromCanvas(result.canvas,'image/png');
+     if(run!==bgProcessRun||currentImg!==source)return;
+     await verifyTransparentBlob(blob);
+     if(run!==bgProcessRun||currentImg!==source)return;
+     let previewBlob=null;try{previewBlob=await bgComparisonPreview(result.canvas)}catch(_){/* Keep verified full-size output available. */}
+     if(run!==bgProcessRun||currentImg!==source)return;
+     const url=URL.createObjectURL(previewBlob||blob);bgCompareURLs.push(url);
+     bgCompareResults[model]={blob,url};renderBgComparison();
+    }catch(e){if(run!==bgProcessRun||currentImg!==source)return;problems.push((model==='fast'?'Fast':'Detail')+': '+(e?.message||e));}
+    finally{if(result?.canvas){result.canvas.width=result.canvas.height=1;}}
+   }
+   if(run!==bgProcessRun||currentImg!==source)return;
+   // Extra output from the two verified masks, never a substitute for the
+   // original Fast/Detail outputs. Fail open if fusion is unavailable.
+   if(bgCompareResults.fast&&bgCompareResults.detail){
+    let balanced=null;
+    try{
+     balanced=await bgBalancedCanvas(bgCompareResults.fast.blob,bgCompareResults.detail.blob);
+     if(run!==bgProcessRun||currentImg!==source)return;
+     const blob=await blobFromCanvas(balanced,'image/png');
+     if(run!==bgProcessRun||currentImg!==source)return;
+     await verifyTransparentBlob(blob);
+     if(run!==bgProcessRun||currentImg!==source)return;
+     let previewBlob=null;try{previewBlob=await bgComparisonPreview(balanced)}catch(_){}
+     if(run!==bgProcessRun||currentImg!==source)return;
+     const url=URL.createObjectURL(previewBlob||blob);bgCompareURLs.push(url);
+     bgCompareResults.balanced={blob,url};renderBgComparison();
+    }catch(e){if(run===bgProcessRun)problems.push('Experimental Balanced: '+(e?.message||e));}
+    finally{if(balanced)balanced.width=balanced.height=1;}
+   }
+   if(run!==bgProcessRun||currentImg!==source)return;
+   if(Object.keys(bgCompareResults).length){
+    setStatus('Compare the available outputs (including optional experimental Balanced) and choose one to Refine/Download.'+(problems.length?' '+problems.join(' | '):''),'Ready:');
+   }else setStatus('Neither model produced a valid result. '+problems.join(' | '));
+  }finally{
+   // An older async request must never change the controls for a newer run.
+   if(run===bgProcessRun&&bgCompareActiveRun===run)resetBgCompareControls();
+  }
+ }
+ $('bgCompareDownloadBoth')?.addEventListener('click',async()=>{
+  const fast=bgCompareResults.fast,detail=bgCompareResults.detail,source=currentImg,run=bgProcessRun;
+  if(!fast||!detail||!source)return;
+  const button=$('bgCompareDownloadBoth');button.disabled=true;
+  try{
+   const files=[
+    {name:'DoKitly_Background_Remover_Fast.png',blob:fast.blob},
+    {name:'DoKitly_Background_Remover_Detail.png',blob:detail.blob}
+   ];
+   if(bgCompareResults.balanced)files.push({name:'DoKitly_Background_Remover_Balanced_Experimental.png',blob:bgCompareResults.balanced.blob});
+   const zip=await makeZipFromBlobs(files);
+   if(run!==bgProcessRun||source!==currentImg||bgCompareResults.fast!==fast||bgCompareResults.detail!==detail)return;
+   await triggerDownload(zip,'DoKitly_Background_Remover_Fast_vs_Detail.zip');
+   setStatus('Full-resolution PNG results packaged, including experimental Balanced when available. Inspect each cutout.','Ready:');
+  }catch(e){if(run===bgProcessRun)setStatus('Could not export both results: '+(e?.message||e));}
+  finally{if(button&&bgCompareResults.fast&&bgCompareResults.detail)button.disabled=false;}
+ });
+ $('bgCompareBtn')?.addEventListener('click',()=>{compareBgModels().catch(e=>setStatus(e?.message||String(e)))});
+ $('bgCancelCompareBtn')?.addEventListener('click',()=>{++bgProcessRun;window.DoKitlyBackgroundAI?.cancel?.();resetBgCompareControls();clearBgComparison();preparedResultBlob=null;preparedResultName=null;preparedResultType=null;if($('finalImageDownload'))$('finalImageDownload').disabled=true;setStatus('Comparison cancelled. No result was selected.');});
+$('bgModel')?.addEventListener('change',()=>{
+  clearBgComparison();
+ // A result belongs to the model that generated it. Never offer a stale Fast
+ // download after the user has switched to Detail (or the reverse).
+ ++bgProcessRun;window.DoKitlyBackgroundAI?.cancel?.();resetBgCompareControls();
+ preparedResultBlob=null;preparedResultName=null;preparedResultType=null;
+ bgEditCanvas=null;bgPointer=null;++bgBlobRun;clearTimeout(bgBlobTimer);
+ $('bgRefine')?.setAttribute('hidden','');
+ if($('finalImageDownload'))$('finalImageDownload').disabled=true;
+ if($('afterStage'))$('afterStage').textContent='Select Remove Background to process with the selected model.';
+ if($('afterMeta'))$('afterMeta').textContent='No result for selected model';
+ if(currentImg)setStatus('AI model changed. Choose Remove Background to process a new result.');
+});
 $('bgResetBtn')?.addEventListener('click',()=>{$('fileInput')?.click()});
 $('processBtn')?.addEventListener('click',()=>{if(id==='multi-resize'||id==='multi-compress')processBatch();else downloadCurrent()});$('cancelBatchBtn')?.addEventListener('click',()=>{batchCancelled=true});$('retryBatchBtn')?.addEventListener('click',()=>processBatch(true));
 $('targetDownloadBtn')?.addEventListener('click',()=>{if(!targetResultBlob||!targetResultType){setStatus('Compress the image first.');return}triggerDownload(targetResultBlob,outName('image-target',targetResultType));setStatus(`Downloaded ${humanSize(targetResultBlob.size)} image.`,'Downloaded:')});
@@ -360,6 +711,32 @@ function bindColorCanvas(img){const stage=$('beforeStage');if(!stage)return;cons
 
 const crcTable=(()=>{let t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
 function crc32(u8){let c=0xffffffff;for(const b of u8)c=crcTable[(c^b)&255]^(c>>>8);return(c^0xffffffff)>>>0}function le16(n){return[n&255,(n>>>8)&255]}function le32(n){return[n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255]}
+
+// ZIP32 store-mode package for full-resolution comparison exports. Compute
+// CRC in bounded slices and reuse Blob data, rather than duplicating both
+// large PNGs in JS typed arrays (the ordinary batch ZIP path is unchanged).
+async function makeZipFromBlobs(files){
+ const enc=new TextEncoder(),parts=[],central=[];let offset=0;
+ for(const f of files){
+  if(!(f.blob instanceof Blob))throw Error('Missing PNG output.');
+  const name=enc.encode(f.name),size=f.blob.size;
+  if(size>0xffffffff||name.length>65535||offset+30+name.length+size>0xffffffff)throw Error('ZIP32 size exceeded; download each PNG separately.');
+  let state=0xffffffff;
+  for(let start=0;start<size;start+=524288){
+   const data=new Uint8Array(await f.blob.slice(start,Math.min(size,start+524288)).arrayBuffer());
+   for(const v of data)state=crcTable[(state^v)&255]^(state>>>8);
+  }
+  const crc=(state^0xffffffff)>>>0;
+  const local=new Uint8Array([...le32(0x04034b50),...le16(20),...le16(0),...le16(0),...le16(0),...le16(0),...le32(crc),...le32(size),...le32(size),...le16(name.length),...le16(0),...name]);
+  parts.push(local,f.blob);
+  const cent=new Uint8Array([...le32(0x02014b50),...le16(20),...le16(20),...le16(0),...le16(0),...le16(0),...le16(0),...le32(crc),...le32(size),...le32(size),...le16(name.length),...le16(0),...le16(0),...le16(0),...le16(0),...le32(0),...le32(offset),...name]);
+  central.push(cent);offset+=local.length+size;
+ }
+ const centralSize=central.reduce((n,x)=>n+x.length,0);
+ if(offset+centralSize>0xffffffff)throw Error('ZIP32 size exceeded; download each PNG separately.');
+ const end=new Uint8Array([...le32(0x06054b50),...le16(0),...le16(0),...le16(files.length),...le16(files.length),...le32(centralSize),...le32(offset),...le16(0)]);
+ return new Blob([...parts,...central,end],{type:'application/zip'});
+}
 async function makeZip(files){const enc=new TextEncoder(),parts=[],central=[];let offset=0;for(const f of files){const name=enc.encode(f.name),data=new Uint8Array(await f.blob.arrayBuffer()),crc=crc32(data);const local=new Uint8Array([...le32(0x04034b50),...le16(20),...le16(0),...le16(0),...le16(0),...le16(0),...le32(crc),...le32(data.length),...le32(data.length),...le16(name.length),...le16(0),...name]);parts.push(local,data);const cent=new Uint8Array([...le32(0x02014b50),...le16(20),...le16(20),...le16(0),...le16(0),...le16(0),...le16(0),...le32(crc),...le32(data.length),...le32(data.length),...le16(name.length),...le16(0),...le16(0),...le16(0),...le16(0),...le32(0),...le32(offset),...name]);central.push(cent);offset+=local.length+data.length}const centralSize=central.reduce((n,a)=>n+a.length,0),end=new Uint8Array([...le32(0x06054b50),...le16(0),...le16(0),...le16(files.length),...le16(files.length),...le32(centralSize),...le32(offset),...le16(0)]);return new Blob([...parts,...central,end],{type:'application/zip'})}
 async function passportSheet(){if(id!=='image-passport'||!currentImg)return;const photo=drawVisual(true);if(!photo)throw Error('Process a passport photo first.');const dpi=Number($('dpi')?.value)||300,W=Math.round(6*dpi),H=Math.round(4*dpi),sheet=document.createElement('canvas');sheet.width=W;sheet.height=H;const x=sheet.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);const gap=Math.round(.12*dpi),cols=Math.max(1,Math.floor((W+gap)/(photo.width+gap))),rows=Math.max(1,Math.floor((H+gap)/(photo.height+gap))),count=Math.min(cols*rows,12);for(let i=0;i<count;i++){const c=i%cols,r=Math.floor(i/cols);x.drawImage(photo,c*(photo.width+gap),r*(photo.height+gap))}const blob=await blobFromCanvas(sheet,'image/jpeg',.94),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='DoKitly_Passport_Photo_Print_Sheet.jpg';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);photo.width=photo.height=sheet.width=sheet.height=1}
 $('passportSheetBtn')?.addEventListener('click',()=>passportSheet().catch(e=>setStatus(e.message)));

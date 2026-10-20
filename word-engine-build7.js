@@ -99,6 +99,75 @@ async function detectDarkBands(page,vp){
   return groups.filter(g=>g.y1-g.y0+1>=3).map(g=>{const lum=Math.round(g.lums.reduce((a,b)=>a+b,0)/g.lums.length),h=Math.max(0,Math.min(255,lum)).toString(16).padStart(2,'0').toUpperCase();return{x0:g.minX/scale,x1:(g.maxX+1)/scale,y0:g.y0/scale,y1:(g.y1+1)/scale,fill:h+h+h}})
  }catch(_){return[]}
 }
+// Conservative vector preservation: outlined axis-aligned PDF rectangles only.
+// Extract strokes via PDF.js' operator list (no raster overlay / no duplicate text).
+// The VML shape anchors to the existing first paragraph so text baselines do not move.
+function multiplyMatrix(a,b){return[a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],a[0]*b[4]+a[2]*b[5]+a[4],a[1]*b[4]+a[3]*b[5]+a[5]]}
+function shapeColor(value){const v=String(value||'');return /^#[0-9a-fA-F]{6}$/.test(v)?v:'#000000'}
+async function detectOutlinedRects(page,vp,OPS){
+ const found=[];
+ try{
+  const ol=await page.getOperatorList();let state={matrix:[1,0,0,1,0,0],color:'#000000',width:1};const saved=[];
+  for(let k=0;k<ol.fnArray.length;k++){
+   const fn=ol.fnArray[k],args=ol.argsArray[k]||[];
+   if(fn===OPS.save){saved.push({matrix:[...state.matrix],color:state.color,width:state.width});continue}
+   if(fn===OPS.restore){if(saved.length)state=saved.pop();continue}
+   if(fn===OPS.transform){if(args.length===6&&args.every(Number.isFinite))state.matrix=multiplyMatrix(state.matrix,args);continue}
+   if(fn===OPS.setStrokeRGBColor){state.color=shapeColor(args[0]);continue}
+   if(fn===OPS.setLineWidth){state.width=clamp(Number(args[0])||1,.4,8);continue}
+   if(fn!==OPS.constructPath||args[0]!==OPS.stroke||!args[1]||found.length>=60)continue;
+   const path=Array.isArray(args[1])&&args[1].length===1&&ArrayBuffer.isView(args[1][0])?args[1][0]:args[1],pts=[];let valid=true;
+   for(let j=0;j<path.length;){const op=Number(path[j++]);if(op===0||op===1){if(j+1>=path.length){valid=false;break}pts.push([Number(path[j++]),Number(path[j++])])}else if(op===4){continue}else{valid=false;break}}
+   if(!valid||pts.length<4||pts.length>5)continue;
+   if(pts.length===5&&Math.hypot(pts[4][0]-pts[0][0],pts[4][1]-pts[0][1])<.8)pts.pop();
+   if(pts.length!==4)continue;
+   const mapped=pts.map(q=>{const m=state.matrix;return vp.convertToViewportPoint(m[0]*q[0]+m[2]*q[1]+m[4],m[1]*q[0]+m[3]*q[1]+m[5])});
+   if(!mapped.every(q=>q.length>=2&&Number.isFinite(q[0])&&Number.isFinite(q[1])))continue;
+   const x0=Math.min(...mapped.map(q=>q[0])),x1=Math.max(...mapped.map(q=>q[0])),y0=Math.min(...mapped.map(q=>q[1])),y1=Math.max(...mapped.map(q=>q[1]));
+   const w=x1-x0,h=y1-y0;if(w<5||h<5||w>vp.width*1.02||h>vp.height*1.02||x0<-1||y0<-1||x1>vp.width+1||y1>vp.height+1)continue;
+   if(!mapped.every(q=>(Math.abs(q[0]-x0)<1||Math.abs(q[0]-x1)<1)&&(Math.abs(q[1]-y0)<1||Math.abs(q[1]-y1)<1)))continue;
+   const corners=new Set(mapped.map(q=>`${Math.round((q[0]-x0)/w)}:${Math.round((q[1]-y0)/h)}`));if(corners.size!==4)continue;
+   if(found.some(r=>Math.abs(r.x-x0)<.6&&Math.abs(r.y-y0)<.6&&Math.abs(r.w-w)<.6&&Math.abs(r.h-h)<.6))continue;
+   found.push({x:x0,y:y0,w,h,color:state.color,width:state.width});
+  }
+ }catch(e){console.info('PDF vector rectangle extraction unavailable:',e?.message||e)}
+ return found
+}
+function rectShapeRuns(rects,pageNo){
+ return rects.map((r,k)=>{
+  const n=v=>Number(v).toFixed(2).replace(/\.00$/,'');
+  return `<w:r><w:pict><v:rect id="dokitly_rect_p${pageNo}_${k+1}" style="position:absolute;margin-left:${n(r.x)}pt;margin-top:${n(r.y)}pt;width:${n(r.w)}pt;height:${n(r.h)}pt;z-index:-1;mso-position-horizontal-relative:page;mso-position-vertical-relative:page" filled="f" stroked="t" strokecolor="${r.color}" strokeweight="${n(r.width)}pt"/></w:pict></w:r>`
+ }).join('')
+}
+function attachToFirstParagraph(chunk,shapes){
+ if(!shapes)return chunk;
+ const match=/<w:p>(<w:pPr>[\s\S]*?<\/w:pPr>)?/.exec(chunk);
+ if(!match)return chunk;
+ const at=match.index+match[0].length;
+ return chunk.slice(0,at)+shapes+chunk.slice(at)
+}
+// A scanned page can contain a selectable page number/header above a full-page raster.
+// Treat sparse text + a dominant image as a scanned page, not as a text-only PDF.
+// Constrained to the sparse-text case to avoid OCRing regular mixed text/image PDFs.
+async function isRasterDominantPage(page,vp,OPS){
+ try{
+  const list=await page.getOperatorList();
+  let matrix=[1,0,0,1,0,0],saved=[],covered=0;
+  const pageArea=Math.max(1,vp.width*vp.height);
+  for(let i=0;i<list.fnArray.length;i++){
+   const op=list.fnArray[i],args=list.argsArray[i]||[];
+   if(op===OPS.save){saved.push([...matrix]);continue}
+   if(op===OPS.restore){if(saved.length)matrix=saved.pop();continue}
+   if(op===OPS.transform){if(args.length===6&&args.every(Number.isFinite))matrix=multiplyMatrix(matrix,args);continue}
+   if(op===OPS.paintImageXObject||op===OPS.paintInlineImageXObject||op===OPS.paintJpegXObject){
+    const area=Math.abs(matrix[0]*matrix[3]-matrix[1]*matrix[2]);
+    if(Number.isFinite(area))covered=Math.max(covered,area/pageArea);
+    if(covered>=.68)return true;
+   }
+  }
+ }catch(_){/* Keep normal selectable text if image operators cannot be inspected. */}
+ return false;
+}
 async function renderScanImage(page,vp){
  const scale=Math.min(1.65,1800/Math.max(vp.width,vp.height)),rv=page.getViewport({scale}),c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(rv.width));c.height=Math.max(1,Math.ceil(rv.height));const ctx=c.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);await page.render({canvasContext:ctx,viewport:rv}).promise;const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(Error('Could not render scanned PDF page.')),'image/jpeg',.9));return new Uint8Array(await blob.arrayBuffer())
 }
@@ -107,6 +176,11 @@ function scanImagePara(relId,vp,docPrId){
  return `<w:p><w:pPr><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${docPrId}" name="Scanned PDF page ${docPrId}"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="scan-${docPrId}.jpg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${relId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`
 }
 const pageBreak=()=>'<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+// Mixed portrait/landscape PDFs need actual Word section boundaries: a page break
+// alone cannot change the physical page size in the resulting DOCX.
+const pageSectionAttrs=(w,h)=>`w:w="${w}" w:h="${h}"${w>h?' w:orient="landscape"':''}`;
+const pageMargins='<w:pgMar w:top="0" w:right="0" w:bottom="0" w:left="0" w:header="0" w:footer="0" w:gutter="0"/>';
+const sectionBreak=(w,h)=>`<w:p><w:pPr><w:sectPr><w:type w:val="nextPage"/><w:pgSz ${pageSectionAttrs(w,h)}/>${pageMargins}</w:sectPr></w:pPr></w:p>`;
 function contentTypes(){return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`}
 function rootRels(){return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`}
 function docRels(media=[]){return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>${media.map(m=>`<Relationship Id="${m.relId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${m.name}"/>`).join('')}</Relationships>`}
@@ -114,30 +188,37 @@ function styles(){return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?
 function settings(){return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="12"/></w:compat></w:settings>`}
 function core(){const now=new Date().toISOString();return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>Converted PDF</dc:title><dc:creator>DoKitly</dc:creator><cp:lastModifiedBy>DoKitly</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`}
 function app(){return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>DoKitly</Application><AppVersion>12.0000</AppVersion></Properties>`}
-async function convert(file){
+async function convertInternal(file,ocrLifecycle){
  const pdfjsLib=await window.DoKitlyGetPDFJS();if(!pdfjsLib)throw Error('PDF text engine did not load.');if(!window.JSZip)throw Error('DOCX package engine did not load.');
  const bytes=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:bytes}).promise,counts=new Map(),pages=[],media=[];
  for(let p=1;p<=pdf.numPages;p++){
   const pg=await pdf.getPage(p),vp=pg.getViewport({scale:1}),tc=await pg.getTextContent({disableCombineTextItems:false}),items=enrichItems(pg,tc).filter(i=>clean(i.str).trim()),textChars=items.reduce((n,i)=>n+clean(i.str).trim().length,0),bands=items.length?await detectDarkBands(pg,vp):[];
-  let scan=null;
-  if(textChars<4){const name=`scan-page-${p}.jpg`,relId=`rId${media.length+3}`,data=await renderScanImage(pg,vp);let ocr='';if(window.Tesseract){try{const rr=await Tesseract.recognize(new Blob([data],{type:'image/jpeg'}),'eng+hin');ocr=clean(rr?.data?.text||'').trim()}catch(e){console.info('Scanned-page OCR fallback:',e?.message||e)}}scan={name,relId,data,ocr};media.push(scan)}
-  pages.push({vp,items,bands,scan});for(const i of items){const t=clean(i.str).trim();if(t.length>10)counts.set(t,(counts.get(t)||0)+1)}
+  let scan=null;const scanLike=textChars<4||(textChars<60&&await isRasterDominantPage(pg,vp,pdfjsLib.OPS));const rects=!scanLike?await detectOutlinedRects(pg,vp,pdfjsLib.OPS):[];
+  if(scanLike){const name=`scan-page-${p}.jpg`,relId=`rId${media.length+3}`,data=await renderScanImage(pg,vp);let ocr='';try{const tess=window.Tesseract||(window.DoKitlyLoadTesseract?await window.DoKitlyLoadTesseract():null);if(tess){const image=new Blob([data],{type:'image/jpeg'});let rr;if(typeof tess.createWorker==='function'){if(!ocrLifecycle.worker)ocrLifecycle.worker=await tess.createWorker('eng+hin');rr=await ocrLifecycle.worker.recognize(image)}else{rr=await tess.recognize(image,'eng+hin')}ocr=clean(rr?.data?.text||'').trim()}}catch(e){console.info('Scanned-page OCR fallback:',e?.message||e)}scan={name,relId,data,ocr};if(!ocr)media.push(scan)}
+  pages.push({vp,items,bands,scan,rects});for(const i of items){const t=clean(i.str).trim();if(t.length>10)counts.set(t,(counts.get(t)||0)+1)}
  }
- let body='',firstW=12240,firstH=15840,blocks=0,tables=0,bandsFound=0,scannedPages=0;
+ let body='',firstW=12240,firstH=15840,prevW=0,prevH=0,blocks=0,tables=0,bandsFound=0,scannedPages=0,ocrPages=0,imagePages=0;
  for(let pi=0;pi<pages.length;pi++){
-  const {vp,bands,scan}=pages[pi],pw=clamp(Math.round(vp.width*20),7200,31680),ph=clamp(Math.round(vp.height*20),7200,31680);bandsFound+=bands.length;if(pi===0){firstW=pw;firstH=ph}else body+=pageBreak();
-  if(scan){if(scan.ocr){for(const line of scan.ocr.split(/\n+/).map(x=>x.trim()).filter(Boolean)){body+=`<w:p><w:pPr><w:spacing w:after=\"80\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Nirmala UI\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t xml:space=\"preserve\">${xml(line)}</w:t></w:r></w:p>`;blocks++}}else{body+=scanImagePara(scan.relId,vp,pi+1);blocks++}scannedPages++;continue}
-  const filtered=pages[pi].items.filter(i=>{const t=clean(i.str).trim();return !(pdf.numPages>2&&counts.get(t)>=Math.ceil(pdf.numPages*.7)&&t.length>14)}),rs=rows(filtered);let prev=vp.height;
-  for(let i=0;i<rs.length;){const tb=trueTableAt(rs,i);if(tb){body+=tableXml(rs.slice(i,tb.end+1),tb.cols,pw);tables++;prev=rs[tb.end].y;i=tb.end+1}else{body+=rowParaXml(rs[i],prev,vp.width,vp.height,bands);prev=rs[i].y;i++}blocks++}
+  const {vp,bands,scan,rects}=pages[pi],pw=clamp(Math.round(vp.width*20),7200,31680),ph=clamp(Math.round(vp.height*20),7200,31680);bandsFound+=bands.length;if(pi===0){firstW=pw;firstH=ph}else body+=(pw!==prevW||ph!==prevH)?sectionBreak(prevW,prevH):pageBreak();prevW=pw;prevH=ph;
+  if(scan){if(scan.ocr){ocrPages++;for(const line of scan.ocr.split(/\n+/).map(x=>x.trim()).filter(Boolean)){body+=`<w:p><w:pPr><w:spacing w:after=\"80\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Nirmala UI\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t xml:space=\"preserve\">${xml(line)}</w:t></w:r></w:p>`;blocks++}}else{imagePages++;body+=scanImagePara(scan.relId,vp,pi+1);blocks++}scannedPages++;continue}
+  const filtered=pages[pi].items.filter(i=>{const t=clean(i.str).trim();return !(pdf.numPages>2&&counts.get(t)>=Math.ceil(pdf.numPages*.7)&&t.length>14)}),rs=rows(filtered);let prev=vp.height,shapeRuns=rectShapeRuns(rects||[],pi+1);
+  for(let i=0;i<rs.length;){const tb=trueTableAt(rs,i);let chunk;if(tb){chunk=tableXml(rs.slice(i,tb.end+1),tb.cols,pw);tables++;prev=rs[tb.end].y;i=tb.end+1}else{chunk=rowParaXml(rs[i],prev,vp.width,vp.height,bands);prev=rs[i].y;i++}if(shapeRuns){chunk=attachToFirstParagraph(chunk,shapeRuns);shapeRuns=''}body+=chunk;blocks++}
  }
- body+=`<w:sectPr><w:pgSz w:w="${firstW}" w:h="${firstH}"/><w:pgMar w:top="0" w:right="0" w:bottom="0" w:left="0" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr>`;
- const documentXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>${body}</w:body></w:document>`;
+ body+=`<w:sectPr><w:pgSz ${pageSectionAttrs(prevW||firstW,prevH||firstH)}/>${pageMargins}</w:sectPr>`;
+ const documentXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" xmlns:v="urn:schemas-microsoft-com:vml"><w:body>${body}</w:body></w:document>`;
  const parsed=new DOMParser().parseFromString(documentXml,'application/xml');if(parsed.querySelector('parsererror'))throw Error('Word engine generated invalid XML.');
  const zip=new JSZip();zip.file('[Content_Types].xml',contentTypes());zip.folder('_rels').file('.rels',rootRels());zip.folder('docProps').file('core.xml',core()).file('app.xml',app());const word=zip.folder('word');word.file('document.xml',documentXml).file('styles.xml',styles()).file('settings.xml',settings());word.folder('_rels').file('document.xml.rels',docRels(media));const mediaFolder=word.folder('media');media.forEach(m=>mediaFolder.file(m.name,m.data));
  const blob=await zip.generateAsync({type:'blob',mimeType:MIME,compression:'DEFLATE',compressionOptions:{level:6}});
  const verify=await JSZip.loadAsync(blob);for(const n of ['[Content_Types].xml','_rels/.rels','word/document.xml','word/styles.xml','word/settings.xml','word/_rels/document.xml.rels'])if(!verify.file(n))throw Error(`DOCX validation failed: missing ${n}.`);
  for(const n of ['word/document.xml','word/styles.xml','word/settings.xml']){const vx=await verify.file(n).async('string'),vp2=new DOMParser().parseFromString(vx,'application/xml');if(vp2.querySelector('parsererror'))throw Error(`DOCX validation failed: ${n} is invalid XML.`)}
- return {blob,pages:pdf.numPages,tables,blocks,bands:bandsFound,scannedPages};
+ return {blob,pages:pdf.numPages,tables,blocks,bands:bandsFound,scannedPages,ocrPages,imagePages,outlinedRects:pages.reduce((n,p)=>n+(p.rects?.length||0),0)};
 }
-window.DMOWordEngine={convert,version:'dokitly-2-high-fidelity-layout-ocr-fallback'};
+// Keep one OCR worker for a conversion, then release its WASM/model memory.
+// A failed OCR still preserves the source-page image as a visual fallback.
+async function convert(file){
+ const ocrLifecycle={worker:null};
+ try{return await convertInternal(file,ocrLifecycle)}
+ finally{if(ocrLifecycle.worker){try{await ocrLifecycle.worker.terminate()}catch(_){/* Never mask an export error. */}}}
+}
+window.DMOWordEngine={convert,version:'dokitly-43-scanned-ocr-worker-reuse'};
 })();

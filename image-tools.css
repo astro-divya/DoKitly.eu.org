@@ -241,7 +241,9 @@
 @media(min-width:901px){.it-head-inner{height:58px!important}.it-brand img{width:205px!important}.it-shell{padding:10px 22px 30px!important}.it-breadcrumb{margin-bottom:6px!important;font-size:11px!important}.it-title{margin-bottom:9px!important}.it-title .ico{width:36px!important;height:36px!important;font-size:18px!important}.it-title h1{font-size:25px!important;margin-bottom:2px!important}.it-title p{font-size:12px!important;line-height:1.3!important}.it-panel{padding:13px!important}}
 
 /* Build 23: no tolerance or comparison slider on Background Remover. Show actual alpha as checkerboard. */
-body[data-tool="image-bg-remove"] .editor-after-stage{background-color:#f7f9fb!important;background-image:linear-gradient(45deg,#dde4eb 25%,transparent 25%,transparent 75%,#dde4eb 75%),linear-gradient(45deg,#dde4eb 25%,transparent 25%,transparent 75%,#dde4eb 75%)!important;background-position:0 0,12px 12px!important;background-size:24px 24px!important}
+/* Background Remover: default checkerboard ONLY before/without a selected preview mode.
+   The former unconditional !important rule hid White/Dark previews. */
+body[data-tool="image-bg-remove"] .editor-after-stage:not([data-bg-preview]){background-color:#f7f9fb!important;background-image:linear-gradient(45deg,#dde4eb 25%,transparent 25%,transparent 75%,#dde4eb 75%),linear-gradient(45deg,#dde4eb 25%,transparent 25%,transparent 75%,#dde4eb 75%)!important;background-position:0 0,12px 12px!important;background-size:24px 24px!important}
 .bg-auto-note{background:linear-gradient(130deg,#eafaf7,#f4f7ff);border:1px solid #c9e8e0;border-radius:14px;padding:14px 15px;line-height:1.55;color:#27445b;font-size:13px}
 .bg-auto-note b{font-size:15px}.bg-auto-note p{margin:5px 0 0}
 /* Build 30 completion: background refine preview */
@@ -249,3 +251,17 @@ body[data-tool="image-bg-remove"] .editor-after-stage{background-color:#f7f9fb!i
 #afterStage[data-bg-preview="white"]{background:#fff}#afterStage[data-bg-preview="dark"]{background:#111827}.bg-refine{margin-top:12px}.bg-refine .note{margin:.5rem 0 0}
 /* Build 30 Watermark Studio */
 .wm-mode-tabs{display:flex;gap:.55rem;flex-wrap:wrap;margin:.35rem 0 1rem}.wm-mode-tabs button{border:1px solid var(--line,#d9e0ea);background:transparent;border-radius:999px;padding:.62rem 1rem;font:inherit;font-weight:750;cursor:pointer}.wm-mode-tabs button.active{background:#172033;color:#fff;border-color:#172033}.wm-authorized-note{padding:.8rem 0;margin:.2rem 0 .8rem;border-top:1px solid var(--line,#e3e8ef);border-bottom:1px solid var(--line,#e3e8ef);font-size:.92rem}.wm-authorized-note b{display:block;margin-bottom:.18rem}.wm-seo{max-width:1120px;margin:2.2rem auto 0;padding:0 .2rem 2rem}.wm-seo h2{font-size:clamp(1.35rem,2vw,1.8rem);margin:1.7rem 0 .55rem}.wm-seo h3{font-size:1.05rem;margin:1.15rem 0 .35rem}.wm-seo p,.wm-seo li{color:var(--muted,#536173);line-height:1.7}.wm-seo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.1rem;margin:1rem 0}.wm-seo-grid>div{border-top:1px solid var(--line,#e3e8ef);padding-top:.85rem}.wm-seo details{border-top:1px solid var(--line,#e3e8ef);padding:.8rem 0}.wm-seo summary{cursor:pointer;font-weight:750}.editor-after-stage canvas{touch-action:none}@media(max-width:760px){.wm-seo-grid{grid-template-columns:1fr}.wm-mode-tabs button{flex:1}}
+
+/* Build 43: optional two-engine comparison, local previews, no decorative white tiles. */
+body[data-tool="image-bg-remove"] .dk-bg-compare{margin:16px 0 22px;padding:14px 0;border-top:1px solid var(--line,#cbd5e1);border-bottom:1px solid var(--line,#cbd5e1)}
+body[data-tool="image-bg-remove"] .dk-bg-compare[hidden]{display:none!important}
+body[data-tool="image-bg-remove"] .dk-bg-compare h3{margin:0 0 4px;font-size:1rem}
+body[data-tool="image-bg-remove"] .dk-bg-compare p{margin:0 0 12px;font-size:.875rem;color:var(--muted,#64748b)}
+body[data-tool="image-bg-remove"] .dk-bg-compare-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+body[data-tool="image-bg-remove"] .dk-bg-compare-option{min-width:0;display:flex;flex-direction:column;gap:8px}
+body[data-tool="image-bg-remove"] .dk-bg-compare-option img{width:100%;height:180px;object-fit:contain;display:block;border:1px solid rgba(125,142,165,.24);border-radius:10px;background-color:#e8ecf1;background-image:linear-gradient(45deg,#fff 25%,transparent 25%),linear-gradient(-45deg,#fff 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#fff 75%),linear-gradient(-45deg,transparent 75%,#fff 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
+body[data-tool="image-bg-remove"] .dk-bg-compare-option.dk-bg-chosen strong::after{content:' • Selected';font-weight:500}
+body[data-tool="image-bg-remove"] .dk-bg-compare-option button{align-self:start}
+@media(max-width:520px){body[data-tool="image-bg-remove"] .dk-bg-compare-grid{grid-template-columns:minmax(0,1fr)}body[data-tool="image-bg-remove"] .dk-bg-compare-option img{height:190px}}
+
+body[data-tool="image-bg-remove"] #bgCancelCompareBtn[hidden]{display:none!important}
