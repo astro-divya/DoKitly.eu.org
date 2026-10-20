@@ -1,0 +1,16 @@
+DoKitly Build 43 — Background Remover model notices
+
+Fast: U2NetP, from https://huggingface.co/edgetools/u2netp
+SHA-256: 309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8
+
+Optional Detail: Silueta ONNX, published by rembg and mirrored at
+https://huggingface.co/fofr/comfyui/resolve/main/rembg/silueta.onnx
+SHA-256: 75da6c8d2f8096ec743d071951be73b4a8bc7b3e51d9a6625d63644f90ffeedb
+
+Silueta is a compact U2-Net-derived model. U2-Net source is
+https://github.com/xuebinqin/U-2-Net (Apache-2.0).
+rembg distributions: https://github.com/danielgatis/rembg (MIT software).
+Models download only when selected, execute locally in an ONNX Web Worker.
+Availability, speed and output quality depend on the browser/device/image.
+
+This file is a provenance and attribution notice, not evidence of tested visual superiority.

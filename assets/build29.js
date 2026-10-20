@@ -1,4 +1,13 @@
 (()=>{'use strict';
+/* Keep external typography optional for the critical rendering path.
+   Do not let a slow fonts.googleapis.com stylesheet block DOMContentLoaded. */
+const fontHref='https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=Onest:wght@500;600;700;800&display=swap';
+if(!document.querySelector('link[data-dk-fonts="29"]')){
+  const fonts=document.createElement('link');fonts.rel='stylesheet';fonts.href=fontHref;fonts.media='print';fonts.dataset.dkFonts='29';
+  fonts.onload=()=>{fonts.onload=null;fonts.media='all'};
+  fonts.onerror=()=>{fonts.onerror=null;fonts.remove()};
+  document.head.appendChild(fonts);
+}
 const ready=fn=>document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();
 ready(()=>{
   /* Apply saved theme on every page. Homepage keeps its existing toggle listener; other pages get one. */

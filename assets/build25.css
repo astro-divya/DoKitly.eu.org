@@ -1,5 +1,5 @@
 /* DoKitly Build 25 Revised — consolidated visual system. */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+/* Font delivery consolidated into build29.css; CSS rules unchanged. */
 :root{--dk25-ink:#102f46;--dk25-text:#28485f;--dk25-muted:#637b8c;--dk25-blue:#1769ff;--dk25-teal:#0ea99d;--dk25-card:#fff;--dk25-line:rgba(133,176,202,.27)}
 html,body,button,input,select,textarea{font-family:"Plus Jakarta Sans",Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important}
 body{color:var(--dk25-text)}

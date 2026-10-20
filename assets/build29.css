@@ -3,7 +3,7 @@
    Rule: decorative cards/white tiles are not a layout primitive.
    Local surfaces are reserved for inputs, upload zones, results and settings.
    ========================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Onest:wght@500;600;700;800&display=swap');
+/* Google Fonts loaded non-blocking by build29.js; system fallback is available immediately. */
 
 :root{
   --dk-bg:#f7f7f4;
