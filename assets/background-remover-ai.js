@@ -1,4 +1,5 @@
-/* Build 43 — U2NetP default with opt-in Silueta ONNX in a dedicated worker. */
+/* Build 43 background image preparation fix: single-pass, lossless model input.
+   U2NetP remains default; Silueta stays opt-in. No inference or model thresholds changed. */
 (()=>{'use strict';
 const workerURL=new URL('./background-remover-worker.js?v=43-detail3',document.currentScript.src);let active=null;let worker=null;let pendingAbort=null;
 function refineMask(canvas){
@@ -12,10 +13,20 @@ async function remove(source,onProgress,options={}){
  if(active)throw Error('Background removal is already running.');
  const w=worker||(worker=new Worker(workerURL));active=w;
  try{
-  const input=document.createElement('canvas'),max=2048,scale=Math.min(1,max/Math.max(source.width,source.height));
-  input.width=Math.max(1,Math.round(source.width*scale));input.height=Math.max(1,Math.round(source.height*scale));
-  input.getContext('2d').drawImage(source,0,0,input.width,input.height);
-  const blob=await new Promise((ok,fail)=>input.toBlob(b=>b?ok(b):fail(Error('Image preparation failed.')),'image/jpeg',.94));
+  // Both pinned ONNX models infer from a 320x320 RGB tensor. The previous
+  // 2048px JPEG intermediary lost edge/color information, forced a second
+  // 320px downsample in the worker, and needlessly occupied large canvases.
+  // Draw once at the exact tensor input size and encode losslessly instead.
+  const input=document.createElement('canvas'),side=320;
+  input.width=input.height=side;
+  const ix=input.getContext('2d');
+  if(!ix)throw Error('Image preparation canvas is unavailable.');
+  ix.imageSmoothingEnabled=true;ix.imageSmoothingQuality='high';
+  // The legacy JPEG composited transparent pixels against black. Preserve
+  // that input convention so existing model behavior does not shift on PNGs.
+  ix.fillStyle='#000';ix.fillRect(0,0,side,side);
+  ix.drawImage(source,0,0,side,side);
+  const blob=await new Promise((ok,fail)=>input.toBlob(b=>b?ok(b):fail(Error('Image preparation failed.')),'image/png'));
   input.width=input.height=1;
   if(active!==w)throw Error('Background removal cancelled.');
   const result=await new Promise((ok,fail)=>{
@@ -58,5 +69,5 @@ async function remove(source,onProgress,options={}){
   return out;
  }finally{if(active===w)active=null;}
 }
-window.DoKitlyBackgroundAI={remove,cancel(){const w=active;if(!w)return;active=null;if(worker===w)worker=null;w.terminate();pendingAbort?.();pendingAbort=null},version:'build43-u2netp-silueta-selector-r2'};
+window.DoKitlyBackgroundAI={remove,cancel(){const w=active;if(!w)return;active=null;if(worker===w)worker=null;w.terminate();pendingAbort?.();pendingAbort=null},version:'build43-lossless-input-r3'};
 })();
