@@ -1,0 +1,45 @@
+/* Build 44 — open release timeline, no decorative card wall. */
+body.dk44-whats-page main.it-shell{max-width:1190px;margin:0 auto;padding:42px 24px 85px!important;font-family:Manrope,Onest,Inter,system-ui,sans-serif}
+.dk44-whats{--ink:#18395e;--soft:#60748a;--line:#dce5ed;color:var(--ink)}
+.dk44-whats-eyebrow,.dk44-section-label{font-size:12px;font-weight:850;letter-spacing:.14em;color:#1b7d9b;display:flex;align-items:center;gap:12px}
+.dk44-bullet{width:8px;height:8px;border-radius:50%;background:#0da5a3;box-shadow:0 0 0 5px #e2f8f6}
+.dk44-whats-hero{display:grid;grid-template-columns:minmax(0,1fr) 280px;align-items:center;gap:32px;margin:28px 0 55px;padding-bottom:35px;border-bottom:1px solid var(--line)}
+.dk44-whats-hero h1{font-weight:900;font-size:clamp(38px,5vw,69px);line-height:1.1;letter-spacing:-.057em;color:#143966;margin:0 0 20px}
+.dk44-whats-hero h1 span{color:#0c9397}
+.dk44-whats-hero p{max-width:64ch;color:#62758a;font-size:17px;line-height:1.8;margin:0 0 23px}
+.dk44-release-meta{display:flex;gap:12px 20px;flex-wrap:wrap;font-size:12px;align-items:center;color:#58718a}
+.dk44-release-meta strong{color:#0b8893;background:#e7f6f8;border-radius:30px;padding:6px 13px;font-size:12px}
+.dk44-whats-orb{width:100%;height:255px;display:grid;place-items:center;position:relative}
+.dk44-whats-orb:before{content:'';position:absolute;inset:14%;background:radial-gradient(ellipse,rgba(169,226,237,.48),transparent 72%);border-radius:50%}
+.dk44-whats-orb img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 16px 22px rgba(31,63,91,.13));position:relative}
+.dk44-section-label span{border:1px solid #b9d6e3;border-radius:50%;height:31px;width:31px;display:grid;place-items:center;letter-spacing:0}
+.dk44-top-release h2,.dk44-history h2{font-size:clamp(29px,3.6vw,44px);line-height:1.19;letter-spacing:-.045em;color:#183e6c;margin:16px 0 12px;font-weight:850}
+.dk44-news-lead{max-width:82ch;font-size:16px;color:#60758a;line-height:1.82;margin-bottom:30px}
+.dk44-highlight-list{display:grid;grid-template-columns:1fr 1fr;gap:0 48px;margin:18px 0 39px}
+.dk44-highlight-list article{display:grid;grid-template-columns:40px 1fr;gap:14px;padding:23px 0;border-top:1px solid var(--line);min-width:0}
+.dk44-feature-num{font-size:14px;font-weight:850;color:#0b9397;padding-top:3px}
+.dk44-highlight-list h3{font-size:20px;color:#163e68;line-height:1.3;font-weight:850;margin:0 0 8px}
+.dk44-highlight-list p{font-size:14px;color:#60758a;line-height:1.74;margin:0}
+.dk44-release-status{border-left:3px solid #1aabb0;padding:8px 0 8px 20px;margin:20px 0 66px;max-width:95ch}
+.dk44-release-status strong{color:#087b86;font-size:13px;letter-spacing:.04em}
+.dk44-release-status p{color:#60758a;font-size:14px;line-height:1.75;margin:7px 0 0}
+.dk44-history>p{color:#66788b;font-size:15px;line-height:1.7;margin-bottom:19px}
+.dk44-history details{border-top:1px solid var(--line);padding:0;background:none;border-radius:0}
+.dk44-history details:last-of-type{border-bottom:1px solid var(--line)}
+.dk44-history summary{display:flex;align-items:center;gap:22px;cursor:pointer;list-style:none;padding:19px 34px 19px 0;position:relative;color:#17385c}
+.dk44-history summary::-webkit-details-marker{display:none}
+.dk44-history summary:after{content:'+';position:absolute;right:9px;color:#098a92;font-size:22px;font-weight:400;line-height:1}
+.dk44-history details[open] summary:after{content:'−'}
+.dk44-history summary span{font-size:17px;font-weight:850;min-width:100px}
+.dk44-history summary small{font-size:13px;color:#67788c;line-height:1.5}
+.dk44-history details div{max-width:92ch;padding:0 0 19px 122px}
+.dk44-history details p{color:#65788b;font-size:14px;line-height:1.8;margin:0}
+.dk44-news-end{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:54px;padding-top:23px;border-top:1px solid var(--line);font-size:13px;color:#65788b}
+.dk44-news-end a{font-weight:800;color:#078d94;text-decoration:none}
+@media(prefers-reduced-motion:no-preference){.dk44-whats-orb img{animation:dk44WhatsFloat 6s ease-in-out infinite alternate}.dk44-highlight-list article{animation:dk44WhatsEnter .7s ease both}.dk44-highlight-list article:nth-child(2){animation-delay:.09s}.dk44-highlight-list article:nth-child(3){animation-delay:.16s}.dk44-highlight-list article:nth-child(4){animation-delay:.24s}}
+@keyframes dk44WhatsFloat{from{transform:translateY(-5px)}to{transform:translateY(8px)}}
+@keyframes dk44WhatsEnter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+@media(max-width:750px){body.dk44-whats-page main.it-shell{padding:24px 18px 56px!important}.dk44-whats-hero{grid-template-columns:1fr;gap:5px;margin-bottom:35px}.dk44-whats-orb{height:160px;width:160px;margin:0 auto}.dk44-highlight-list{grid-template-columns:1fr}.dk44-history details div{padding-left:0}.dk44-history summary{display:block}.dk44-history summary span{display:block}.dk44-history summary small{display:block;padding-top:3px}.dk44-news-end{flex-direction:column;align-items:flex-start}}
+@media(prefers-reduced-motion:reduce){.dk44-whats *{animation:none!important;transition:none!important}}
+html[data-theme='dark'] .dk44-whats h1,html[data-theme='dark'] .dk44-whats h2,html[data-theme='dark'] .dk44-whats h3,html[data-theme='dark'] .dk44-history summary,body.dark .dk44-whats h1,body.dark .dk44-whats h2,body.dark .dk44-whats h3,body.dark .dk44-history summary{color:#d6eafa!important}
+html[data-theme='dark'] .dk44-whats p,body.dark .dk44-whats p{color:#b4c5d7!important}

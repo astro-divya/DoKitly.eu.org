@@ -1,0 +1,4 @@
+/* Build 44: small progressive, accessible editorial motion. Never hides text on JS failure. */
+(()=>{const items=[...document.querySelectorAll('body.dk44-premium-category .dk44-animate-on-scroll')];if(!items.length||!('IntersectionObserver' in window)||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+const observer=new IntersectionObserver(entries=>{for(const entry of entries){const el=entry.target;if(entry.isIntersecting){el.classList.remove('dk44-pending');el.classList.add('dk44-visible')}else if(entry.boundingClientRect.bottom < -36||entry.boundingClientRect.top>innerHeight+36){el.classList.remove('dk44-visible');el.classList.add('dk44-pending')}}},{rootMargin:'0px 0px 36px 0px',threshold:.04});
+for(const el of items){el.classList.add(el.getBoundingClientRect().top>innerHeight+36?'dk44-pending':'dk44-visible');observer.observe(el)}})();

@@ -1,0 +1,82 @@
+/* DoKitly Build 44 — user-approved Style 01 / 13 category headings (additive overrides only). */
+/* Same 3D WebP icons; same approved Berkshire Swash; colored accents per category. */
+@import url('https://fonts.googleapis.com/css2?family=Berkshire+Swash&display=swap');
+body.dk44-premium-category .it-title.dk44-style01-title {
+  isolation:isolate!important;position:relative!important;display:flex!important;align-items:center!important;
+  gap:24px!important;min-height:230px!important;margin:0 0 20px!important;
+  padding:8px 18px 12px 0!important;overflow:visible!important;
+  background:linear-gradient(100deg,transparent 0%,transparent 48%,var(--dkcat-wash,#edf7f9) 100%)!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+}
+body.dk44-premium-category .it-title.dk44-style01-title>.ico{
+  display:block!important;position:relative!important;z-index:1!important;
+  flex:0 0 224px!important;width:224px!important;height:224px!important;
+  min-width:224px!important;min-height:224px!important;max-width:none!important;max-height:none!important;
+  padding:0!important;margin:0!important;border:0!important;border-radius:0!important;
+  background:none!important;box-shadow:none!important;overflow:visible!important;
+}
+body.dk44-premium-category .it-title.dk44-style01-title>.ico img {
+  display:block!important;width:224px!important;height:224px!important;
+  max-width:none!important;max-height:none!important;object-fit:contain!important;
+  filter:drop-shadow(0 17px 15px rgba(23,55,85,.17))!important;
+}
+body.dk44-premium-category .it-title.dk44-style01-title>.dk44-style01-copy{position:relative!important;z-index:1!important;flex:1 1 auto!important;min-width:0!important;max-width:1050px!important;}
+body.dk44-premium-category .it-title.dk44-style01-title .dk44-style01-eyebrow{
+  color:var(--dkcat-accent)!important;font:850 11px/1.4 Manrope,Onest,Inter,system-ui,sans-serif!important;
+  letter-spacing:.18em!important;text-transform:uppercase!important;margin:0 0 9px!important;max-width:none!important;
+}
+body.dk44-premium-category .it-title.dk44-style01-title h1 {
+  font-family:'Berkshire Swash',Georgia,serif!important;font-size:clamp(50px,6vw,84px)!important;
+  font-weight:400!important;font-style:normal!important;letter-spacing:-.043em!important;line-height:1.13!important;
+  color:#153859!important;text-shadow:none!important;overflow-wrap:normal!important;word-break:normal!important;
+  margin:0 0 10px!important;padding:0!important;
+}
+body.dk44-premium-category .it-title.dk44-style01-title h1 em{font-style:normal!important;color:var(--dkcat-accent)!important;text-shadow:0 5px 18px rgba(var(--dkcat-rgb),.10)!important;}
+body.dk44-premium-category .it-title.dk44-style01-title .dk44-style01-desc{font-size:15px!important;line-height:1.65!important;color:#586f85!important;max-width:780px!important;margin:0!important;}
+/* Preview has NO extra right visual, glowing ball, overlapping circles or tiles. */
+body.dk44-premium-category .it-title.dk44-style01-title .dk44-cat-hero-art{display:none!important;}
+@media(prefers-reduced-motion:no-preference){
+  body.dk44-premium-category .it-title.dk44-style01-title>.ico img{animation:dk44Style01Float 6.5s ease-in-out infinite!important;}
+}
+@keyframes dk44Style01Float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+/* SEO articles should fill the available page width instead of leaving an arbitrary text gutter. */
+body.dk44-premium-category .dk-next-category-guide {width:100%!important;max-width:none!important;margin-left:0!important;margin-right:0!important;}
+body.dk44-premium-category .dk-next-category-guide > p,
+body.dk44-premium-category .dk-next-category-guide .dk-next-guide-part > p,
+body.dk44-premium-category .dk-next-category-guide .dk-next-tool-choices > p,
+body.dk44-premium-category .dk-next-category-guide .dk44-cat-insight > p,
+body.dk44-premium-category .dk-next-category-guide .dk-next-guide-faq p{
+  max-width:100%!important;width:100%!important;
+}
+/* Breakpoints reproduce the approved 13-category preview. */
+@media(max-width:880px){
+  body.dk44-premium-category .it-title.dk44-style01-title{gap:14px!important;min-height:189px!important;}
+  body.dk44-premium-category .it-title.dk44-style01-title>.ico{width:174px!important;height:174px!important;min-width:174px!important;min-height:174px!important;flex-basis:174px!important;}
+  body.dk44-premium-category .it-title.dk44-style01-title>.ico img{width:174px!important;height:174px!important;}
+  body.dk44-premium-category .it-title.dk44-style01-title h1{font-size:clamp(39px,6vw,63px)!important;}
+  body.dk44-premium-category .it-title.dk44-style01-title .dk44-style01-desc{font-size:13px!important;}
+}
+@media(max-width:600px){
+  body.dk44-premium-category .it-title.dk44-style01-title{gap:8px!important;min-height:159px!important;padding:5px 4px 8px 0!important;margin:0 0 17px!important;
+   background:linear-gradient(105deg,transparent 0%,transparent 46%,var(--dkcat-wash,#edf7f9) 100%)!important;}
+  body.dk44-premium-category .it-title.dk44-style01-title>.ico{width:119px!important;height:119px!important;min-width:119px!important;min-height:119px!important;flex:0 0 119px!important;}
+  body.dk44-premium-category .it-title.dk44-style01-title>.ico img{width:119px!important;height:119px!important;}
+  body.dk44-premium-category .it-title.dk44-style01-title .dk44-style01-eyebrow{font-size:8px!important;letter-spacing:.08em!important;margin:0 0 6px!important;}
+  body.dk44-premium-category .it-title.dk44-style01-title h1{font-size:clamp(28px,7.4vw,42px)!important;line-height:1.1!important;letter-spacing:-.04em!important;overflow-wrap:anywhere!important;margin-bottom:7px!important;}
+  body.dk44-premium-category .it-title.dk44-style01-title .dk44-style01-desc{font-size:11px!important;line-height:1.5!important;}
+}
+@media(max-width:360px){
+  body.dk44-premium-category .it-title.dk44-style01-title{gap:5px!important;}
+  body.dk44-premium-category .it-title.dk44-style01-title>.ico{width:102px!important;height:102px!important;min-width:102px!important;min-height:102px!important;flex-basis:102px!important;}
+  body.dk44-premium-category .it-title.dk44-style01-title>.ico img{width:102px!important;height:102px!important;}
+  body.dk44-premium-category .it-title.dk44-style01-title h1{font-size:28px!important;}
+}
+@media(prefers-reduced-motion:reduce){body.dk44-premium-category .it-title.dk44-style01-title>.ico img{animation:none!important;}}
+html[data-theme="dark"] body.dk44-premium-category .it-title.dk44-style01-title,
+body.dark.dk44-premium-category .it-title.dk44-style01-title{background:linear-gradient(100deg,transparent 0%,transparent 58%,rgba(var(--dkcat-rgb),.12) 100%)!important;}
+html[data-theme="dark"] body.dk44-premium-category .it-title.dk44-style01-title h1,
+body.dark.dk44-premium-category .it-title.dk44-style01-title h1{color:#e0edff!important;}
+html[data-theme="dark"] body.dk44-premium-category .it-title.dk44-style01-title h1 em,
+body.dark.dk44-premium-category .it-title.dk44-style01-title h1 em{color:var(--dkcat-accent)!important;}
+html[data-theme="dark"] body.dk44-premium-category .it-title.dk44-style01-title .dk44-style01-desc,
+body.dark.dk44-premium-category .it-title.dk44-style01-title .dk44-style01-desc{color:#bacbda!important;}

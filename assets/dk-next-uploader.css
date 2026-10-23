@@ -1,0 +1,25 @@
+/* Build 44 final: mobile upload first, desktop retains established two-column preview. */
+#toolRoot [hidden]{display:none!important}
+#toolRoot .global-upload-row{position:relative;z-index:2}
+#toolRoot .global-upload-row .file-pick-btn,#toolRoot .pdf-upload-row .file-pick-btn{display:inline-flex!important;align-items:center;justify-content:center;min-height:44px;cursor:pointer}
+/* Restore original desktop image-editor preview, including its pre-upload waiting state.
+   B45 had hidden previews on every screen; that visibility choice applies only on phones/tablets. */
+@media(min-width:901px){
+  body[data-tool^="image-"] #toolRoot .editor-layout.dk-next-upload-first{display:grid!important;grid-template-columns:minmax(330px,.82fr) minmax(420px,1.18fr)!important;gap:22px!important}
+  body[data-tool^="image-"] #toolRoot .editor-layout.dk-next-upload-first .editor-controls{order:initial!important}
+  body[data-tool^="image-"] #toolRoot .editor-layout.dk-next-upload-first .editor-preview{order:initial!important;display:block!important;position:relative!important}
+  body[data-tool^="image-"] #toolRoot .editor-layout.dk-next-upload-first .editor-preview[hidden]{display:block!important}
+}
+@media(max-width:900px){
+  #toolRoot .editor-layout{display:flex!important;flex-direction:column!important;gap:14px!important}
+  #toolRoot .editor-layout .editor-controls{order:0!important;width:100%!important;position:static!important;min-width:0!important}
+  #toolRoot .editor-layout .editor-preview{order:1!important;width:100%!important;position:static!important;min-width:0!important}
+  #toolRoot .editor-layout .editor-preview[hidden]{display:none!important}
+  #toolRoot .global-upload-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important;min-height:78px!important;padding:14px!important}
+  #toolRoot .global-upload-row .upload-thumb{grid-column:1/-1;max-width:100%!important}
+  #toolRoot .global-upload-row .file-pick-btn{padding:12px 18px!important;font-size:14px!important}
+  #toolRoot .global-upload-row .upload-name{min-width:0;overflow-wrap:anywhere}
+  #toolRoot .pdf-upload-row{max-width:100%;min-height:68px!important}
+  #toolRoot .pdf-upload-row .file-pick-btn{padding:11px 18px!important}
+}
+@media(max-width:390px){#toolRoot .global-upload-row{grid-template-columns:1fr!important}#toolRoot .global-upload-row .file-pick-btn{width:100%!important}}

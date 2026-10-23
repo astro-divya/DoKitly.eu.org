@@ -1,0 +1,32 @@
+/* DoKitly next build: open, editorial category guidance without white-card walls. */
+body:has(.dk-next-category-guide) main.it-shell{padding-top:clamp(100px,11vw,132px)!important;}
+body:has(.dk-next-category-guide) .it-title{align-items:center;min-height:94px;margin-top:10px;margin-bottom:26px;}
+body:has(.dk-next-category-guide) .dk-next-category-guide{max-width:1060px;margin:40px auto 60px;padding:26px 0;border-top:1px solid #dce5ed;font-size:15px;line-height:1.8;}
+.dk-next-category-guide h2{font-family:Manrope,Onest,system-ui,sans-serif;font-size:clamp(25px,3vw,37px);color:#173b66;line-height:1.25;letter-spacing:-.035em;margin:0 0 20px;}
+.dk-next-category-guide h3{font-family:Manrope,Onest,system-ui,sans-serif;font-size:clamp(19px,2vw,25px);line-height:1.35;color:#163d64;margin:27px 0 10px;}
+.dk-next-category-guide p{max-width:82ch;font-size:15px;line-height:1.83;color:#53657a;margin:0 0 13px;}
+.dk-next-category-guide .dk-next-guide-part{padding:3px 0 8px;border-bottom:1px solid rgba(130,154,179,.17);}
+.dk-next-category-guide .dk-next-guide-links{display:flex;flex-wrap:wrap;gap:9px;margin:17px 0 28px;}
+.dk-next-category-guide .dk-next-guide-links a{border-bottom:1px solid #b7d6e3;text-decoration:none!important;padding:5px 3px;color:#2467a3;font-weight:750;font-size:14px;}
+.dk-next-category-guide .dk-next-guide-links a:hover{text-decoration:underline!important;color:#087f86;}
+.dk-next-category-guide .dk-next-guide-faq{border-top:1px solid #dce5ed;padding-top:14px;}
+.dk-next-category-guide details{padding:14px 0;border-bottom:1px solid #dce5ed;}
+.dk-next-category-guide summary{font-weight:750;color:#173b66;cursor:pointer;font-size:15px;}
+.dk-next-category-guide details p{margin:11px 0 5px;}
+@media(max-width:700px){body:has(.dk-next-category-guide) main.it-shell{padding-top:96px!important}.dk-next-category-guide{padding:19px 0!important}.dk-next-category-guide .dk-next-guide-part{padding-bottom:3px}}
+html[data-theme=dark] .dk-next-category-guide h2,html[data-theme=dark] .dk-next-category-guide h3,html[data-theme=dark] .dk-next-category-guide summary,body.dark .dk-next-category-guide h2,body.dark .dk-next-category-guide h3,body.dark .dk-next-category-guide summary{color:#d7e9fb}
+html[data-theme=dark] .dk-next-category-guide p,body.dark .dk-next-category-guide p{color:#becadd}
+
+.dk-next-category-guide .dk-next-tool-choices{padding:10px 0 14px;border-bottom:1px solid rgba(130,154,179,.17)}
+.dk-next-category-guide .dk-next-choice-list{list-style:none;margin:10px 0 17px;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 26px}
+.dk-next-category-guide .dk-next-choice-list li{padding:10px 0;border-bottom:1px solid rgba(130,154,179,.16);font-size:14px;color:#526781;line-height:1.6}
+.dk-next-category-guide .dk-next-choice-list a{font-weight:800;color:#176d98;text-decoration:none}
+@media(max-width:650px){.dk-next-category-guide .dk-next-choice-list{grid-template-columns:1fr}}
+
+/* Consistent, repeatable motion for category guide content. */
+@media(prefers-reduced-motion:no-preference){
+.dk-next-category-guide .dk-next-reveal{transition:opacity .6s ease,transform .6s cubic-bezier(.2,.75,.25,1)}
+.dk-next-category-guide .dk-next-reveal.dk-next-await{opacity:0;transform:translateY(17px)}
+.dk-next-category-guide .dk-next-reveal.dk-next-visible{opacity:1;transform:none}
+}
+@media(prefers-reduced-motion:reduce){.dk-next-category-guide .dk-next-reveal{opacity:1!important;transform:none!important;transition:none!important}}
