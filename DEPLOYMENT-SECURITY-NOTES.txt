@@ -1,0 +1,6 @@
+Build 45 Deployment Notes
+1. Full CSP is intentionally excluded.
+2. Clickjacking: where infrastructure supports response header configuration, configure X-Frame-Options: SAMEORIGIN. GitHub Pages does not accept an HTTP header setting from a repository file. Check domain/proxy configuration before doing this.
+3. Verify deployed headers with browser Network panel or curl -I https://dokitly.in/ . Do not claim this step complete until the header appears.
+4. Review tool workflows (PDF, OCR, image, search, desktop/mobile) after publishing.
+5. Ads/privacy obligations depend on visitors and active Google services; policy pages alone do not establish legal compliance. No consent interface was added at user request.

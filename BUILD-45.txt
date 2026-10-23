@@ -1,0 +1,7 @@
+DoKitly Build 45 — SEO & policy revision
+BASELINE: Build 44, incorporating audited Build 45 revisions.
+INCLUDED: homepage SEO/content; About/Disclaimer edits; tool directory with crawlable links; 139+ sitemap entries; selected tool-specific title edits; Cookie Policy, Privacy Policy link and footer link; existing engines retained.
+NOT INCLUDED by user direction: full CSP, CMP, Consent Mode, consent popup.
+CLICKJACKING: X-Frame-Options cannot be deployed from a GitHub Pages ZIP alone; requires a response-header-capable hosting/proxy configuration. No fake HTML workaround applied.
+SEO: descriptive keyword targeting, not paid-tool verified volumes/difficulty. Search Console validation and browser regression QA remain required.
+STATUS: code candidate. Google AdSense approval and live security headers cannot be claimed verified.

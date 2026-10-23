@@ -1,0 +1,73 @@
+Title changes where existing title focused on a specific example (not claimed as search-volume verified):
+calculator-tools/advanced-math-solver.html
+ BEFORE: Advanced Math Solver: Choose the Right Math Workspace | DoKitly
+ AFTER:  Advanced Math Solver – Free Online Tool | DoKitly
+calculator-tools/age.html
+ BEFORE: Age Calculator: Find Your Age on Any Reference Date | DoKitly
+ AFTER:  Age Calculator – Free Online Tool | DoKitly
+calculator-tools/equation-solver.html
+ BEFORE: Equation Solver: Checking quadratic roots | DoKitly
+ AFTER:  Equation Solver – Free Online Tool | DoKitly
+calculator-tools/fraction.html
+ BEFORE: Fraction Calculator: Adding unlike denominators | DoKitly
+ AFTER:  Fraction Calculator – Free Online Tool | DoKitly
+calculator-tools/laplace-transform.html
+ BEFORE: Laplace Transform Calculator: A constant input in the s-domain | DoKitly
+ AFTER:  Laplace Transform Calculator – Free Online Tool | DoKitly
+calculator-tools/lcm-gcd.html
+ BEFORE: LCM & GCD Calculator: Two repeating schedules | DoKitly
+ AFTER:  LCM & GCD Calculator – Free Online Tool | DoKitly
+calculator-tools/limit.html
+ BEFORE: Limit Calculator: A removable hole at x equals two | DoKitly
+ AFTER:  Limit Calculator – Free Online Tool | DoKitly
+calculator-tools/percentage.html
+ BEFORE: Percentage Calculator: A discount followed by a price increase | DoKitly
+ AFTER:  Percentage Calculator – Free Online Tool | DoKitly
+calculator-tools/statistics.html
+ BEFORE: Statistics Calculator: Mean versus median under an outlier | DoKitly
+ AFTER:  Statistics Calculator – Free Online Tool | DoKitly
+converter-tools/unit.html
+ BEFORE: Universal Converter: A road speed in metres per second | DoKitly
+ AFTER:  Universal Converter – Free Online Tool | DoKitly
+creator-tools/caption-generator.html
+ BEFORE: AI Caption Generator: Promoting a local workshop | DoKitly
+ AFTER:  AI Caption Generator – Free Online Tool | DoKitly
+creator-tools/hashtag-generator.html
+ BEFORE: AI Hashtag Generator: Tags for handmade ceramics | DoKitly
+ AFTER:  AI Hashtag Generator – Free Online Tool | DoKitly
+developer-tools/barcode-studio.html
+ BEFORE: Barcode Studio: Preparing a label for stock inventory | DoKitly
+ AFTER:  Barcode Studio – Free Online Tool | DoKitly
+developer-tools/sha256.html
+ BEFORE: SHA-256 Generator: Verifying a downloaded package | DoKitly
+ AFTER:  SHA-256 Generator – Free Online Tool | DoKitly
+developer-tools/timestamp.html
+ BEFORE: Unix Timestamp Converter: Seconds compared with milliseconds | DoKitly
+ AFTER:  Unix Timestamp Converter – Free Online Tool | DoKitly
+developer-tools/uuid.html
+ BEFORE: UUID Generator: Assigning stable record identifiers | DoKitly
+ AFTER:  UUID Generator – Free Online Tool | DoKitly
+finance-tools/discount.html
+ BEFORE: Discount Calculator: Successive offers on one item | DoKitly
+ AFTER:  Discount Calculator – Free Online Tool | DoKitly
+finance-tools/gst.html
+ BEFORE: GST Calculator: Extracting an included tax | DoKitly
+ AFTER:  GST Calculator – Free Online Tool | DoKitly
+finance-tools/interest-calculator.html
+ BEFORE: Interest Calculator: One year on a principal of ₹10,000 | DoKitly
+ AFTER:  Interest Calculator – Free Online Tool | DoKitly
+text-tools/slug-generator.html
+ BEFORE: Slug Generator: Turning an article title into a path | DoKitly
+ AFTER:  Slug Generator – Free Online Tool | DoKitly
+developer-tools/csv-data-studio.html
+ BEFORE: CSV & Data Studio: Inspect and Clean CSV Data Carefully | DoKitly
+ AFTER:  CSV & Data Studio – Free Online Tool | DoKitly
+developer-tools/text-code-diff-checker.html
+ BEFORE: Text & Code Diff Checker: Reviewing a configuration change | DoKitly
+ AFTER:  Text & Code Diff Checker – Free Online Tool | DoKitly
+developer-tools/markdown-studio.html
+ BEFORE: Markdown Studio: Write, Preview and Refine Markdown | DoKitly
+ AFTER:  Markdown Studio – Free Online Tool | DoKitly
+
+Total title edits: 23
+Tool directory entries: 98
