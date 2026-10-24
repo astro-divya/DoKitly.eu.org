@@ -59953,7 +59953,8 @@ class PDFDocument {
     } else {
       hashOriginal = calculateMD5(this.stream.getByteRange(0, FINGERPRINT_FIRST_BYTES), 0, FINGERPRINT_FIRST_BYTES);
     }
-    return shadow(this, "fingerprints", [hashOriginal.toHex(), hashModified?.toHex() ?? null]);
+    const toHexCompat = bytes => Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
+    return shadow(this, "fingerprints", [toHexCompat(hashOriginal), hashModified ? toHexCompat(hashModified) : null]);
   }
   async #getLinearizationPage(pageIndex) {
     const {
