@@ -204,19 +204,19 @@ Object.assign(dkToolIconMap,{
 const dkToolIcon = t => `<img src="${dkToolIconMap[t.id]||''}" alt="" aria-hidden="true" loading="lazy">`;
 
 const categories = [
- {name:'Image',icon:'assets/category-icons/image.webp?v=43-iconopt1',count:'24 working',desc:'Compress, resize, convert, crop and optimize images.'},
- {name:'PDF & Document',icon:'assets/category-icons/pdf.webp?v=43-iconopt1',count:'30 working',desc:'Merge, split, edit, convert and organize PDF documents.'},
- {name:'Text',icon:'assets/category-icons/text.webp?v=43-iconopt1',count:'30+',desc:'Count, clean, transform and format text.'},
- {name:'Calculators',icon:'assets/category-icons/calculator.webp?v=43-iconopt1',count:'40+',desc:'Everyday, math, health and practical calculators.'},
- {name:'Converters',icon:'assets/category-icons/converters.webp?v=43-iconopt1',count:'35+',desc:'Units, files, data and common format conversions.'},
- {name:'Finance',icon:'assets/category-icons/finance.webp?v=43-iconopt1',count:'25+',desc:'EMI, GST, interest, salary and business calculations.'},
- {name:'Developer',icon:'assets/category-icons/developer.webp?v=43-iconopt1',count:'30+',desc:'JSON, Base64, code, web and developer utilities.'},
- {name:'Website & SEO',icon:'assets/category-icons/seo.webp?v=43-iconopt1',count:'25+',desc:'Website analysis, metadata, diagnostics and practical SEO utilities.'},
- {name:'Student',icon:'assets/category-icons/student.webp?v=43-iconopt1',count:'20+',desc:'Typing, quizzes and exam-style practice without unnecessary clutter.'},
- {name:'Creator',icon:'assets/category-icons/creator.webp?v=43-iconopt1',count:'20+',desc:'Captions, hashtags and public-link creator workflows.'},
- {name:'Color & Design',icon:'assets/category-icons/color-design.webp?v=43-iconopt1',count:'18+',desc:'Color conversion, contrast and gradients in one studio.'},
- {name:'Date & Time',icon:'assets/category-icons/date-time.webp?v=43-iconopt1',count:'18+',desc:'Date and precise time differences, date arithmetic and calendar helpers.'},
- {name:'Everyday',icon:'assets/category-icons/everyday.webp?v=43-iconopt1',count:'25+',desc:'Quick tools for common daily digital tasks.'}
+ {name:'Image',icon:'assets/category-icons/image-fast192.webp?v=45-perf1',count:'24 working',desc:'Compress, resize, convert, crop and optimize images.'},
+ {name:'PDF & Document',icon:'assets/category-icons/pdf-fast192.webp?v=45-perf1',count:'30 working',desc:'Merge, split, edit, convert and organize PDF documents.'},
+ {name:'Text',icon:'assets/category-icons/text-fast192.webp?v=45-perf1',count:'30+',desc:'Count, clean, transform and format text.'},
+ {name:'Calculators',icon:'assets/category-icons/calculator-fast192.webp?v=45-perf1',count:'40+',desc:'Everyday, math, health and practical calculators.'},
+ {name:'Converters',icon:'assets/category-icons/converters-fast192.webp?v=45-perf1',count:'35+',desc:'Units, files, data and common format conversions.'},
+ {name:'Finance',icon:'assets/category-icons/finance-fast192.webp?v=45-perf1',count:'25+',desc:'EMI, GST, interest, salary and business calculations.'},
+ {name:'Developer',icon:'assets/category-icons/developer-fast192.webp?v=45-perf1',count:'30+',desc:'JSON, Base64, code, web and developer utilities.'},
+ {name:'Website & SEO',icon:'assets/category-icons/seo-fast192.webp?v=45-perf1',count:'25+',desc:'Website analysis, metadata, diagnostics and practical SEO utilities.'},
+ {name:'Student',icon:'assets/category-icons/student-fast192.webp?v=45-perf1',count:'20+',desc:'Typing, quizzes and exam-style practice without unnecessary clutter.'},
+ {name:'Creator',icon:'assets/category-icons/creator-fast192.webp?v=45-perf1',count:'20+',desc:'Captions, hashtags and public-link creator workflows.'},
+ {name:'Color & Design',icon:'assets/category-icons/color-design-fast192.webp?v=45-perf1',count:'18+',desc:'Color conversion, contrast and gradients in one studio.'},
+ {name:'Date & Time',icon:'assets/category-icons/date-time-fast192.webp?v=45-perf1',count:'18+',desc:'Date and precise time differences, date arithmetic and calendar helpers.'},
+ {name:'Everyday',icon:'assets/category-icons/everyday-fast192.webp?v=45-perf1',count:'25+',desc:'Quick tools for common daily digital tasks.'}
 ];
 
 const popularIds=['pdf-to-word','pdf-editor','image-compress','typing-practice','world-quiz'];
