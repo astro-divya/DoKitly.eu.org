@@ -1,0 +1,7 @@
+Build 45 Step 5 - targeted homepage image delivery optimization
+13 new 192x192 WebP category image variants; original images preserved.
+Homepage index.html and assets/home-tools-engine-b43.js URL references updated to fast variants.
+No processing-engine modifications, no GA4/AdSense changes, no CSP/CMP additions.
+Google PageSpeed mobile baseline 72 / LCP 5.9s; desktop 78 / TBT 460ms.
+Actual post-deployment scores not verified. Hosting cache TTL and 3rd-party script overhead are not addressed.
+Follow-up needs live PageSpeed tests and browser functional verification.

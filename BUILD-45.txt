@@ -1,7 +1,21 @@
-DoKitly Build 45 — SEO & policy revision
-BASELINE: Build 44, incorporating audited Build 45 revisions.
-INCLUDED: homepage SEO/content; About/Disclaimer edits; tool directory with crawlable links; 139+ sitemap entries; selected tool-specific title edits; Cookie Policy, Privacy Policy link and footer link; existing engines retained.
-NOT INCLUDED by user direction: full CSP, CMP, Consent Mode, consent popup.
-CLICKJACKING: X-Frame-Options cannot be deployed from a GitHub Pages ZIP alone; requires a response-header-capable hosting/proxy configuration. No fake HTML workaround applied.
-SEO: descriptive keyword targeting, not paid-tool verified volumes/difficulty. Search Console validation and browser regression QA remain required.
-STATUS: code candidate. Google AdSense approval and live security headers cannot be claimed verified.
+DoKitly Build 45 — Consolidated SEO, accessibility and homepage-delivery release
+Date: 2026-10-24
+Baseline: Build 44 + Build 45 STEP 1, STEP 4 and STEP 5 audited patches.
+
+INCLUDED
+- Updated homepage and selected tool SEO metadata, About and Disclaimer, Cookie Policy and Privacy links.
+- Tools directory and static links for 140 sitemap URLs including Privacy Tools, FAQ, Disclaimer, Suggest Tool and Report Bug.
+- Existing image alt attributes retained; 141 targeted informative-image width/height corrections from STEP 4.
+- 13 smaller category icon WebP delivery variants for homepage; original 360px WebP images retained.
+- What's New updated for Build 45; sitemap holds 140 URLs.
+- Existing PDF.js/CMaps and processing engines retained.
+
+STEP 6 — ADSENSE STATIC VERIFICATION
+- ads.txt line present: google.com, pub-9623211628880604, DIRECT, f08c47fec0942fa0
+- Homepage AdSense publisher meta + async script present. Privacy, Terms, About, Contact and Cookie Policy present.
+- LIVE AdSense dashboard status, approval, consent obligations, and header deployment are NOT certified by ZIP inspection.
+
+EXPLICITLY EXCLUDED ON USER INSTRUCTION: Full CSP, CMP, Consent Mode and consent popup.
+UNRESOLVED OUTSIDE ZIP: HTTP clickjacking header (GitHub Pages cannot provide arbitrary custom headers from HTML files).
+NOT VERIFIED: Browser upload/convert/download workflows; post-deployment mobile Lighthouse/LCP; Google indexing or rankings.
+DO NOT describe this package as universally QA-passed or AdSense-approved.
