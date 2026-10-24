@@ -59,7 +59,7 @@ function rowParaXml(r,prevY,pageWidthPt,pageHeightPt,bands){
  let leftPt=segs[0].x,rightPt=0,shade='';
  if(band){leftPt=Math.min(leftPt,band.x0);rightPt=Math.max(0,pageWidthPt-band.x1);shade=`<w:shd w:val="clear" w:color="auto" w:fill="${band.fill}"/>`}
  const left=clamp(Math.round(leftPt*20),0,30000),right=clamp(Math.round(rightPt*20),0,30000);const rowRight=Math.max(...r.items.map(it=>px(it)+tw(it))),rowWidth=Math.max(1,rowRight-segs[0].x),center=(segs[0].x+rowRight)/2,centerDelta=Math.abs(center-pageWidthPt/2),leftGap=segs[0].x,rightGap=Math.max(0,pageWidthPt-rowRight);let jc='';if(rowWidth<pageWidthPt*.82&&centerDelta<Math.max(8,pageWidthPt*.035))jc='<w:jc w:val="center"/>';else if(rowWidth<pageWidthPt*.72&&rightGap<leftGap*.38)jc='<w:jc w:val="right"/>';
- const tabStops=segs.slice(1).map(s=>`<w:tab w:val="left" w:pos="${clamp(Math.round(s.x*20),left+20,30000)}"/>`).join('');
+ const tabStops=segs.slice(1).map(s=>`<w:tab w:val="left" w:pos="${clamp(Math.round((s.x-segs[0].x)*20),20,30000)}"/>`).join('');
  let body='';segs.forEach((s,idx)=>{if(idx)body+='<w:r><w:tab/></w:r>';body+=itemTextXml(s.items)});
  // Exact line spacing keeps PDF baselines far closer than Word's default font-leading spacing.
  const line=clamp(Math.round(linePt*20),160,1920);
@@ -73,6 +73,26 @@ function headerColumns(r){
 }
 function tableHeaderScore(r){const t=r.items.map(i=>clean(i.str)).join(' ').toLowerCase().replace(/[^a-z0-9]+/g,' ');return ['sr no','bill no','description','quantity','rate','value','claimed'].reduce((n,k)=>n+(t.includes(k)?1:0),0)}
 function trueTableAt(rs,idx){
+ const header=rs[idx].items.map(it=>clean(it.str)).join(' ').toLowerCase().replace(/[^a-z0-9]+/g,' ');
+ // Two supported structural patterns: financial line-item tables and audit
+ // report grids. Report rows often wrap, so a single visual line is not a row.
+ if(/\bstatus\b/.test(header)&&/\bcheck\b/.test(header)&&/\bdetails\b/.test(header)){
+  const cols=rs[idx].items.filter(it=>/^(status|check|details)$/i.test(clean(it.str).trim())).map(px).sort((a,b)=>a-b);
+  if(cols.length!==3||cols[2]-cols[0]<110)return null;
+  let end=idx,hasRows=false;
+  for(let k=idx+1;k<rs.length;k++){
+   const row=rs[k],starts=row.items.filter(it=>px(it)<cols[0]+Math.max(14,(cols[1]-cols[0])*.42));
+   const head=starts.map(it=>clean(it.str)).join(' ').trim().toUpperCase();
+   const valid=/^(PASS|FAIL|WARN|N\/A)(\s|$)/.test(head);
+   if(valid){hasRows=true;end=k;continue}
+   const hasData=row.items.some(it=>px(it)>cols[1]-5);
+   // A continuing line belongs to the current table row only if it is
+   // horizontally aligned with the table's non-status columns.
+   if(hasRows&&hasData&&row.y>=30&&row.items.every(it=>px(it)>=cols[0]-4)){end=k;continue}
+   break;
+  }
+  return hasRows?{end,cols,report:true}:null;
+ }
  if(tableHeaderScore(rs[idx])<3)return null;const cols=headerColumns(rs[idx]);if(cols.length<3)return null;
  let end=idx;for(let k=idx+1;k<Math.min(rs.length,idx+8);k++){const txt=rs[k].items.map(i=>clean(i.str)).join(' ');if(/long\s*desc/i.test(txt))break;if(k>idx+1&&rs[k].items.length<2)break;end=k}
  return end>idx?{end,cols}:null
@@ -87,7 +107,21 @@ function tableXml(rs,cols,pageWidthTwips){
  const boundaries=[...cols.map(x=>Math.round(x*20)),right],widths=[];for(let i=0;i<cols.length;i++)widths.push(clamp((boundaries[i+1]||right)-boundaries[i],360,7000));
  const sum=widths.reduce((a,b)=>a+b,0),scale=usable/sum;for(let i=0;i<widths.length;i++)widths[i]=Math.max(360,Math.round(widths[i]*scale));
  const grid=widths.map(w=>`<w:gridCol w:w="${w}"/>`).join('');let body='';
- rs.forEach((r,ri)=>{const buckets=bucketRowItems(r,cols);body+='<w:tr>'+buckets.map((arr,j)=>{if(!arr.length)return `<w:tc><w:tcPr><w:tcW w:w="${widths[j]}" w:type="dxa"/></w:tcPr><w:p/></w:tc>`;return `<w:tc><w:tcPr><w:tcW w:w="${widths[j]}" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="${Math.round(Math.max(...arr.map(fs))*20)}" w:lineRule="exact"/></w:pPr>${arr.map(it=>runXml(it,clean(it.str),ri===0)).join('')}</w:p></w:tc>`}).join('')+'</w:tr>'});
+ const report=rs.length>1&&/status/i.test(rs[0].items.map(i=>i.str).join(' '))&&/details/i.test(rs[0].items.map(i=>i.str).join(' '));
+ const grouped=[];
+ for(let ri=0;ri<rs.length;ri++){
+  const buckets=bucketRowItems(rs[ri],cols);
+  const status=buckets[0].map(it=>clean(it.str)).join(' ').trim().toUpperCase();
+  const newRow=!report||ri===0||/^(PASS|FAIL|WARN|N\/A)(\s|$)/.test(status);
+  if(newRow)grouped.push(buckets.map(a=>[...a]));
+  else if(grouped.length)for(let j=0;j<buckets.length;j++)grouped[grouped.length-1][j].push(...buckets[j]);
+ }
+ grouped.forEach((buckets,ri)=>{body+='<w:tr>'+buckets.map((arr,j)=>{
+  if(!arr.length)return `<w:tc><w:tcPr><w:tcW w:w="${widths[j]}" w:type="dxa"/></w:tcPr><w:p/></w:tc>`;
+  // Text remains native editable Word text inside native table cells.
+  const lines=rows(arr),paragraphs=lines.map(r=>`<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="${Math.round(Math.max(...r.items.map(fs))*23)}" w:lineRule="atLeast"/></w:pPr>${itemTextXml(r.items)}</w:p>`).join('');
+  return `<w:tc><w:tcPr><w:tcW w:w="${widths[j]}" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr>${paragraphs}</w:tc>`;
+ }).join('')+'</w:tr>'});
  const border='<w:top w:val="single" w:sz="6" w:color="000000"/><w:left w:val="single" w:sz="6" w:color="000000"/><w:bottom w:val="single" w:sz="6" w:color="000000"/><w:right w:val="single" w:sz="6" w:color="000000"/><w:insideH w:val="single" w:sz="6" w:color="000000"/><w:insideV w:val="single" w:sz="6" w:color="000000"/>';
  return `<w:tbl><w:tblPr><w:tblW w:w="${usable}" w:type="dxa"/><w:tblInd w:w="${left}" w:type="dxa"/><w:tblBorders>${border}</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>${grid}</w:tblGrid>${body}</w:tbl>`
 }
@@ -220,5 +254,5 @@ async function convert(file){
  try{return await convertInternal(file,ocrLifecycle)}
  finally{if(ocrLifecycle.worker){try{await ocrLifecycle.worker.terminate()}catch(_){/* Never mask an export error. */}}}
 }
-window.DMOWordEngine={convert,version:'dokitly-43-scanned-ocr-worker-reuse'};
+window.DMOWordEngine={convert,version:'dokitly-b45-r3-table-geometry'};
 })();
