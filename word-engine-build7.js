@@ -14,6 +14,18 @@ const px=i=>Number.isFinite(i?.transform?.[4])?i.transform[4]:0;
 const py=i=>Number.isFinite(i?.transform?.[5])?i.transform[5]:0;
 const fs=i=>clamp(Math.hypot(Number(i?.transform?.[0])||0,Number(i?.transform?.[1])||0)||Number(i?.height)||9,6,48);
 const tw=i=>Math.max(1,Number(i?.width)||clean(i?.str).length*fs(i)*.5);
+// PDF.js text transforms include glyph rotation. Rotated display text must never
+// be merged into horizontal paragraphs or native table cells.
+function rotatedText(i){
+ const t=i?.transform||[];if(t.length<4)return false;
+ const x=Number(t[0])||0,y=Number(t[1])||0;
+ return Math.hypot(x,y)>2 && Math.abs(y)>Math.abs(x)*.10;
+}
+function watermarkText(i){
+ const t=clean(i?.str).trim();
+ return rotatedText(i) && (fs(i)>22 || /(?:https?:\/\/)?(?:www\.)?[^\s]+\.(?:com|net|org|in)/i.test(t));
+}
+
 function fontIdentity(i){return `${i?._fontFamily||''} ${i?._fontNameResolved||''} ${i?.fontName||''}`.trim()}
 function fontName(i){let n=fontIdentity(i).replace(/^[A-Z]{6}\+/,'').replace(/[,;].*$/,'').trim();if(/courier|mono|consolas/i.test(n))return 'Courier New';if(/times|serif|georgia/i.test(n))return 'Times New Roman';if(/helvetica/i.test(n))return 'Arial';if(/calibri/i.test(n))return 'Calibri';if(/cambria/i.test(n))return 'Cambria';if(/nirmala/i.test(n))return 'Nirmala UI';n=n.replace(/[-_](bold|italic|regular|medium|semibold|light|roman).*$/i,'').trim();return n&&n.length<64?n:'Arial'}
 function isBold(i){return /bold|black|semibold|demi|heavy/i.test(fontIdentity(i))}
@@ -88,7 +100,7 @@ function trueTableAt(rs,idx){
    const hasData=row.items.some(it=>px(it)>cols[1]-5);
    // A continuing line belongs to the current table row only if it is
    // horizontally aligned with the table's non-status columns.
-   if(hasRows&&hasData&&row.y>=30&&row.items.every(it=>px(it)>=cols[0]-4)){end=k;continue}
+   if(hasRows&&hasData&&row.y>=30&&row.items.every(it=>px(it)>=cols[0]-4)&&!row.items.some(it=>fs(it)>22||rotatedText(it))){end=k;continue}
    break;
   }
   return hasRows?{end,cols,report:true}:null;
@@ -116,10 +128,10 @@ function tableXml(rs,cols,pageWidthTwips){
   if(newRow)grouped.push(buckets.map(a=>[...a]));
   else if(grouped.length)for(let j=0;j<buckets.length;j++)grouped[grouped.length-1][j].push(...buckets[j]);
  }
- grouped.forEach((buckets,ri)=>{body+='<w:tr>'+buckets.map((arr,j)=>{
+ grouped.forEach((buckets,ri)=>{body+='<w:tr><w:trPr><w:cantSplit/></w:trPr>'+buckets.map((arr,j)=>{
   if(!arr.length)return `<w:tc><w:tcPr><w:tcW w:w="${widths[j]}" w:type="dxa"/></w:tcPr><w:p/></w:tc>`;
   // Text remains native editable Word text inside native table cells.
-  const lines=rows(arr),paragraphs=lines.map(r=>`<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="${Math.round(Math.max(...r.items.map(fs))*23)}" w:lineRule="atLeast"/></w:pPr>${itemTextXml(r.items)}</w:p>`).join('');
+  const lines=rows(arr.filter(it=>!rotatedText(it))),paragraphs=lines.map(r=>`<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="${Math.round(Math.max(...r.items.map(fs))*20)}" w:lineRule="atLeast"/></w:pPr>${itemTextXml(r.items)}</w:p>`).join('');
   return `<w:tc><w:tcPr><w:tcW w:w="${widths[j]}" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr>${paragraphs}</w:tc>`;
  }).join('')+'</w:tr>'});
  const border='<w:top w:val="single" w:sz="6" w:color="000000"/><w:left w:val="single" w:sz="6" w:color="000000"/><w:bottom w:val="single" w:sz="6" w:color="000000"/><w:right w:val="single" w:sz="6" w:color="000000"/><w:insideH w:val="single" w:sz="6" w:color="000000"/><w:insideV w:val="single" w:sz="6" w:color="000000"/>';
@@ -235,7 +247,7 @@ async function convertInternal(file,ocrLifecycle){
  for(let pi=0;pi<pages.length;pi++){
   const {vp,bands,scan,rects}=pages[pi],pw=clamp(Math.round(vp.width*20),7200,31680),ph=clamp(Math.round(vp.height*20),7200,31680);bandsFound+=bands.length;if(pi===0){firstW=pw;firstH=ph}else body+=(pw!==prevW||ph!==prevH)?sectionBreak(prevW,prevH):pageBreak();prevW=pw;prevH=ph;
   if(scan){if(scan.ocr){ocrPages++;for(const line of scan.ocr.split(/\n+/).map(x=>x.trim()).filter(Boolean)){body+=`<w:p><w:pPr><w:spacing w:after=\"80\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Nirmala UI\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t xml:space=\"preserve\">${xml(line)}</w:t></w:r></w:p>`;blocks++}}else{imagePages++;body+=scanImagePara(scan.relId,vp,pi+1);blocks++}scannedPages++;continue}
-  const filtered=pages[pi].items.filter(i=>{const t=clean(i.str).trim();return !(pdf.numPages>2&&counts.get(t)>=Math.ceil(pdf.numPages*.7)&&t.length>14)}),rs=rows(filtered);let prev=vp.height,shapeRuns=rectShapeRuns(rects||[],pi+1);
+  const filtered=pages[pi].items.filter(i=>{const t=clean(i.str).trim();return !rotatedText(i)&&!(pdf.numPages>2&&counts.get(t)>=Math.ceil(pdf.numPages*.7)&&t.length>14)}),rs=rows(filtered);let prev=vp.height,shapeRuns='';// Native Word tables draw their own borders; overlaying PDF rects duplicates/overlaps them.
   for(let i=0;i<rs.length;){const tb=trueTableAt(rs,i);let chunk;if(tb){chunk=tableXml(rs.slice(i,tb.end+1),tb.cols,pw);tables++;prev=rs[tb.end].y;i=tb.end+1}else{chunk=rowParaXml(rs[i],prev,vp.width,vp.height,bands);prev=rs[i].y;i++}if(shapeRuns){chunk=attachToFirstParagraph(chunk,shapeRuns);shapeRuns=''}body+=chunk;blocks++}
  }
  body+=`<w:sectPr><w:pgSz ${pageSectionAttrs(prevW||firstW,prevH||firstH)}/>${pageMargins}</w:sectPr>`;
@@ -254,5 +266,5 @@ async function convert(file){
  try{return await convertInternal(file,ocrLifecycle)}
  finally{if(ocrLifecycle.worker){try{await ocrLifecycle.worker.terminate()}catch(_){/* Never mask an export error. */}}}
 }
-window.DMOWordEngine={convert,version:'dokitly-b45-r3-table-geometry'};
+window.DMOWordEngine={convert,version:'dokitly-b45-r4-rotated-text-table-overlap'};
 })();

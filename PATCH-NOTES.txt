@@ -1,0 +1,4 @@
+DoKitly B45R2 PDF-to-Word targeted patch.
+Replace repository root word-engine-build7.js only.
+Rotated watermark text is excluded from horizontal editable paragraphs and tables, and overlapping PDF vector rectangles are suppressed. Native tables retained. Rotated decorative watermark visual is NOT preserved by this patch.
+Validated: JavaScript syntax + synthetic watermark/table tests. NOT validated: end-to-end browser PDF conversion.
